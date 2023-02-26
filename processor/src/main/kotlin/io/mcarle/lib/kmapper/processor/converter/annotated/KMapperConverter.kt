@@ -1,17 +1,25 @@
-package io.mcarle.lib.kmapper.processor
+package io.mcarle.lib.kmapper.processor.converter.annotated
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.lib.kmapper.annotation.KMap
 import io.mcarle.lib.kmapper.annotation.KMappers
-import io.mcarle.lib.kmapper.processor.converter.AbstractTypeConverter
+import io.mcarle.lib.kmapper.annotation.KMapping
+import io.mcarle.lib.kmapper.annotation.Priority
+import io.mcarle.lib.kmapper.processor.AbstractTypeConverter
 
-class KMapperConverter(
+class KMapperConverter constructor(
+    override val annotation: KMapping,
     val sourceClassDeclaration: KSClassDeclaration,
     val targetClassDeclaration: KSClassDeclaration,
     val mapKSClassDeclaration: KSClassDeclaration,
-    val mapFunctionName: String,
-    val paramName: String,
-) : AbstractTypeConverter() {
+    val mapKSFunctionDeclaration: KSFunctionDeclaration,
+) : AbstractTypeConverter(), AnnotatedConverter<KMapping> {
+
+    override val priority: Priority = annotation.priority
+    val mapFunctionName: String = mapKSFunctionDeclaration.simpleName.asString()
+    val paramName: String = mapKSFunctionDeclaration.parameters.first().name!!.asString()
 
     private val sourceType: KSType = sourceClassDeclaration.asStarProjectedType()
     private val targetType: KSType = targetClassDeclaration.asStarProjectedType()

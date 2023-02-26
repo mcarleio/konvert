@@ -3,7 +3,7 @@ package io.mcarle.lib.kmapper.processor.converter
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.symbolProcessorProviders
-import io.mcarle.lib.kmapper.processor.KMapperProcessorProvider
+import io.mcarle.lib.kmapper.processor.KMapProcessorProvider
 import io.mcarle.lib.kmapper.processor.TypeConverterRegistry
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -100,7 +100,7 @@ interface FooMapper {
         .apply {
             workingDir = temporaryFolder
             inheritClassPath = true
-            symbolProcessorProviders = listOf(KMapperProcessorProvider())
+            symbolProcessorProviders = listOf(KMapProcessorProvider())
             sources = sourceFiles
             verbose = false
         }

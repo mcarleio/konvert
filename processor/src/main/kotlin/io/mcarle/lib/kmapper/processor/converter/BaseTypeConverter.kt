@@ -2,6 +2,7 @@ package io.mcarle.lib.kmapper.processor.converter
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.lib.kmapper.processor.AbstractTypeConverter
 import io.mcarle.lib.kmapper.processor.isNullable
 import kotlin.reflect.KClass
 
@@ -18,29 +19,24 @@ abstract class BaseTypeConverter(
     }
 
     override fun matches(source: KSType, target: KSType): Boolean {
-        if (sourceType == source && targetType == target) {
-            return true
+        return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
+            sourceNotNullable == sourceType && targetNotNullable == targetType
         }
-
-        val nonNullSource = source.makeNotNullable()
-        val nonNullTarget = target.makeNotNullable()
-
-        return sourceType == nonNullSource && targetType == nonNullTarget
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): String {
         val sourceNullable = source.isNullable()
         val convertCode = convert(fieldName, if (sourceNullable) "?" else "")
 
-        return if (sourceNullable && !target.isNullable()) {
-            handleNullable(convertCode)
+        return if (needsNotNullAssertionOperator(source, target)) {
+            appendNotNullAssertionOperator(convertCode)
         } else {
             convertCode
         }
     }
 
     abstract fun convert(fieldName: String, nc: String): String
-    protected open fun handleNullable(code: String): String = "$code!!"
+    protected open fun appendNotNullAssertionOperator(code: String): String = "$code!!"
 
 }
 
@@ -147,7 +143,7 @@ class IntToCharConverter : BaseTypeConverter(Int::class, Char::class) {
 
 class IntToBooleanConverter : BaseTypeConverter(Int::class, Boolean::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName == 1"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class IntToFloatConverter : BaseTypeConverter(Int::class, Float::class) {
@@ -205,7 +201,7 @@ class UIntToCharConverter : BaseTypeConverter(UInt::class, Char::class) {
 
 class UIntToBooleanConverter : BaseTypeConverter(UInt::class, Boolean::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName == 1u"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class UIntToFloatConverter : BaseTypeConverter(UInt::class, Float::class) {
@@ -263,7 +259,7 @@ class LongToCharConverter : BaseTypeConverter(Long::class, Char::class) {
 
 class LongToBooleanConverter : BaseTypeConverter(Long::class, Boolean::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName == 1L"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class LongToFloatConverter : BaseTypeConverter(Long::class, Float::class) {
@@ -321,7 +317,7 @@ class ULongToCharConverter : BaseTypeConverter(ULong::class, Char::class) {
 
 class ULongToBooleanConverter : BaseTypeConverter(ULong::class, Boolean::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName == 1u.toULong()"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class ULongToFloatConverter : BaseTypeConverter(ULong::class, Float::class) {
@@ -378,7 +374,7 @@ class ShortToCharConverter : BaseTypeConverter(Short::class, Char::class) {
 
 class ShortToBooleanConverter : BaseTypeConverter(Short::class, Boolean::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName == 1.toShort()"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class ShortToFloatConverter : BaseTypeConverter(Short::class, Float::class) {
@@ -436,7 +432,7 @@ class UShortToCharConverter : BaseTypeConverter(UShort::class, Char::class) {
 
 class UShortToBooleanConverter : BaseTypeConverter(UShort::class, Boolean::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName == 1u.toUShort()"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class UShortToFloatConverter : BaseTypeConverter(UShort::class, Float::class) {
@@ -498,7 +494,7 @@ class FloatToCharConverter : BaseTypeConverter(Float::class, Char::class) {
 
 class FloatToBooleanConverter : BaseTypeConverter(Float::class, Boolean::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName == 1.0f"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class FloatToDoubleConverter : BaseTypeConverter(Float::class, Double::class) {
@@ -555,7 +551,7 @@ class DoubleToCharConverter : BaseTypeConverter(Double::class, Char::class) {
 
 class DoubleToBooleanConverter : BaseTypeConverter(Double::class, Boolean::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName == 1.0"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class DoubleToFloatConverter : BaseTypeConverter(Double::class, Float::class) {
@@ -612,7 +608,7 @@ class ByteToCharConverter : BaseTypeConverter(Byte::class, Char::class) {
 
 class ByteToBooleanConverter : BaseTypeConverter(Byte::class, Boolean::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName == 1.toByte()"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class ByteToFloatConverter : BaseTypeConverter(Byte::class, Float::class) {
@@ -666,7 +662,7 @@ class UByteToCharConverter : BaseTypeConverter(UByte::class, Char::class) {
 
 class UByteToBooleanConverter : BaseTypeConverter(UByte::class, Boolean::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName == 1u.toUByte()"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class UByteToFloatConverter : BaseTypeConverter(UByte::class, Float::class) {
@@ -723,7 +719,7 @@ class NumberToCharConverter : BaseTypeConverter(Number::class, Char::class) {
 
 class NumberToBooleanConverter : BaseTypeConverter(Number::class, Boolean::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName == 1"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class NumberToFloatConverter : BaseTypeConverter(Number::class, Float::class) {
@@ -785,7 +781,7 @@ class CharToUByteConverter : BaseTypeConverter(Char::class, UByte::class) {
 
 class CharToBooleanConverter : BaseTypeConverter(Char::class, Boolean::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName == '1'"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class CharToFloatConverter : BaseTypeConverter(Char::class, Float::class) {
@@ -802,60 +798,60 @@ class BooleanToStringConverter : BaseTypeConverter(Boolean::class, String::class
 
 class BooleanToIntConverter : BaseTypeConverter(Boolean::class, Int::class) {
     override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1 else 0"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class BooleanToUIntConverter : BaseTypeConverter(Boolean::class, UInt::class) {
     override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1u else 0u"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class BooleanToLongConverter : BaseTypeConverter(Boolean::class, Long::class) {
     override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1L else 0L"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class BooleanToULongConverter : BaseTypeConverter(Boolean::class, ULong::class) {
     override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1u else 0u"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class BooleanToShortConverter : BaseTypeConverter(Boolean::class, Short::class) {
     override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1.toShort() else 0.toShort()"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class BooleanToUShortConverter : BaseTypeConverter(Boolean::class, UShort::class) {
     override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1u else 0u"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class BooleanToNumberConverter : BaseTypeConverter(Boolean::class, Number::class) {
     override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1 else 0"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class BooleanToDoubleConverter : BaseTypeConverter(Boolean::class, Double::class) {
     override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1.0 else 0.0"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class BooleanToByteConverter : BaseTypeConverter(Boolean::class, Byte::class) {
     override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1 else 0"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class BooleanToUByteConverter : BaseTypeConverter(Boolean::class, UByte::class) {
     override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1u else 0u"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class BooleanToCharConverter : BaseTypeConverter(Boolean::class, Char::class) {
     override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) '1' else '0'"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 class BooleanToFloatConverter : BaseTypeConverter(Boolean::class, Float::class) {
     override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1.0f else 0.0f"
-    override fun handleNullable(code: String): String = code
+    override fun appendNotNullAssertionOperator(code: String): String = code
 }

@@ -23,9 +23,9 @@ interface Mapper {
     )
     fun toDto(address: Address): AddressDto
 
-    @KMapping
+    @KMapping(mappings = [KMap(target = "age", expression = "42"),KMap(target = "age", expression = "42", constant = "", ignore = true)])
     fun fromDto(dto: PersonDto): Person
 
-    @KMapping
+    @KMapping(mappings = [KMap(source = "age", target = "ageX")])
     fun toDto(person: Person): PersonDto
 }

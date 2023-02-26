@@ -1,10 +1,12 @@
 package io.mcarle.lib.kmapper.processor
 
+import io.mcarle.lib.kmapper.annotation.DEFAULT_CONVERTER_PRIORITY
+import io.mcarle.lib.kmapper.processor.config.ConverterConfig
 import io.mcarle.lib.kmapper.processor.converter.*
 
 object TypeConverterRegistry : Iterable<TypeConverter> {
 
-    private val typeConverterList = mutableListOf<TypeConverter>()
+    private val typeConverterList = sortedMapOf<Int, MutableList<TypeConverter>>()
 
     val defaultConverter = listOf(
         SameTypeConverter(),
@@ -252,18 +254,20 @@ object TypeConverterRegistry : Iterable<TypeConverter> {
      */
     internal fun reinitConverterList(vararg typeConverter: TypeConverter) {
         typeConverterList.clear()
-        typeConverterList += typeConverter
+        typeConverterList[DEFAULT_CONVERTER_PRIORITY] = typeConverter.toMutableList()
     }
 
-    operator fun plusAssign(converter: TypeConverter) {
-        typeConverterList += converter
+    fun addConverters(order: Int, converterList: List<TypeConverter>) {
+        typeConverterList[order] ?: mutableListOf<TypeConverter>().also {
+            typeConverterList[order] = it
+        } += converterList
     }
 
-    fun initConverter(converterConfig: ConverterConfig) {
-        typeConverterList.forEach { it.init(converterConfig) }
+    fun initConverters(converterConfig: ConverterConfig) {
+        typeConverterList.values.flatten().forEach { it.init(converterConfig) }
     }
 
     override fun iterator(): Iterator<TypeConverter> {
-        return typeConverterList.iterator()
+        return typeConverterList.values.flatten().iterator()
     }
 }

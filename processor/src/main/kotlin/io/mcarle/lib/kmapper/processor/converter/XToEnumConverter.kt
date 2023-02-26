@@ -2,6 +2,7 @@ package io.mcarle.lib.kmapper.processor.converter
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.lib.kmapper.processor.AbstractTypeConverter
 import io.mcarle.lib.kmapper.processor.isNullable
 import kotlin.reflect.KClass
 
@@ -10,26 +11,25 @@ abstract class XToEnumConverter(
 ) : AbstractTypeConverter() {
 
     private val enumType: KSType by lazy {
-        resolver.getClassDeclarationByName<Enum<*>>()!!.asStarProjectedType().makeNullable()
+        resolver.getClassDeclarationByName<Enum<*>>()!!.asStarProjectedType()
     }
 
     private val sourceType: KSType by lazy {
-        resolver.getClassDeclarationByName(sourceClass.qualifiedName!!)!!.asType(emptyList())
+        resolver.getClassDeclarationByName(sourceClass.qualifiedName!!)!!.asStarProjectedType()
     }
 
     override fun matches(source: KSType, target: KSType): Boolean {
-        return enumType != target && enumType.isAssignableFrom(target) && (sourceType == source || sourceType == source.makeNotNullable())
+        return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
+            enumType != targetNotNullable && enumType.isAssignableFrom(targetNotNullable)
+                    && sourceType == sourceNotNullable
+        }
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): String {
         val sourceNullable = source.isNullable()
         val convertCode = convert(fieldName, if (sourceNullable) "?" else "", target.declaration.qualifiedName!!.asString())
 
-        return if (sourceNullable && !target.isNullable()) {
-            "$convertCode!!"
-        } else {
-            convertCode
-        }
+        return convertCode + appendNotNullAssertionOperatorIfNeeded(source, target)
     }
 
     abstract fun convert(fieldName: String, nc: String, enumFQ: String): String

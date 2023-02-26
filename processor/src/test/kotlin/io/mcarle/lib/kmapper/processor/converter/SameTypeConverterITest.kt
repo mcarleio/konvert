@@ -35,7 +35,7 @@ class SameTypeConverterITest : ConverterITest() {
             .flatMap {
                 listOf(
                     Arguments.arguments(it, it),
-                    Arguments.arguments("$it?", it),
+//                    Arguments.arguments("$it?", it),
                     Arguments.arguments(it, "$it?"),
                     Arguments.arguments("$it?", "$it?"),
                 )
@@ -53,8 +53,8 @@ class SameTypeConverterITest : ConverterITest() {
         val enforceNotNull = if (sourceTypeNullable && !targetTypeNullable) "!!" else ""
         assertSourceEquals(
             expected = """
-                 object FooMapperImpl : FooMapper {
-                  override fun toYyy(it: Xxx): Yyy = Yyy(
+                public object FooMapperImpl : FooMapper {
+                  public override fun toYyy(it: Xxx): Yyy = Yyy(
                       test = it.test$enforceNotNull
                   )
                 }

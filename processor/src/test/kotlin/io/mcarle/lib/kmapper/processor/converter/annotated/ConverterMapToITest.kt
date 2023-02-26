@@ -1,4 +1,4 @@
-package io.mcarle.lib.kmapper.processor.converter
+package io.mcarle.lib.kmapper.processor.converter.annotated
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
@@ -7,6 +7,7 @@ import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.mcarle.lib.kmapper.processor.KMapProcessorProvider
 import io.mcarle.lib.kmapper.processor.TypeConverter
 import io.mcarle.lib.kmapper.processor.TypeConverterRegistry
+import io.mcarle.lib.kmapper.processor.converter.generatedSourceFor
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -14,15 +15,12 @@ import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 
-abstract class ConverterITest {
+abstract class ConverterMapToITest {
 
     @TempDir
     protected lateinit var temporaryFolder: File
-    private val sourceClassName: String = "Xxx"
-    private val targetClassName: String = "Yyy"
-    private val mapperClassName: String = "FooMapper"
-    private val mapperFunctionName: String = "to$targetClassName"
-    private val mapperFunctionParamName: String = "it"
+    protected val sourceClassName: String = "Xxx"
+    protected val targetClassName: String = "Yyy"
     protected var expectedResultCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK
 
     /**
@@ -33,34 +31,30 @@ abstract class ConverterITest {
     protected open fun converterTest(converter: TypeConverter, sourceTypeName: String, targetTypeName: String) {
         val sourceCode = generateSourceCode(listOf("test" to sourceTypeName))
         val targetCode = generateTargetCode(listOf("test" to targetTypeName))
-        val mapperCode = generateMapper()
 
         val additionalCode = generateAdditionalCode()
 
         TypeConverterRegistry.reinitConverterList(converter, *additionalConverter())
 
         val compilation = if (additionalCode != null) {
-            compile(sourceCode, targetCode, mapperCode, additionalCode)
+            compile(sourceCode, targetCode, additionalCode)
         } else {
-            compile(sourceCode, targetCode, mapperCode)
+            compile(sourceCode, targetCode)
         }
 
         if (compilation != null) {
-            val generatedMapperCode = compilation.first.generatedSourceFor("${mapperClassName}Impl.kt")
+            val generatedMapperCode = compilation.first.generatedSourceFor("${sourceClassName}KMapExtensions.kt")
             if (log) {
                 println(generatedMapperCode)
             }
 
-//            val compilationResult = checkIfGeneratedMapperCompiles(compilation, generatedMapperCode + "\n" + (loadAdditionalCode(compilation) ?: ""))
             val compilationResult = compilation.second
-
-            val mapperKClass = compilationResult.classLoader.loadClass("${mapperClassName}Impl").kotlin
+//            val compilationResult = checkIfGeneratedMapperCompiles(compilation, generatedMapperCode + "\n" + (loadAdditionalCode(compilation) ?: ""))
 
             verifyMapper(
                 sourceTypeName = sourceTypeName,
                 targetTypeName = targetTypeName,
-                mapperInstance = mapperKClass.objectInstance!!,
-                mapperFunction = mapperKClass.members.first { it.name == mapperFunctionName },
+                mapperKClass = compilationResult.classLoader.loadClass(sourceClassName+"KMapExtensionsKt").kotlin, // ugly workaround to access generated member function
                 sourceKClass = compilationResult.classLoader.loadClass(sourceClassName).kotlin,
                 targetKClass = compilationResult.classLoader.loadClass(targetClassName).kotlin,
                 classLoader = compilationResult.classLoader
@@ -81,21 +75,10 @@ abstract class ConverterITest {
     open fun verifyMapper(
         sourceTypeName: String,
         targetTypeName: String,
-        mapperInstance: Any,
-        mapperFunction: KCallable<*>,
+        mapperKClass: KClass<*>,
         sourceKClass: KClass<*>,
         targetKClass: KClass<*>,
         classLoader: ClassLoader
-    ) {
-        verifyMapper(sourceTypeName, targetTypeName, mapperInstance, mapperFunction, sourceKClass, targetKClass)
-    }
-    open fun verifyMapper(
-        sourceTypeName: String,
-        targetTypeName: String,
-        mapperInstance: Any,
-        mapperFunction: KCallable<*>,
-        sourceKClass: KClass<*>,
-        targetKClass: KClass<*>
     ) {
     }
 
@@ -103,9 +86,15 @@ abstract class ConverterITest {
         name = "$sourceClassName.kt",
         contents =
         """
+import io.mcarle.lib.kmapper.annotation.KMapTo
+
+@KMapTo($targetClassName::class)
 class $sourceClassName(
     ${params.joinToString(",\n") { "val ${it.first}: ${it.second}" }}
-)
+) {
+//    @KMapTo($targetClassName::class)
+    companion object
+}
         """.trimIndent()
     )
 
@@ -113,28 +102,16 @@ class $sourceClassName(
         name = "$targetClassName.kt",
         contents =
         """
+//import io.mcarle.lib.kmapper.annotation.KMapFrom
+
 class $targetClassName(
     ${params.joinToString(",\n") { "val ${it.first}: ${it.second}" }}
-)
+) {
+//    @KMapFrom($sourceClassName::class)
+    companion object 
+}
         """.trimIndent()
     )
-
-    fun generateMapper() = SourceFile.kotlin(
-        name = "$mapperClassName.kt",
-        contents =
-        """
-import io.mcarle.lib.kmapper.annotation.KMapper
-import io.mcarle.lib.kmapper.annotation.KMapping
-import io.mcarle.lib.kmapper.annotation.KMap
-
-@KMapper
-interface $mapperClassName {
-    @KMapping
-    fun $mapperFunctionName($mapperFunctionParamName: $sourceClassName): $targetClassName
-}
-        """
-    )
-
 
     private fun compile(vararg sourceFiles: SourceFile): Pair<KotlinCompilation, KotlinCompilation.Result>? {
         val compilation = prepareCompilation(sourceFiles.toList())
@@ -148,15 +125,15 @@ interface $mapperClassName {
 
         return compilation to result
     }
-
-    private fun checkIfGeneratedMapperCompiles(compilation: KotlinCompilation, code: String): KotlinCompilation.Result {
-        compilation.symbolProcessorProviders = emptyList()
-        compilation.sources += SourceFile.kotlin("${mapperClassName}Impl.kt", code)
-
-        val result = compilation.compile()
-        assertEquals(expected = KotlinCompilation.ExitCode.OK, actual = result.exitCode)
-        return result
-    }
+//
+//    private fun checkIfGeneratedMapperCompiles(compilation: KotlinCompilation, code: String): KotlinCompilation.Result {
+//        compilation.symbolProcessorProviders = emptyList()
+//        compilation.sources += SourceFile.kotlin("${sourceClassName}KMapExtensions.kt", code)
+//
+//        val result = compilation.compile()
+//        assertEquals(expected = KotlinCompilation.ExitCode.OK, actual = result.exitCode)
+//        return result
+//    }
 
     private fun prepareCompilation(sourceFiles: List<SourceFile>) = KotlinCompilation()
         .apply {

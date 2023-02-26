@@ -3,16 +3,19 @@ package io.mcarle.lib.kmapper.processor.converter
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.lib.kmapper.processor.AbstractTypeConverter
 import io.mcarle.lib.kmapper.processor.isNullable
 
 class EnumToEnumConverter : AbstractTypeConverter() {
 
     private val enumType: KSType by lazy {
-        resolver.getClassDeclarationByName<Enum<*>>()!!.asStarProjectedType().makeNullable()
+        resolver.getClassDeclarationByName<Enum<*>>()!!.asStarProjectedType()
     }
 
     override fun matches(source: KSType, target: KSType): Boolean {
-        return enumType.isAssignableFrom(source) && enumType.isAssignableFrom(target)
+        return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
+            enumType.isAssignableFrom(sourceNotNullable) && enumType.isAssignableFrom(targetNotNullable)
+        }
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): String {
@@ -44,7 +47,7 @@ when ($fieldName) {
             }
         }
     }
-}${if (source.isNullable() && !target.isNullable()) "!!" else ""}
+}${if (needsNotNullAssertionOperator(source, target)) "!!" else ""}
         """.trimIndent()
         // @formatter:on
     }

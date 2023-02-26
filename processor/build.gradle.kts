@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("java-library")
     kotlin("jvm") version "1.7.22"
+    id("maven-publish")
     id("com.google.devtools.ksp").version("1.7.22-1.0.8")
 }
 
@@ -12,8 +13,8 @@ dependencies {
     implementation("org.jetbrains:annotations:23.1.0")
 
     implementation("com.google.devtools.ksp:symbol-processing-api:1.7.22-1.0.8")
-    implementation("com.google.devtools.ksp:symbol-processing:1.7.22-1.0.8")
-    implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.7.22")
+    testImplementation("com.google.devtools.ksp:symbol-processing:1.7.22-1.0.8")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.7.22")
 
     implementation("com.squareup:kotlinpoet:1.12.0")
     implementation("com.squareup:kotlinpoet-ksp:1.12.0")
@@ -58,4 +59,16 @@ tasks.test {
 ksp {
     arg("autoserviceKsp.verify", "true")
     arg("autoserviceKsp.verbose", "true")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "io.mcarle.lib"
+            artifactId = "kmapper-processor"
+            version = "1.0"
+
+            from(components["kotlin"])
+        }
+    }
 }

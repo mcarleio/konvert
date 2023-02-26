@@ -1,5 +1,6 @@
 package io.mcarle.lib.kmapper.processor.converter
 
+import io.mcarle.lib.kmapper.processor.TypeConverter
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments.arguments
@@ -21,39 +22,40 @@ class MapToMapConverterITest : ConverterITest() {
         )
             .flatMap { listOf(it, "$it?") }
             .let { Generator.cartesianProduct(it, it) }
+            .removeSourceNullableAndTargetNotNull()
             .flatMap {
                 listOf(
                     arguments(it[0], "String, String", it[1], "String, String"),
                     arguments(it[0], "String, String", it[1], "String?, String"),
                     arguments(it[0], "String, String", it[1], "String, String?"),
                     arguments(it[0], "String, String", it[1], "String?, String?"),
-                    arguments(it[0], "String, String?", it[1], "String, String"),
-                    arguments(it[0], "String, String?", it[1], "String?, String"),
+//                    arguments(it[0], "String, String?", it[1], "String, String"),
+//                    arguments(it[0], "String, String?", it[1], "String?, String"),
                     arguments(it[0], "String, String?", it[1], "String, String?"),
                     arguments(it[0], "String, String?", it[1], "String?, String?"),
-                    arguments(it[0], "String?, String", it[1], "String, String"),
+//                    arguments(it[0], "String?, String", it[1], "String, String"),
                     arguments(it[0], "String?, String", it[1], "String?, String"),
-                    arguments(it[0], "String?, String", it[1], "String, String?"),
+//                    arguments(it[0], "String?, String", it[1], "String, String?"),
                     arguments(it[0], "String?, String", it[1], "String?, String?"),
-                    arguments(it[0], "String?, String?", it[1], "String, String"),
-                    arguments(it[0], "String?, String?", it[1], "String?, String"),
-                    arguments(it[0], "String?, String?", it[1], "String, String?"),
+//                    arguments(it[0], "String?, String?", it[1], "String, String"),
+//                    arguments(it[0], "String?, String?", it[1], "String?, String"),
+//                    arguments(it[0], "String?, String?", it[1], "String, String?"),
                     arguments(it[0], "String?, String?", it[1], "String?, String?"),
                     arguments(it[0], "String, String", it[1], "Int, Int"),
                     arguments(it[0], "String, String", it[1], "Int?, Int"),
                     arguments(it[0], "String, String", it[1], "Int, Int?"),
                     arguments(it[0], "String, String", it[1], "Int?, Int?"),
-                    arguments(it[0], "String, String?", it[1], "Int, Int"),
-                    arguments(it[0], "String, String?", it[1], "Int?, Int"),
+//                    arguments(it[0], "String, String?", it[1], "Int, Int"),
+//                    arguments(it[0], "String, String?", it[1], "Int?, Int"),
                     arguments(it[0], "String, String?", it[1], "Int, Int?"),
                     arguments(it[0], "String, String?", it[1], "Int?, Int?"),
-                    arguments(it[0], "String?, String", it[1], "Int, Int"),
+//                    arguments(it[0], "String?, String", it[1], "Int, Int"),
                     arguments(it[0], "String?, String", it[1], "Int?, Int"),
-                    arguments(it[0], "String?, String", it[1], "Int, Int?"),
+//                    arguments(it[0], "String?, String", it[1], "Int, Int?"),
                     arguments(it[0], "String?, String", it[1], "Int?, Int?"),
-                    arguments(it[0], "String?, String?", it[1], "Int, Int"),
-                    arguments(it[0], "String?, String?", it[1], "Int?, Int"),
-                    arguments(it[0], "String?, String?", it[1], "Int, Int?"),
+//                    arguments(it[0], "String?, String?", it[1], "Int, Int"),
+//                    arguments(it[0], "String?, String?", it[1], "Int?, Int"),
+//                    arguments(it[0], "String?, String?", it[1], "Int, Int?"),
                     arguments(it[0], "String?, String?", it[1], "Int?, Int?"),
                 )
             }

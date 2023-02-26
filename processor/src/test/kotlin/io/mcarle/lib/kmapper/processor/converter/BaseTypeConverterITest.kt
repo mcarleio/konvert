@@ -1,7 +1,6 @@
 package io.mcarle.lib.kmapper.processor.converter
 
 import org.jetbrains.kotlin.util.removeSuffixIfPresent
-import org.jetbrains.kotlin.util.suffixIfNot
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -36,8 +35,8 @@ class BaseTypeConverterITest : ConverterITest() {
             ).flatMap { listOf(it, "$it?") }
 
             return Generator.cartesianProduct(types, types)
-                .stream()
-                .filter { it[0].suffixIfNot("?") != it[1].suffixIfNot("?") }
+                .removeSourceEqualsTarget()
+                .removeSourceNullableAndTargetNotNull()
                 .map { arguments(it[0], it[1]) }
                 .toList()
         }

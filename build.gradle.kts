@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.7.22"
-    application
+    id("maven-publish")
 }
 
 group = "io.mcarle.lib"
@@ -22,10 +22,6 @@ tasks.test {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "17"
-}
-
-application {
-    mainClass.set("MainKt")
 }
 
 java {

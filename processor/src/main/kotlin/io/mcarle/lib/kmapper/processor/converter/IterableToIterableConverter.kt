@@ -2,6 +2,7 @@ package io.mcarle.lib.kmapper.processor.converter
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.*
+import io.mcarle.lib.kmapper.processor.AbstractTypeConverter
 import io.mcarle.lib.kmapper.processor.TypeConverterRegistry
 import io.mcarle.lib.kmapper.processor.isNullable
 
@@ -21,14 +22,13 @@ class IterableToIterableConverter : AbstractTypeConverter() {
         private val LINKEDHASHSET = "java.util.LinkedHashSet"
     }
 
-    private val sourceType: KSType by lazy { resolver.builtIns.iterableType }
-
-    private val targetType: KSType by lazy { resolver.builtIns.iterableType }
+    private val iterableType: KSType by lazy { resolver.builtIns.iterableType }
 
     override fun matches(source: KSType, target: KSType): Boolean {
-        return sourceType.isAssignableFrom(source.makeNotNullable())
-                && targetType.isAssignableFrom(target.makeNotNullable())
-                && TypeConverterRegistry.any {
+        return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
+            iterableType.isAssignableFrom(sourceNotNullable) &&
+                    iterableType.isAssignableFrom(targetNotNullable)
+        } && TypeConverterRegistry.any {
             it.matches(
                 source = source.arguments[0].type!!.resolve(),
                 target = target.arguments[0].type!!.resolve(),
@@ -58,7 +58,7 @@ class IterableToIterableConverter : AbstractTypeConverter() {
 
         val mapSourceContentCode = when {
             genericSourceType == genericTargetType -> fieldName
-            genericSourceType.makeNotNullable() == genericTargetType -> {
+            needsNotNullAssertionOperator(genericSourceType, genericTargetType) -> {
                 listTypeChanged = true
                 "$fieldName$nc.map { it!! }"
             }
@@ -92,13 +92,8 @@ class IterableToIterableConverter : AbstractTypeConverter() {
             else -> throw RuntimeException("target $target is an unknown type and could not be converted")
         }
 
-        val iterableNullHandlingCode = if (source.isNullable() && !target.isNullable()) {
-            "!!"
-        } else {
-            ""
-        }
 
-        val code = mapSourceContentCode + mapSourceContainerCode + iterableNullHandlingCode
+        val code = mapSourceContentCode + mapSourceContainerCode + appendNotNullAssertionOperatorIfNeeded(source, target)
 
         return if (castNeeded) {
             "($code as $target)" // encapsulate with braces

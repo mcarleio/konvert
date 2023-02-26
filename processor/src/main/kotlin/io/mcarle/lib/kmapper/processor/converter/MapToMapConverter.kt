@@ -2,6 +2,7 @@ package io.mcarle.lib.kmapper.processor.converter
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.*
+import io.mcarle.lib.kmapper.processor.AbstractTypeConverter
 import io.mcarle.lib.kmapper.processor.TypeConverterRegistry
 import io.mcarle.lib.kmapper.processor.isNullable
 
@@ -16,24 +17,20 @@ class MapToMapConverter : AbstractTypeConverter() {
         private val LINKEDHASHMAP = "java.util.LinkedHashMap" // not "kotlin.collections.LinkedHashMap"
     }
 
-    private val sourceType: KSType by lazy {
-        resolver.getClassDeclarationByName<Map<*, *>>()!!.asStarProjectedType()
-    }
-
-    private val targetType: KSType by lazy {
+    private val mapType: KSType by lazy {
         resolver.getClassDeclarationByName<Map<*, *>>()!!.asStarProjectedType()
     }
 
     override fun matches(source: KSType, target: KSType): Boolean {
-        return sourceType.isAssignableFrom(source.makeNotNullable())
-                && targetType.isAssignableFrom(target.makeNotNullable())
-                && TypeConverterRegistry.any {
+        return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
+            mapType.isAssignableFrom(sourceNotNullable)
+                    && mapType.isAssignableFrom(targetNotNullable)
+        } && TypeConverterRegistry.any {
             it.matches(
                 source = source.arguments[0].type!!.resolve(),
                 target = target.arguments[0].type!!.resolve(),
             )
-        }
-                && TypeConverterRegistry.any {
+        } && TypeConverterRegistry.any {
             it.matches(
                 source = source.arguments[1].type!!.resolve(),
                 target = target.arguments[1].type!!.resolve(),
@@ -82,7 +79,7 @@ class MapToMapConverter : AbstractTypeConverter() {
         val mapSourceContentCode = when {
             genericSourceKeyType == genericTargetKeyType -> when {
                 genericSourceValueType == genericTargetValueType -> fieldName
-                genericSourceValueType.makeNotNullable() == genericTargetValueType -> {
+                needsNotNullAssertionOperator(genericSourceValueType, genericTargetValueType) -> {
                     mapTypeChanged = true
                     "$fieldName$nc.mapValues { it.value!! }"
                 }
@@ -106,13 +103,13 @@ class MapToMapConverter : AbstractTypeConverter() {
                 }
             }
 
-            genericSourceKeyType.makeNotNullable() == genericTargetKeyType -> when {
+            needsNotNullAssertionOperator(genericSourceKeyType, genericTargetKeyType) -> when {
                 genericSourceValueType == genericTargetValueType -> {
                     mapTypeChanged = true
                     "$fieldName$nc.mapKeys { it.key!! }"
                 }
 
-                genericSourceValueType.makeNotNullable() == genericTargetValueType -> {
+                needsNotNullAssertionOperator(genericSourceValueType, genericTargetValueType) -> {
                     mapTypeChanged = true
                     mappedToListOfPairs = true
                     "$fieldName$nc.map { it.key!! to it.value!! }"
@@ -145,7 +142,7 @@ $fieldName$nc.map { (key, value) ->
                 }
                 when {
                     genericSourceValueType == genericTargetValueType -> fieldName
-                    genericSourceValueType.makeNotNullable() == genericTargetValueType -> {
+                    needsNotNullAssertionOperator(genericSourceValueType, genericTargetValueType) -> {
                         mapTypeChanged = true
                         "$fieldName$nc.mapValues { it.value!! }"
                     }
@@ -176,7 +173,7 @@ $fieldName$nc.map { (key, value) ->
                     "$fieldName$nc.mapKeys { (it, _) -> ${keyTypeConverter.convert("it", genericSourceKeyType, genericTargetKeyType)} }"
                 }
 
-                genericSourceValueType.makeNotNullable() == genericTargetValueType -> {
+                needsNotNullAssertionOperator(genericSourceValueType, genericTargetValueType) -> {
                     mapTypeChanged = true
                     mappedToListOfPairs = true
                     """
@@ -219,13 +216,7 @@ $fieldName$nc.map { (key, value) ->
             else -> throw RuntimeException("target $target is an unknown type and could not be converted")
         }
 
-        val mapNullHandlingCode = if (source.isNullable() && !target.isNullable()) {
-            "!!"
-        } else {
-            ""
-        }
-
-        val code = mapSourceContentCode + mapSourceContainerCode + mapNullHandlingCode
+        val code = mapSourceContentCode + mapSourceContainerCode + appendNotNullAssertionOperatorIfNeeded(source, target)
 
         return if (castNeeded) {
             "($code as $target)" // encapsulate with braces

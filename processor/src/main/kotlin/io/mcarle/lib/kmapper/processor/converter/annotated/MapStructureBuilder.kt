@@ -1,4 +1,4 @@
-package io.mcarle.lib.kmapper.processor
+package io.mcarle.lib.kmapper.processor.converter.annotated
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getConstructors
@@ -6,10 +6,12 @@ import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
-import io.mcarle.lib.kmapper.annotation.KMapping
+import io.mcarle.lib.kmapper.annotation.KMap
+import io.mcarle.lib.kmapper.processor.TypeConverterRegistry
+import io.mcarle.lib.kmapper.processor.isNullable
 import org.paukov.combinatorics3.Generator
 
-class Mapper(
+class MapStructureBuilder(
     private val resolver: Resolver,
     private val logger: KSPLogger
 ) {
@@ -20,22 +22,37 @@ class Mapper(
         sourceProperties: List<Property>,
         indentLevel: Int
     ): String {
-        return constructor.parameters.joinToString(",\n") { ksValueParameter ->
+        return constructor.parameters.mapNotNull { ksValueParameter ->
+            val sourceHasParamNames = constructor.origin !in listOf(
+                Origin.JAVA,
+                Origin.JAVA_LIB
+            )
+            val valueParamHasDefault = ksValueParameter.hasDefault && sourceHasParamNames
+            val valueParamIsNullable = ksValueParameter.type.resolve().isNullable()
+
             val sourceProperty = determineSourceProperty(sourceProperties, ksValueParameter)
             val convertedValue = convertValue(
                 source = sourceProperty,
-                targetTypeRef = ksValueParameter.type
-            )
-            (1..indentLevel).joinToString("") { " " } + if (constructor.origin in listOf(
-                    Origin.JAVA,
-                    Origin.JAVA_LIB
-                )
-            ) {
-                convertedValue
+                targetTypeRef = ksValueParameter.type,
+                ignorable = valueParamHasDefault || valueParamIsNullable
+            ) ?: if (valueParamHasDefault) {
+                null
+            } else if (valueParamIsNullable) {
+                "null"
             } else {
-                "${sourceProperty.targetName} = $convertedValue"
+                null
             }
-        }
+
+            if (convertedValue != null) {
+                (1..indentLevel).joinToString("") { " " } + if (sourceHasParamNames) {
+                    "${sourceProperty.targetName} = $convertedValue"
+                } else {
+                    convertedValue
+                }
+            } else {
+                null
+            }
+        }.joinToString(",\n")
     }
 
     private fun determineSourceProperty(props: List<Property>, ksValueParameter: KSValueParameter): Property {
@@ -54,7 +71,7 @@ class Mapper(
     }
 
     data class Property constructor(
-        val mappingParamName: String,
+        val mappingParamName: String?,
         val sourceName: String?,
         val targetName: String,
         val constant: String?,
@@ -64,16 +81,16 @@ class Mapper(
     )
 
     private fun determineProperties(
-        mappingParamName: String,
-        mappingAnnotation: KMapping,
+        mappingParamName: String?,
+        mappings: List<KMap>,
         ksClassDeclaration: KSClassDeclaration
     ): List<Property> {
-        val sourceMappings = mappingAnnotation.mappings.map { it.source }
+        val sourceMappings = mappings.map { it.source }
         val properties = ksClassDeclaration.getAllProperties().toList()
 
         verifyAllPropertiesExist(sourceMappings, properties, ksClassDeclaration)
 
-        val result = mappingAnnotation.mappings.filter { it.source.isEmpty() }.map { annotation ->
+        val result = mappings.filter { it.source.isEmpty() }.map { annotation ->
             Property(
                 mappingParamName = mappingParamName,
                 sourceName = null,
@@ -87,7 +104,7 @@ class Mapper(
 
         return result + properties.map { property ->
 
-            val annotation = mappingAnnotation.mappings.firstOrNull {
+            val annotation = mappings.firstOrNull {
                 property.simpleName.asString() == it.source
             }
 
@@ -124,23 +141,32 @@ class Mapper(
             .toList()
     }
 
-    private fun convertValue(source: Property, targetTypeRef: KSTypeReference): String {
+    private fun convertValue(source: Property, targetTypeRef: KSTypeReference, ignorable: Boolean): String? {
         val targetType = targetTypeRef.resolve()
 
         if (source.declaration == null) {
+            if (source.ignore && ignorable) {
+                return null
+            }
             if (source.constant != null) {
                 return source.constant
             }
             if (source.expression != null) {
-                return source.expression
+                if (source.mappingParamName != null) {
+                    return "${source.mappingParamName}.let { ${source.expression} }"
+                } else {
+                    return "let { ${source.expression} }"
+                }
             }
             throw IllegalStateException("Could not convert value $source")
         } else {
             val sourceType = source.declaration.type.resolve()
 
+            val paramName = source.mappingParamName?.let { "$it." } ?: ""
+
             return TypeConverterRegistry
                 .firstOrNull { it.matches(sourceType, targetType) }
-                ?.convert(source.mappingParamName + "." + source.sourceName!!, sourceType, targetType)
+                ?.convert(paramName + source.sourceName!!, sourceType, targetType)
                 ?: throw NoSuchElementException("Could not find converter for $sourceType -> $targetType")
         }
     }
@@ -207,9 +233,9 @@ class Mapper(
 
     private fun KSFunctionDeclaration.isEmptyConstructor() = this.parameters.isEmpty()
 
-    fun rules(mappingAnnotation: KMapping, paramName: String, source: KSClassDeclaration, target: KSClassDeclaration): String {
+    fun rules(mappings: List<KMap>, paramName: String?, source: KSClassDeclaration, target: KSClassDeclaration): String {
 
-        val sourceProperties = determineProperties(paramName, mappingAnnotation, source).toList()
+        val sourceProperties = determineProperties(paramName, mappings, source).toList()
 
         var constructor = determineConstructor(target)
         val targetProperties = if (constructor?.isEmptyConstructor() == true) {
@@ -242,11 +268,10 @@ class Mapper(
             }
         }
 
-        return tryConvert(paramName, sourceProperties, constructor, targetProperties)
+        return tryConvert(sourceProperties, constructor, targetProperties)
     }
 
     private fun tryConvert(
-        paramName: String,
         sourceProperties: List<Property>,
         constructor: KSFunctionDeclaration,
         targetProperties: List<TargetPropertyOrParam>
@@ -254,42 +279,6 @@ class Mapper(
         if (constructor.isEmptyConstructor()) {
             return """
 val gen = ${constructor.parentDeclaration!!.simpleName.asString()}()
-${ // @formatter:off
-                setProperties(
-                    targetProperties = targetProperties.filter { it.isProperty() }.map { it.getProperty() },
-                    sourceProperties = sourceProperties,
-                    targetVarName = "gen",
-                    indentLevel = 0
-                )
-            }
-return gen
-            """.trimIndent()
-            // @formatter:on
-        } else {
-            if (!containsAdditional(targetProperties, constructor)) {
-                return """
-return ${constructor.parentDeclaration!!.simpleName.asString()}(
-${ // @formatter:off
-                    callConstructor(
-                        constructor = constructor,
-                        sourceProperties = sourceProperties,
-                        indentLevel = 4
-                    )
-                }
-)
-                """.trimIndent()
-                // @formatter:on
-            } else {
-                return """
-val gen = ${constructor.parentDeclaration!!.simpleName.asString()}(
-${ // @formatter:off
-                    callConstructor(
-                        constructor = constructor,
-                        sourceProperties = sourceProperties,
-                        indentLevel = 2
-                    )
-                }
-)
 ${ // @formatter:off
                     setProperties(
                         targetProperties = targetProperties.filter { it.isProperty() }.map { it.getProperty() },
@@ -299,8 +288,44 @@ ${ // @formatter:off
                     )
                 }
 return gen
-                """.trimIndent()
+            """.trimIndent()
                 // @formatter:on
+        } else {
+            if (!containsAdditional(targetProperties, constructor)) {
+                return """
+return ${constructor.parentDeclaration!!.simpleName.asString()}(
+${ // @formatter:off
+                        callConstructor(
+                            constructor = constructor,
+                            sourceProperties = sourceProperties,
+                            indentLevel = 4
+                        )
+                    }
+)
+                """.trimIndent()
+                    // @formatter:on
+            } else {
+                return """
+val gen = ${constructor.parentDeclaration!!.simpleName.asString()}(
+${ // @formatter:off
+                        callConstructor(
+                            constructor = constructor,
+                            sourceProperties = sourceProperties,
+                            indentLevel = 2
+                        )
+                    }
+)
+${ // @formatter:off
+                        setProperties(
+                            targetProperties = targetProperties.filter { it.isProperty() }.map { it.getProperty() },
+                            sourceProperties = sourceProperties,
+                            targetVarName = "gen",
+                            indentLevel = 0
+                        )
+                    }
+return gen
+                """.trimIndent()
+                    // @formatter:on
             }
         }
     }
@@ -324,15 +349,20 @@ return gen
         targetVarName: String,
         indentLevel: Int
     ): String {
-        return targetProperties.joinToString("\n") { targetProperty ->
+        return targetProperties.mapNotNull { targetProperty ->
             val sourceProperty = determineSourceProperty(sourceProperties, targetProperty)
             val convertedValue = convertValue(
                 source = sourceProperty,
-                targetTypeRef = targetProperty.type
+                targetTypeRef = targetProperty.type,
+                ignorable = true
             )
-            (1..indentLevel).joinToString("") { " " } +
-                    "$targetVarName.${sourceProperty.targetName} = $convertedValue"
-        }
+            if (convertedValue != null) {
+                (1..indentLevel).joinToString("") { " " } +
+                        "$targetVarName.${sourceProperty.targetName} = $convertedValue"
+            } else {
+                null
+            }
+        }.joinToString("\n")
     }
 
     private fun verifyMandatoryPropertiesOrParamsExisting(
@@ -353,7 +383,7 @@ return gen
         }
     }
 
-    class TargetPropertyOrParam private constructor(
+    data class TargetPropertyOrParam private constructor(
         private val propertyDeclaration: KSPropertyDeclaration? = null,
         private val valueParameter: KSValueParameter? = null
     ) {
@@ -371,4 +401,5 @@ return gen
             return valueParameter!!
         }
     }
+
 }

@@ -1,14 +1,18 @@
-package io.mcarle.lib.kmapper.processor.converter
+package io.mcarle.lib.kmapper.processor.converter.annotated
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.lib.kmapper.annotation.KMappers
+import io.mcarle.lib.kmapper.processor.converter.ConverterITest
+import io.mcarle.lib.kmapper.processor.converter.StringToIntConverter
+import io.mcarle.lib.kmapper.processor.converter.generatedSourceFor
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
+import kotlin.reflect.full.memberExtensionFunctions
 
-class KMapperConverterITest : ConverterITest() {
+class KMapToConverterITest : ConverterMapToITest() {
 
 
     @Test
@@ -24,51 +28,41 @@ class KMapperConverterITest : ConverterITest() {
         name = "Additional.kt",
         contents =
         """
-import io.mcarle.lib.kmapper.annotation.KMapper
+import io.mcarle.lib.kmapper.annotation.KMapTo
 import io.mcarle.lib.kmapper.annotation.KMapping
 
+@KMapTo(Blub::class)
 class Bla(
     val test: String  
 )
 class Blub(
     val test: Int  
 )
-
-@KMapper
-interface FooFooMapper {
-    @KMapping
-    fun something(somewhere: Bla): Blub
-}
         """.trimIndent()
     )
 
     override fun loadAdditionalCode(compilation: KotlinCompilation): String {
-        return compilation.generatedSourceFor("FooFooMapperImpl.kt")
+        return compilation.generatedSourceFor("BlaKMapExtensions.kt")
     }
 
     override fun verifyMapper(
         sourceTypeName: String,
         targetTypeName: String,
-        mapperInstance: Any,
-        mapperFunction: KCallable<*>,
+        mapperKClass: KClass<*>,
         sourceKClass: KClass<*>,
         targetKClass: KClass<*>,
         classLoader: ClassLoader
     ) {
         KMappers.classLoader += classLoader
-//        TypeConverterRegistry.filterIsInstance<KMapperConverter>().forEach {
-//            val converterInterfaceClass = classLoader.loadClass(it.mapKSClassDeclaration.qualifiedName?.asString())
-//            val converterImplClass = classLoader.loadClass(it.mapKSClassDeclaration.qualifiedName?.asString() + "Impl")
-//            KMappers.add(converterInterfaceClass.kotlin, converterImplClass.kotlin.objectInstance!!)
-//        }
-
 
         val sourceInstance = (sourceKClass.constructors.first().parameters.first().type.classifier as KClass<*>)
             .constructors.first().call("123").let {
                 sourceKClass.constructors.first().call(it)
             }
 
-        val targetInstance = mapperFunction.call(mapperInstance, sourceInstance)
+//        val targetInstance = sourceKClass.memberExtensionFunctions.first { it.name == "mapToYyy" }.call(sourceInstance)
+        val method = mapperKClass.java.methods.first { it.name == "mapToYyy" } // ugly workaround to access generated member function
+        val targetInstance = method.invoke(null, sourceInstance)
 
         assertDoesNotThrow {
             targetKClass.members.first { it.name == "test" }.call(targetInstance)

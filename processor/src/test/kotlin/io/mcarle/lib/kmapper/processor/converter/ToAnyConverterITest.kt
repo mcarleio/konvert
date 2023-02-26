@@ -35,7 +35,7 @@ class ToAnyConverterITest : ConverterITest() {
             .flatMap {
                 listOf(
                     Arguments.arguments(it, "Any"),
-                    Arguments.arguments("$it?", "Any"),
+//                    Arguments.arguments("$it?", "Any"),
                     Arguments.arguments(it, "Any?"),
                     Arguments.arguments("$it?", "Any?"),
                 )

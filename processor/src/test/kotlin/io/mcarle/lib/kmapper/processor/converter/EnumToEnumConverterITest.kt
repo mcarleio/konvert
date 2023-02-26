@@ -2,6 +2,7 @@ package io.mcarle.lib.kmapper.processor.converter
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
+import io.mcarle.lib.kmapper.processor.TypeConverter
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
