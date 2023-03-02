@@ -1,13 +1,15 @@
 package io.mcarle.lib.kmapper.example
 
-import io.mcarle.lib.kmapper.annotation.KMap
-import io.mcarle.lib.kmapper.annotation.KMapTo
+import io.mcarle.lib.kmapper.api.annotation.KMap
+import io.mcarle.lib.kmapper.api.annotation.KMapTo
+import io.mcarle.lib.kmapper.converter.StringToIntConverter
 
 @KMapTo(
     AddressDto::class,
     mappings = [
         KMap(source = "street", target = "streetName"),
-        KMap(source = "zip", target = "zipCode")
+        KMap(source = "zip", target = "zipCode"),
+        KMap(source = "streetNumber", target = "streetNumber", enable = [StringToIntConverter::class]),
     ],
     priority = 1
 )

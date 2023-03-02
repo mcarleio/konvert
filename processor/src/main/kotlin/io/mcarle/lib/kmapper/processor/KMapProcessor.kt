@@ -8,9 +8,10 @@ import com.google.devtools.ksp.symbol.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
-import io.mcarle.lib.kmapper.annotation.KMapTo
-import io.mcarle.lib.kmapper.annotation.KMapper
-import io.mcarle.lib.kmapper.annotation.KMapping
+import io.mcarle.lib.kmapper.api.annotation.KMapTo
+import io.mcarle.lib.kmapper.api.annotation.KMapper
+import io.mcarle.lib.kmapper.api.annotation.KMapping
+import io.mcarle.lib.kmapper.processor.api.TypeConverterRegistry
 import io.mcarle.lib.kmapper.processor.config.CliOptions
 import io.mcarle.lib.kmapper.processor.converter.annotated.*
 
@@ -102,14 +103,10 @@ class KMapProcessor(
     fun collectTypeConvertersForKMapTo(resolver: Resolver): List<KMapToConverter> {
         return resolver.getSymbolsWithAnnotation(KMapTo::class.qualifiedName!!)
             .flatMap { ksAnnotated ->
-                var companion = false
                 val ksClassDeclaration = ksAnnotated as? KSClassDeclaration
-                if (ksClassDeclaration != null && ksClassDeclaration.isCompanionObject) {
-                    companion = true
-                } else if (ksClassDeclaration == null || ksClassDeclaration.classKind != ClassKind.CLASS) {
+                if (ksClassDeclaration == null || ksClassDeclaration.classKind != ClassKind.CLASS) {
                     throw IllegalStateException("KMap can only target classes and companion objects")
                 }
-
 
                 val kspMapToAnnotation = ksClassDeclaration.annotations.first {
                     (it.annotationType.toTypeName() as? ClassName)?.canonicalName == KMapTo::class.qualifiedName

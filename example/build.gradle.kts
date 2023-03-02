@@ -6,9 +6,15 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("org.jetbrains:annotations:23.1.0")
-    implementation(project(":annotation"))
+    implementation(project(":api"))
+    implementation(project(":processor-api"))
+
+    // only needed in case we enable specific converter
+    compileOnly(project(":converter"))
+
+    // KSP to generate mapping code
     ksp(project(":processor"))
+    ksp(project(":converter"))
 }
 
 repositories {

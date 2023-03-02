@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     id("java-library")
     kotlin("jvm") version "1.7.22"
@@ -9,8 +7,8 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation(project(":annotation"))
-    implementation("org.jetbrains:annotations:23.1.0")
+    implementation(project(":api"))
+    implementation(project(":processor-api"))
 
     implementation("com.google.devtools.ksp:symbol-processing-api:1.7.22-1.0.8")
     testImplementation("com.google.devtools.ksp:symbol-processing:1.7.22-1.0.8")
@@ -28,12 +26,12 @@ dependencies {
     ksp("dev.zacsweers.autoservice:auto-service-ksp:1.0.0")
 
 
-    testImplementation(project(":annotation"))
+    testImplementation(project(":api"))
+    testImplementation(project(":converter"))
     testImplementation(kotlin("test"))
     testImplementation(kotlin("reflect"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
-    testImplementation("org.reflections:reflections:0.10.2")
     testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.9")
     testImplementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:1.4.9")
 }
@@ -47,18 +45,8 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xopt-in=com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview"
-}
-
 tasks.test {
     useJUnitPlatform()
-    maxParallelForks = 1.coerceAtLeast(Runtime.getRuntime().availableProcessors() / 2)
-}
-
-ksp {
-    arg("autoserviceKsp.verify", "true")
-    arg("autoserviceKsp.verbose", "true")
 }
 
 publishing {

@@ -2,11 +2,10 @@ package io.mcarle.lib.kmapper.processor.converter.annotated
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
-import io.mcarle.lib.kmapper.annotation.KMap
-import io.mcarle.lib.kmapper.annotation.KMapTo
-import io.mcarle.lib.kmapper.annotation.Priority
-import io.mcarle.lib.kmapper.processor.AbstractTypeConverter
-import io.mcarle.lib.kmapper.processor.isNullable
+import io.mcarle.lib.kmapper.api.annotation.KMapTo
+import io.mcarle.lib.kmapper.processor.api.AbstractTypeConverter
+import io.mcarle.lib.kmapper.processor.api.Priority
+import io.mcarle.lib.kmapper.processor.api.isNullable
 
 class KMapToConverter(
     override val annotation: KMapTo,
@@ -35,4 +34,6 @@ class KMapToConverter(
         val nc = if (source.isNullable()) "?" else ""
         return "$fieldName$nc.$mapFunctionName()"
     }
+
+    override val enabledByDefault: Boolean = true
 }

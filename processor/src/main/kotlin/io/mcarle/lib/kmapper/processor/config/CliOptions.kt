@@ -1,6 +1,8 @@
 package io.mcarle.lib.kmapper.processor.config
 
 import com.google.devtools.ksp.processing.Resolver
+import io.mcarle.lib.kmapper.processor.api.Config
+import io.mcarle.lib.kmapper.processor.api.ConverterConfig
 
 data class CliOptions(
     override val enforceNotNull: Boolean?

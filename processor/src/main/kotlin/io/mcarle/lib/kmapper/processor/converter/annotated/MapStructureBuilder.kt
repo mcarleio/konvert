@@ -6,10 +6,12 @@ import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
-import io.mcarle.lib.kmapper.annotation.KMap
-import io.mcarle.lib.kmapper.processor.TypeConverterRegistry
-import io.mcarle.lib.kmapper.processor.isNullable
+import io.mcarle.lib.kmapper.api.annotation.KMap
+import io.mcarle.lib.kmapper.processor.api.TypeConverter
+import io.mcarle.lib.kmapper.processor.api.TypeConverterRegistry
+import io.mcarle.lib.kmapper.processor.api.isNullable
 import org.paukov.combinatorics3.Generator
+import kotlin.reflect.KClass
 
 class MapStructureBuilder(
     private val resolver: Resolver,
@@ -77,6 +79,7 @@ class MapStructureBuilder(
         val constant: String?,
         val expression: String?,
         val ignore: Boolean,
+        val enableConverters: List<KClass<out TypeConverter>>,
         val declaration: KSPropertyDeclaration?
     )
 
@@ -98,6 +101,7 @@ class MapStructureBuilder(
                 constant = annotation.constant.takeIf { it.isNotEmpty() },
                 expression = annotation.expression.takeIf { it.isNotEmpty() },
                 ignore = annotation.ignore,
+                enableConverters = annotation.enable.toList(),
                 declaration = null
             )
         }
@@ -115,6 +119,7 @@ class MapStructureBuilder(
                 constant = annotation?.constant?.takeIf { it.isNotEmpty() },
                 expression = annotation?.expression?.takeIf { it.isNotEmpty() },
                 ignore = annotation?.ignore == true,
+                enableConverters = annotation?.enable?.toList() ?: emptyList(),
                 declaration = property
             )
         }
@@ -164,10 +169,12 @@ class MapStructureBuilder(
 
             val paramName = source.mappingParamName?.let { "$it." } ?: ""
 
-            return TypeConverterRegistry
-                .firstOrNull { it.matches(sourceType, targetType) }
-                ?.convert(paramName + source.sourceName!!, sourceType, targetType)
-                ?: throw NoSuchElementException("Could not find converter for $sourceType -> $targetType")
+            return TypeConverterRegistry.withAdditionallyEnabledConverters(source.enableConverters) {
+                firstOrNull { it.matches(sourceType, targetType) }
+                    ?.convert(paramName + source.sourceName!!, sourceType, targetType)
+                    ?: throw NoSuchElementException("Could not find converter for ${paramName + source.sourceName} -> ${source.targetName}: $sourceType -> $targetType")
+            }
+
         }
     }
 

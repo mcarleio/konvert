@@ -1,7 +1,7 @@
 package io.mcarle.lib.kmapper.example
 
-import io.mcarle.lib.kmapper.annotation.KMap
-import io.mcarle.lib.kmapper.annotation.KMapTo
+import io.mcarle.lib.kmapper.api.annotation.KMap
+import io.mcarle.lib.kmapper.api.annotation.KMapTo
 
 @KMapTo(
     LastName::class, mappings = [
@@ -39,13 +39,15 @@ enum class Brand {
 class Car2
 data class DefectCar(val repairCosts: Double?)
 
-@KMapTo(DefectCar2::class, mappings=[
-    KMap(target="price", ignore=true, constant = "123.3"),
-    KMap(target="price", ignore=true),
-    KMap(target="price", expression = "asd"),
-    KMap(target="price", constant = "asd"),
-    KMap(target="price", constant = "asd", expression = "ccc"),
-])
+@KMapTo(
+    DefectCar2::class, mappings = [
+        KMap(target = "price", ignore = true, constant = "123.3"),
+        KMap(target = "price", ignore = true),
+        KMap(target = "price", expression = "asd"),
+        KMap(target = "price", constant = "asd"),
+        KMap(target = "price", constant = "asd", expression = "ccc"),
+    ]
+)
 data class Car3(val price: Double)
 class DefectCar2 {
     var price: Double? = null

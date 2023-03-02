@@ -2,14 +2,8 @@ package io.mcarle.lib.kmapper.processor
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.Nullability
-import io.mcarle.lib.kmapper.annotation.KMap
-import io.mcarle.lib.kmapper.annotation.validate
-
-fun KSType.isNullable(): Boolean {
-    return this.isMarkedNullable || this.nullability == Nullability.NULLABLE || this.nullability == Nullability.PLATFORM
-}
+import io.mcarle.lib.kmapper.api.annotation.KMap
+import io.mcarle.lib.kmapper.api.annotation.validate
 
 fun Array<KMap>.validated(reference: KSNode, logger: KSPLogger) = filter { annotation ->
     var filterOutAnnotation = false

@@ -1,7 +1,7 @@
 package io.mcarle.lib.kmapper.example
 
-import io.mcarle.lib.kmapper.annotation.KMap
-import io.mcarle.lib.kmapper.annotation.KMapTo
+import io.mcarle.lib.kmapper.api.annotation.KMap
+import io.mcarle.lib.kmapper.api.annotation.KMapTo
 
 @KMapTo(
     Address::class,

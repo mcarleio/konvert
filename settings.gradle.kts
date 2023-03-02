@@ -1,4 +1,3 @@
-
 // ideas for alternative names:
 // KMap
 // KMapping
@@ -14,6 +13,8 @@
 // KopyKat -- already taken: https://kopyk.at/
 
 rootProject.name = "kmapper"
-include("annotation")
+include("api")
 include("processor")
 include("example")
+include("converter")
+include("processor-api")

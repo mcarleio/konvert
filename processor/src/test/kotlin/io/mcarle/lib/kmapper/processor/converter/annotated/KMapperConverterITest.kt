@@ -1,82 +1,99 @@
 package io.mcarle.lib.kmapper.processor.converter.annotated
 
-import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import io.mcarle.lib.kmapper.annotation.KMappers
-import io.mcarle.lib.kmapper.processor.converter.ConverterITest
-import io.mcarle.lib.kmapper.processor.converter.StringToIntConverter
-import io.mcarle.lib.kmapper.processor.converter.generatedSourceFor
+import io.mcarle.lib.kmapper.converter.SameTypeConverter
+import io.mcarle.lib.kmapper.processor.api.DEFAULT_KMAPPER_PRIORITY
+import io.mcarle.lib.kmapper.processor.api.TypeConverterRegistry
+import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
-import kotlin.reflect.KCallable
-import kotlin.reflect.KClass
+import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+
 
 class KMapperConverterITest : ConverterITest() {
 
-
     @Test
-    fun converterTest() {
-        super.converterTest(
-            converter = StringToIntConverter(),
-            sourceTypeName = "Bla",
-            targetTypeName = "Blub"
-        )
-    }
+    fun converter() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.lib.kmapper.api.annotation.KMapper
+import io.mcarle.lib.kmapper.api.annotation.KMapping
+import io.mcarle.lib.kmapper.api.annotation.KMap
 
-    override fun generateAdditionalCode(): SourceFile = SourceFile.kotlin(
-        name = "Additional.kt",
-        contents =
-        """
-import io.mcarle.lib.kmapper.annotation.KMapper
-import io.mcarle.lib.kmapper.annotation.KMapping
-
-class Bla(
-    val test: String  
+class SourceClass(
+    val sourceProperty: String
 )
-class Blub(
-    val test: Int  
+class TargetClass(
+    val targetProperty: String
 )
 
 @KMapper
-interface FooFooMapper {
+interface Mapper {
+    @KMapping(mappings = [KMap(source="sourceProperty",target="targetProperty")])
+    fun toTarget(source: SourceClass): TargetClass
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperImpl.kt")
+        println(mapperCode)
+
+        val converter = TypeConverterRegistry.firstIsInstanceOrNull<KMapperConverter>()
+        assertNotNull(converter, "No KMapperConverter registered")
+        assertEquals("toTarget", converter.mapFunctionName)
+        assertEquals("source", converter.paramName)
+        assertEquals("SourceClass", converter.sourceClassDeclaration.simpleName.asString())
+        assertEquals("TargetClass", converter.targetClassDeclaration.simpleName.asString())
+        assertEquals("Mapper", converter.mapKSClassDeclaration.simpleName.asString())
+        assertEquals(true, converter.enabledByDefault)
+        assertEquals(DEFAULT_KMAPPER_PRIORITY, converter.priority)
+    }
+
+    @Test
+    fun useOtherMapper() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.lib.kmapper.api.annotation.KMapper
+import io.mcarle.lib.kmapper.api.annotation.KMapping
+import io.mcarle.lib.kmapper.api.annotation.KMap
+
+class SourceClass(
+    val sourceProperty: SourceProperty
+)
+class TargetClass(
+    val targetProperty: TargetProperty
+)
+
+@KMapper
+interface Mapper {
+    @KMapping(mappings = [KMap(source="sourceProperty",target="targetProperty")])
+    fun toTarget(source: SourceClass): TargetClass
+}
+
+data class SourceProperty(val value: String)
+data class TargetProperty(val value: String)
+
+@KMapper
+interface OtherMapper {
     @KMapping
-    fun something(somewhere: Bla): Blub
+    fun toTarget(source: SourceProperty): TargetProperty
 }
-        """.trimIndent()
-    )
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperImpl.kt")
+        println(mapperCode)
 
-    override fun loadAdditionalCode(compilation: KotlinCompilation): String {
-        return compilation.generatedSourceFor("FooFooMapperImpl.kt")
-    }
-
-    override fun verifyMapper(
-        sourceTypeName: String,
-        targetTypeName: String,
-        mapperInstance: Any,
-        mapperFunction: KCallable<*>,
-        sourceKClass: KClass<*>,
-        targetKClass: KClass<*>,
-        classLoader: ClassLoader
-    ) {
-        KMappers.classLoader += classLoader
-//        TypeConverterRegistry.filterIsInstance<KMapperConverter>().forEach {
-//            val converterInterfaceClass = classLoader.loadClass(it.mapKSClassDeclaration.qualifiedName?.asString())
-//            val converterImplClass = classLoader.loadClass(it.mapKSClassDeclaration.qualifiedName?.asString() + "Impl")
-//            KMappers.add(converterInterfaceClass.kotlin, converterImplClass.kotlin.objectInstance!!)
-//        }
-
-
-        val sourceInstance = (sourceKClass.constructors.first().parameters.first().type.classifier as KClass<*>)
-            .constructors.first().call("123").let {
-                sourceKClass.constructors.first().call(it)
-            }
-
-        val targetInstance = mapperFunction.call(mapperInstance, sourceInstance)
-
-        assertDoesNotThrow {
-            targetKClass.members.first { it.name == "test" }.call(targetInstance)
-        }
+        assertContains(mapperCode, "KMappers.get<OtherMapper>().toTarget(")
     }
 
 }
-

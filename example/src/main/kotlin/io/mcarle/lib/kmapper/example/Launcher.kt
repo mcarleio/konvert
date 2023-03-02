@@ -1,6 +1,6 @@
 package io.mcarle.lib.kmapper.example
 
-import io.mcarle.lib.kmapper.annotation.KMappers
+import io.mcarle.lib.kmapper.api.KMappers
 
 fun main() {
     val mapper = KMappers.get<Mapper>()
