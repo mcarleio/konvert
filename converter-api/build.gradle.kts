@@ -23,7 +23,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             groupId = "io.mcarle.lib"
-            artifactId = "kmapper-processor-api"
+            artifactId = "kmapper-converter-api"
             version = "1.0"
 
             from(components["kotlin"])

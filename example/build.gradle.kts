@@ -7,7 +7,7 @@ plugins {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(project(":api"))
-    implementation(project(":processor-api"))
+    implementation(project(":converter-api"))
 
     // only needed in case we enable specific converter
     compileOnly(project(":converter"))

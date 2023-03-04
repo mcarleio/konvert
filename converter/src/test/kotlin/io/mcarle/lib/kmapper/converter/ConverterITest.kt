@@ -2,8 +2,8 @@ package io.mcarle.lib.kmapper.converter
 
 import com.tschuchort.compiletesting.*
 import io.mcarle.lib.kmapper.processor.KMapProcessorProvider
-import io.mcarle.lib.kmapper.processor.api.TypeConverter
-import io.mcarle.lib.kmapper.processor.api.TypeConverterRegistry
+import io.mcarle.lib.kmapper.converter.api.TypeConverter
+import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.io.TempDir
 import java.io.File

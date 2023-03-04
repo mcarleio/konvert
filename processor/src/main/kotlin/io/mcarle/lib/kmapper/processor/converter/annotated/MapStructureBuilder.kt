@@ -7,9 +7,9 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import io.mcarle.lib.kmapper.api.annotation.KMap
-import io.mcarle.lib.kmapper.processor.api.TypeConverter
-import io.mcarle.lib.kmapper.processor.api.TypeConverterRegistry
-import io.mcarle.lib.kmapper.processor.api.isNullable
+import io.mcarle.lib.kmapper.converter.api.TypeConverter
+import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
+import io.mcarle.lib.kmapper.converter.api.isNullable
 import org.paukov.combinatorics3.Generator
 import kotlin.reflect.KClass
 

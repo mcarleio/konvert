@@ -3,9 +3,10 @@ package io.mcarle.lib.kmapper.processor.converter.annotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import io.mcarle.lib.kmapper.api.annotation.KMapTo
-import io.mcarle.lib.kmapper.processor.api.AbstractTypeConverter
-import io.mcarle.lib.kmapper.processor.api.Priority
-import io.mcarle.lib.kmapper.processor.api.isNullable
+import io.mcarle.lib.kmapper.converter.api.ConverterConfig
+import io.mcarle.lib.kmapper.converter.api.Priority
+import io.mcarle.lib.kmapper.converter.api.TypeConverter
+import io.mcarle.lib.kmapper.converter.api.isNullable
 
 class KMapToConverter(
     override val annotation: KMapTo,
@@ -13,12 +14,17 @@ class KMapToConverter(
     val targetClassDeclaration: KSClassDeclaration,
     val mapKSClassDeclaration: KSClassDeclaration,
     val mapFunctionName: String,
-) : AbstractTypeConverter(), AnnotatedConverter<KMapTo> {
-
-    override val priority: Priority = annotation.priority
+) : TypeConverter, AnnotatedConverter<KMapTo> {
 
     private val sourceType: KSType = sourceClassDeclaration.asStarProjectedType()
     private val targetType: KSType = targetClassDeclaration.asStarProjectedType()
+
+    override val enabledByDefault: Boolean = true
+    override val priority: Priority = annotation.priority
+
+    override fun init(config: ConverterConfig) {
+        // Nothing to initialize
+    }
 
     override fun matches(source: KSType, target: KSType): Boolean {
         return sourceType in setOf(
@@ -35,5 +41,4 @@ class KMapToConverter(
         return "$fieldName$nc.$mapFunctionName()"
     }
 
-    override val enabledByDefault: Boolean = true
 }

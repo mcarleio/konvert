@@ -8,7 +8,7 @@ plugins {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(project(":api"))
-    implementation(project(":processor-api"))
+    implementation(project(":converter-api"))
 
     implementation("com.google.devtools.ksp:symbol-processing-api:1.7.22-1.0.8")
     testImplementation("com.google.devtools.ksp:symbol-processing:1.7.22-1.0.8")

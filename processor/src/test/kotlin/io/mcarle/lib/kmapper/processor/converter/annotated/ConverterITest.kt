@@ -5,8 +5,8 @@ import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.kspWithCompilation
 import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.mcarle.lib.kmapper.processor.KMapProcessorProvider
-import io.mcarle.lib.kmapper.processor.api.TypeConverter
-import io.mcarle.lib.kmapper.processor.api.TypeConverterRegistry
+import io.mcarle.lib.kmapper.converter.api.TypeConverter
+import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.io.TempDir
 import java.io.File

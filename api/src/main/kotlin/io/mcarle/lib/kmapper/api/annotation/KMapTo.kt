@@ -1,7 +1,7 @@
 package io.mcarle.lib.kmapper.api.annotation
 
-import io.mcarle.lib.kmapper.processor.api.DEFAULT_KMAPTO_PRIORITY
-import io.mcarle.lib.kmapper.processor.api.Priority
+import io.mcarle.lib.kmapper.converter.api.DEFAULT_KMAPTO_PRIORITY
+import io.mcarle.lib.kmapper.converter.api.Priority
 import kotlin.reflect.KClass
 
 @Retention(AnnotationRetention.SOURCE)

@@ -1,6 +1,6 @@
 package io.mcarle.lib.kmapper.api.annotation
 
-import io.mcarle.lib.kmapper.processor.api.TypeConverter
+import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import kotlin.reflect.KClass
 
 /**
@@ -14,8 +14,14 @@ import kotlin.reflect.KClass
  */
 @Retention(AnnotationRetention.SOURCE)
 annotation class KMap(
-    val source: String = "",
+    /**
+     * The property name of the target class
+     */
     val target: String,
+    /**
+     * The source property name of the source class.
+     */
+    val source: String = "",
     /**
      * The value provided here will be placed __as is__ into the generated code
      * (hint: if you want a string, you have to use escaped quotes!)
@@ -76,14 +82,25 @@ annotation class KMap(
      *    ```
      */
     val ignore: Boolean = false,
-
+    /**
+     * Some TypeConverters are not enabled by default (see [TypeConverter.enabledByDefault]).
+     * With this setting, you can enable them for this specific mapping.
+     * ```kotlin
+     * @KMapTo(PersonDto::class, mappings=[
+     *      KMap(target="age", enable=[StringToIntConverter::class])
+     * ])
+     * class Person(val age: String)
+     * class PersonDto(val age: Int)
+     * ```
+     */
     val enable: Array<KClass<out TypeConverter>> = []
+
 )
 
 /**
- * Throws exceptions when no params (besides [KMap.target]) are defined or more than one param (besides [KMap.target]) is defined
+ * Throws exceptions when no params (beside [KMap.target]) are defined or more than one param (beside [KMap.target]) is defined.
  */
-fun KMap.validate(logger: ((String, Boolean) -> Unit)? = null) {
+fun KMap.validate() {
     fun noParam() = !ignore && source.isBlank() && constant.isBlank() && expression.isBlank()
     fun moreThanOneParam(): List<String>? {
         val result = mutableListOf<String>()
@@ -91,6 +108,7 @@ fun KMap.validate(logger: ((String, Boolean) -> Unit)? = null) {
         if (source.isNotBlank()) result += KMap::source.name
         if (constant.isNotBlank()) result += KMap::constant.name
         if (expression.isNotBlank()) result += KMap::expression.name
+        if (enable.isNotEmpty()) result += KMap::enable.name
 
         return if (result.size > 1) {
             result
@@ -99,10 +117,11 @@ fun KMap.validate(logger: ((String, Boolean) -> Unit)? = null) {
         }
     }
 
-    if (noParam()) {
-        logger?.invoke("Missing parameter for target=$target", true)
-    }
-    moreThanOneParam()?.let {
-        logger?.invoke("Only one parameter of $it allowed [target=$target]", false)
-    }
+    if (noParam()) throw NoParamDefinedException(target)
+    moreThanOneParam()?.let { throw MoreThanOneParamDefinedException(target, it) }
 }
+
+class NoParamDefinedException(target: String) : RuntimeException("Missing parameter for target=$target")
+
+class MoreThanOneParamDefinedException(target: String, params: List<String>) :
+    RuntimeException("More than one parameter for target=$target defined: $params")

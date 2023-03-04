@@ -1,6 +1,6 @@
 package io.mcarle.lib.kmapper.processor.converter.annotated
 
-import io.mcarle.lib.kmapper.processor.api.TypeConverter
+import io.mcarle.lib.kmapper.converter.api.TypeConverter
 
 sealed interface AnnotatedConverter<A : Annotation> : TypeConverter {
     val annotation: A

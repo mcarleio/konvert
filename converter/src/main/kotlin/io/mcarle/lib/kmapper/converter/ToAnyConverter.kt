@@ -2,8 +2,7 @@ package io.mcarle.lib.kmapper.converter
 
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.symbol.KSType
-import io.mcarle.lib.kmapper.processor.api.AbstractTypeConverter
-import io.mcarle.lib.kmapper.processor.api.TypeConverter
+import io.mcarle.lib.kmapper.converter.api.TypeConverter
 
 @AutoService(TypeConverter::class)
 class ToAnyConverter : AbstractTypeConverter() {

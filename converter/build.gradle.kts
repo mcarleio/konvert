@@ -9,7 +9,7 @@ plugins {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     api(project(":api"))
-    compileOnly(project(":processor-api"))
+    compileOnly(project(":converter-api"))
     compileOnly("com.google.devtools.ksp:symbol-processing-api:1.7.22-1.0.8")
 
     // auto service
@@ -21,7 +21,7 @@ dependencies {
     testImplementation("com.google.devtools.ksp:symbol-processing:1.7.22-1.0.8")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.7.22")
     testImplementation(project(":processor"))
-    testImplementation(project(":processor-api"))
+    testImplementation(project(":converter-api"))
     testImplementation(kotlin("test"))
     testImplementation(kotlin("reflect"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")

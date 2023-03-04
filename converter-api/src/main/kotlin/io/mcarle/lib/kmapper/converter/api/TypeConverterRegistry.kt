@@ -1,4 +1,4 @@
-package io.mcarle.lib.kmapper.processor.api
+package io.mcarle.lib.kmapper.converter.api
 
 import java.util.*
 import kotlin.reflect.KClass

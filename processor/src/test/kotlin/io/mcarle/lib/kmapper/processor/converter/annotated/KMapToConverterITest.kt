@@ -2,8 +2,8 @@ package io.mcarle.lib.kmapper.processor.converter.annotated
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.lib.kmapper.converter.SameTypeConverter
-import io.mcarle.lib.kmapper.processor.api.DEFAULT_KMAPTO_PRIORITY
-import io.mcarle.lib.kmapper.processor.api.TypeConverterRegistry
+import io.mcarle.lib.kmapper.converter.api.DEFAULT_KMAPTO_PRIORITY
+import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains

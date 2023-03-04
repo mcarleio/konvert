@@ -11,13 +11,14 @@ import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.lib.kmapper.api.annotation.KMapTo
 import io.mcarle.lib.kmapper.api.annotation.KMapper
 import io.mcarle.lib.kmapper.api.annotation.KMapping
-import io.mcarle.lib.kmapper.processor.api.TypeConverterRegistry
-import io.mcarle.lib.kmapper.processor.config.CliOptions
+import io.mcarle.lib.kmapper.converter.api.Options
+import io.mcarle.lib.kmapper.converter.api.ConverterConfig
+import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
 import io.mcarle.lib.kmapper.processor.converter.annotated.*
 
 class KMapProcessor(
     private val codeGenerator: CodeGenerator,
-    private val cliOptions: CliOptions,
+    private val options: Options,
     private val logger: KSPLogger,
 ) : SymbolProcessor {
 
@@ -56,7 +57,7 @@ class KMapProcessor(
             .forEach { (priority, list) ->
                 TypeConverterRegistry.addConverters(priority, list)
             }
-        TypeConverterRegistry.initConverters(cliOptions.toConverterConfig(resolver))
+        TypeConverterRegistry.initConverters(ConverterConfig(resolver, options))
         return typeConverters
     }
 

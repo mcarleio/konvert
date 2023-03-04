@@ -4,7 +4,7 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.mcarle.lib.kmapper.processor.KMapProcessorProvider
-import io.mcarle.lib.kmapper.processor.api.TypeConverterRegistry
+import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File

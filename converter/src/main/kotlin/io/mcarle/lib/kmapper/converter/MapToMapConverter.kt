@@ -3,10 +3,9 @@ package io.mcarle.lib.kmapper.converter
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.*
-import io.mcarle.lib.kmapper.processor.api.AbstractTypeConverter
-import io.mcarle.lib.kmapper.processor.api.TypeConverter
-import io.mcarle.lib.kmapper.processor.api.TypeConverterRegistry
-import io.mcarle.lib.kmapper.processor.api.isNullable
+import io.mcarle.lib.kmapper.converter.api.TypeConverter
+import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
+import io.mcarle.lib.kmapper.converter.api.isNullable
 
 @AutoService(TypeConverter::class)
 class MapToMapConverter : AbstractTypeConverter() {

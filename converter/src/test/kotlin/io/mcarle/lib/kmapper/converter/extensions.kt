@@ -1,7 +1,7 @@
 package io.mcarle.lib.kmapper.converter
 
 import com.tschuchort.compiletesting.KotlinCompilation
-import io.mcarle.lib.kmapper.processor.api.TypeConverter
+import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import org.junit.jupiter.params.provider.Arguments
 import java.io.File
 
