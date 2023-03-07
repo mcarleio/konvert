@@ -10,12 +10,12 @@ import io.mcarle.lib.kmapper.converter.api.Priority
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 
 class KMapperConverter constructor(
-    override val annotation: KMapping,
+    val annotation: KMapping,
     val sourceClassDeclaration: KSClassDeclaration,
     val targetClassDeclaration: KSClassDeclaration,
     val mapKSClassDeclaration: KSClassDeclaration,
     val mapKSFunctionDeclaration: KSFunctionDeclaration,
-) : TypeConverter, AnnotatedConverter<KMapping> {
+) : TypeConverter, AnnotatedConverter {
 
     private val sourceType: KSType = sourceClassDeclaration.asStarProjectedType()
     private val targetType: KSType = targetClassDeclaration.asStarProjectedType()

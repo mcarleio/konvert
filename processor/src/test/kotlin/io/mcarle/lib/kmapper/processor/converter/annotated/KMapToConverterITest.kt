@@ -34,7 +34,7 @@ class TargetClass(
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKMapExtensions.kt")
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKMapToExtensions.kt")
         println(extensionFunctionCode)
 
         val converter = TypeConverterRegistry.firstIsInstanceOrNull<KMapToConverter>()
@@ -42,8 +42,6 @@ class TargetClass(
         assertEquals("mapToTargetClass", converter.mapFunctionName)
         assertEquals("SourceClass", converter.sourceClassDeclaration.simpleName.asString())
         assertEquals("TargetClass", converter.targetClassDeclaration.simpleName.asString())
-        // TODO: remove mapKSClassDeclaration?
-        assertEquals("SourceClass", converter.mapKSClassDeclaration.simpleName.asString())
         assertEquals(true, converter.enabledByDefault)
         assertEquals(DEFAULT_KMAPTO_PRIORITY, converter.priority)
     }
@@ -73,7 +71,7 @@ data class TargetProperty(val value: String)
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKMapExtensions.kt")
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKMapToExtensions.kt")
         println(extensionFunctionCode)
 
         assertContains(extensionFunctionCode, "sourceProperty.mapToTargetProperty()")

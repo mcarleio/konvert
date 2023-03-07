@@ -41,7 +41,7 @@ object KMapperCodeGenerator {
                 .addParameter(converter.paramName, converter.sourceClassDeclaration.asType(emptyList()).toTypeName())
                 .addCode(
                     mapper.rules(
-                        converter.annotation.mappings.validated(converter.mapKSFunctionDeclaration, logger),
+                        converter.annotation.mappings.asIterable().validated(converter.mapKSFunctionDeclaration, logger),
                         converter.paramName,
                         converter.sourceClassDeclaration,
                         converter.targetClassDeclaration

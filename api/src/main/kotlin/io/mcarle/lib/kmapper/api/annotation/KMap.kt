@@ -95,7 +95,9 @@ annotation class KMap(
      */
     val enable: Array<KClass<out TypeConverter>> = []
 
-)
+) {
+    companion object
+}
 
 /**
  * Throws exceptions when no params (beside [KMap.target]) are defined or more than one param (beside [KMap.target]) is defined.

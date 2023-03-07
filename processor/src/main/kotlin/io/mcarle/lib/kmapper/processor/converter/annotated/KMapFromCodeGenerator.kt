@@ -10,7 +10,7 @@ import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
 import io.mcarle.lib.kmapper.processor.validated
 
-object KMapToCodeGenerator {
+object KMapFromCodeGenerator {
 
     val builderCache = mutableMapOf<Pair<String, String>, Pair<FileSpec.Builder, List<KSFile>>>()
 
@@ -18,7 +18,7 @@ object KMapToCodeGenerator {
         builderCache.clear()
     }
 
-    fun generate(converter: KMapToConverter, resolver: Resolver, logger: KSPLogger) {
+    fun generate(converter: KMapFromConverter, resolver: Resolver, logger: KSPLogger) {
         val mapper = MapStructureBuilder(
             resolver = resolver,
             logger = logger
@@ -26,19 +26,20 @@ object KMapToCodeGenerator {
 
         val fileSpecBuilder = findOrBuildFileBuilder(
             builderCache,
-            converter.sourceClassDeclaration.packageName.asString(),
-            converter.sourceClassDeclaration.simpleName.asString(),
-            converter.sourceClassDeclaration.containingFile
+            converter.targetClassDeclaration.packageName.asString(),
+            converter.targetClassDeclaration.simpleName.asString(),
+            converter.targetClassDeclaration.containingFile
         )
 
         fileSpecBuilder.addFunction(
             FunSpec.builder(converter.mapFunctionName)
-                .returns(converter.targetClassDeclaration.asType(emptyList()).toTypeName())
-                .receiver(converter.sourceClassDeclaration.asType(emptyList()).toTypeName())
+                .returns(converter.targetClassDeclaration.asStarProjectedType().toTypeName())
+                .addParameter(converter.paramName, converter.sourceClassDeclaration.asStarProjectedType().toTypeName())
+                .receiver(converter.targetCompanionDeclaration.asStarProjectedType().toTypeName())
                 .addCode(
                     mapper.rules(
                         converter.annotationData.mappings.validated(converter.sourceClassDeclaration, logger),
-                        null,
+                        converter.paramName,
                         converter.sourceClassDeclaration,
                         converter.targetClassDeclaration
                     )
@@ -64,7 +65,7 @@ object KMapToCodeGenerator {
         className: String,
         file: KSFile?
     ): FileSpec.Builder {
-        val identifier = packageName to "${className}KMapToExtensions"
+        val identifier = packageName to "${className}KMapFromExtensions"
         val pair = cache[identifier]
         if (pair == null) {
             cache[identifier] = (FileSpec.builder(

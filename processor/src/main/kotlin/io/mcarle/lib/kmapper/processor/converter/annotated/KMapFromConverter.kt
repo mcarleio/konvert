@@ -3,19 +3,20 @@ package io.mcarle.lib.kmapper.processor.converter.annotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
-import com.squareup.kotlinpoet.ksp.toClassName
 import io.mcarle.lib.kmapper.api.annotation.KMap
-import io.mcarle.lib.kmapper.api.annotation.KMapTo
+import io.mcarle.lib.kmapper.api.annotation.KMapFrom
 import io.mcarle.lib.kmapper.converter.api.ConverterConfig
 import io.mcarle.lib.kmapper.converter.api.Priority
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import io.mcarle.lib.kmapper.converter.api.isNullable
 import io.mcarle.lib.kmapper.processor.from
+import java.util.*
 
-class KMapToConverter(
+class KMapFromConverter(
     val annotationData: AnnotationData,
     val sourceClassDeclaration: KSClassDeclaration,
-    val targetClassDeclaration: KSClassDeclaration
+    val targetClassDeclaration: KSClassDeclaration,
+    val targetCompanionDeclaration: KSClassDeclaration,
 ) : TypeConverter, AnnotatedConverter {
 
     private val sourceType: KSType = sourceClassDeclaration.asStarProjectedType()
@@ -23,7 +24,8 @@ class KMapToConverter(
 
     override val enabledByDefault: Boolean = true
     override val priority: Priority = annotationData.priority
-    val mapFunctionName: String = annotationData.mapFunctionName.ifEmpty { "mapTo${targetClassDeclaration.toClassName().simpleName}" }
+    val mapFunctionName: String = annotationData.mapFunctionName.ifEmpty { "from${sourceClassDeclaration.simpleName.asString()}" }
+    val paramName: String = sourceClassDeclaration.simpleName.asString().replaceFirstChar { it.lowercase(Locale.getDefault()) }
 
     override fun init(config: ConverterConfig) {
         // Nothing to initialize
@@ -40,8 +42,11 @@ class KMapToConverter(
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): String {
-        val nc = if (source.isNullable()) "?" else ""
-        return "$fieldName$nc.$mapFunctionName()"
+        return if (source.isNullable()) {
+            return "$fieldName?.let { ${targetClassDeclaration.qualifiedName?.asString()}.$mapFunctionName($paramName = it) }"
+        } else {
+            "${targetClassDeclaration.qualifiedName?.asString()}.$mapFunctionName($paramName = $fieldName)"
+        }
     }
 
     data class AnnotationData(
@@ -53,14 +58,14 @@ class KMapToConverter(
 
         companion object {
             fun from(annotation: KSAnnotation) = AnnotationData(
-                value = (annotation.arguments.first { it.name?.asString() == KMapTo::value.name }.value as KSType).declaration as KSClassDeclaration,
-                mappings = (annotation.arguments.first { it.name?.asString() == KMapTo::mappings.name }.value as List<*>)
+                value = (annotation.arguments.first { it.name?.asString() == KMapFrom::value.name }.value as KSType).declaration as KSClassDeclaration,
+                mappings = (annotation.arguments.first { it.name?.asString() == KMapFrom::mappings.name }.value as List<*>)
                     .filterIsInstance<KSAnnotation>()
                     .map { KMap.from(it) },
-                mapFunctionName = annotation.arguments.first { it.name?.asString() == KMapTo::mapFunctionName.name }.value as String,
-                priority = annotation.arguments.first { it.name?.asString() == KMapTo::priority.name }.value as Priority,
+                mapFunctionName = annotation.arguments.first { it.name?.asString() == KMapFrom::mapFunctionName.name }.value as String,
+                priority = annotation.arguments.first { it.name?.asString() == KMapFrom::priority.name }.value as Priority,
             )
         }
-
     }
+
 }

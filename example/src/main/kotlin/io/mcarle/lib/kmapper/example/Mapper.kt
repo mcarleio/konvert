@@ -26,8 +26,15 @@ interface Mapper {
     )
     fun toDto(address: Address): AddressDto
 
-    @KMapping(mappings = [KMap(target = "age", expression = "42"), KMap(target = "age", expression = "42", constant = "", ignore = true)])
-    fun fromDto(dto: PersonDto): Person
+//    @KMapping(mappings = [KMap(target = "age", expression = "42"), KMap(target = "age", expression = "42", constant = "", ignore = true)])
+//    fun fromDto(dto: PersonDto): Person
+    fun fromDto(dto: PersonDto): Person = Person(
+    name = dto.name,
+    address =
+    io.mcarle.lib.kmapper.api.KMappers.get<io.mcarle.lib.kmapper.example.Mapper>().fromDto(dto =
+    dto.address),
+    age = dto.let { 42 }
+)
 
     @KMapping(mappings = [KMap(source = "age", target = "ageX", enable = [IntToULongConverter::class])])
     fun toDto(person: Person): PersonDto
