@@ -71,7 +71,7 @@ interface FooMapper {
 
         val compilation = compile(code)
 
-        val generatedMapperCode = compilation.generatedSourceFor("FooMapperImpl.kt")
+        val generatedMapperCode = compilation.generatedSourceFor("FooMapperKMap.kt")
         println(generatedMapperCode)
 
         val compilationResult = checkIfGeneratedMapperCompiles(compilation, generatedMapperCode)
@@ -90,7 +90,7 @@ interface FooMapper {
 
     private fun checkIfGeneratedMapperCompiles(compilation: KotlinCompilation, code: String): KotlinCompilation.Result {
         compilation.symbolProcessorProviders = emptyList()
-        compilation.sources += SourceFile.kotlin("FooMapperImpl.kt", code)
+        compilation.sources += SourceFile.kotlin("FooMapperKMap.kt", code)
 
         val result = compilation.compile()
         assertEquals(expected = KotlinCompilation.ExitCode.OK, actual = result.exitCode)

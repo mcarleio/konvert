@@ -1,9 +1,12 @@
-package io.mcarle.lib.kmapper.processor.converter.annotated
+package io.mcarle.lib.kmapper.processor.converter.kmapfrom
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.lib.kmapper.converter.SameTypeConverter
 import io.mcarle.lib.kmapper.converter.api.DEFAULT_KMAPFROM_PRIORITY
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
+import io.mcarle.lib.kmapper.processor.converter.ConverterITest
+import io.mcarle.lib.kmapper.processor.converter.generatedSourceFor
+import io.mcarle.lib.kmapper.processor.kmapfrom.KMapFromConverter
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
@@ -36,7 +39,7 @@ class TargetClass(
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKMapFromExtensions.kt")
+        val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKMap.kt")
         println(extensionFunctionCode)
 
         val converter = TypeConverterRegistry.firstIsInstanceOrNull<KMapFromConverter>()
@@ -72,7 +75,7 @@ class TargetClass(
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKMapFromExtensions.kt")
+        val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKMap.kt")
         println(extensionFunctionCode)
 
         val converter = TypeConverterRegistry.firstIsInstanceOrNull<KMapFromConverter>()
@@ -114,7 +117,7 @@ data class TargetProperty(val value: String) {
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKMapFromExtensions.kt")
+        val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKMap.kt")
         println(extensionFunctionCode)
 
         assertContains(extensionFunctionCode, "TargetProperty.fromSourceProperty(sourceProperty = sourceClass.sourceProperty)")

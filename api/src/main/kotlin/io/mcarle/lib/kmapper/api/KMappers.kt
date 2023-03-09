@@ -2,6 +2,9 @@ package io.mcarle.lib.kmapper.api
 
 import kotlin.reflect.KClass
 
+/**
+ * This object can be used to load the generated class of an interface, which is annotated with `@KMapper`.
+ */
 @Suppress("UNCHECKED_CAST")
 object KMappers {
 

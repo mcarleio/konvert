@@ -1,4 +1,4 @@
-package io.mcarle.lib.kmapper.processor
+package io.mcarle.lib.kmapper.processor.shared
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSAnnotation

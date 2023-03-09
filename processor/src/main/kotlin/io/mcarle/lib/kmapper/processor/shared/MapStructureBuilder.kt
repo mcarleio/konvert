@@ -1,4 +1,4 @@
-package io.mcarle.lib.kmapper.processor.converter.annotated
+package io.mcarle.lib.kmapper.processor.shared
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getConstructors

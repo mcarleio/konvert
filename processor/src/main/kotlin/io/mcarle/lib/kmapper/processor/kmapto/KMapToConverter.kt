@@ -1,4 +1,4 @@
-package io.mcarle.lib.kmapper.processor.converter.annotated
+package io.mcarle.lib.kmapper.processor.kmapto
 
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -10,7 +10,8 @@ import io.mcarle.lib.kmapper.converter.api.ConverterConfig
 import io.mcarle.lib.kmapper.converter.api.Priority
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import io.mcarle.lib.kmapper.converter.api.isNullable
-import io.mcarle.lib.kmapper.processor.from
+import io.mcarle.lib.kmapper.processor.shared.AnnotatedConverter
+import io.mcarle.lib.kmapper.processor.shared.from
 
 class KMapToConverter(
     val annotationData: AnnotationData,

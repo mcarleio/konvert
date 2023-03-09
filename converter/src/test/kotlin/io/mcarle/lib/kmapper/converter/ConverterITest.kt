@@ -43,7 +43,7 @@ abstract class ConverterITest {
         }
 
         if (compilation != null) {
-            val generatedMapperCode = compilation.first.generatedSourceFor("${mapperClassName}Impl.kt")
+            val generatedMapperCode = compilation.first.generatedSourceFor("${mapperClassName}KMap.kt")
             if (log) {
                 println(generatedMapperCode)
             }
@@ -153,15 +153,6 @@ interface $mapperClassName {
         }
 
         return compilation to result
-    }
-
-    private fun checkIfGeneratedMapperCompiles(compilation: KotlinCompilation, code: String): KotlinCompilation.Result {
-        compilation.symbolProcessorProviders = emptyList()
-        compilation.sources += SourceFile.kotlin("${mapperClassName}Impl.kt", code)
-
-        val result = compilation.compile()
-        assertEquals(expected = KotlinCompilation.ExitCode.OK, actual = result.exitCode)
-        return result
     }
 
     private fun prepareCompilation(sourceFiles: List<SourceFile>) = KotlinCompilation()

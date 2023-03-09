@@ -1,11 +1,10 @@
 package io.mcarle.lib.kmapper.processor
 
 import com.google.auto.service.AutoService
-import com.google.devtools.ksp.processing.*
-import com.google.devtools.ksp.symbol.*
-import com.squareup.kotlinpoet.*
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import io.mcarle.lib.kmapper.converter.api.Options
-import io.mcarle.lib.kmapper.processor.converter.annotated.*
 
 @AutoService(SymbolProcessorProvider::class)
 class KMapProcessorProvider : SymbolProcessorProvider {

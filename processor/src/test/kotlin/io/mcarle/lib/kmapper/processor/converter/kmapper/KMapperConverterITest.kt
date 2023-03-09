@@ -1,9 +1,12 @@
-package io.mcarle.lib.kmapper.processor.converter.annotated
+package io.mcarle.lib.kmapper.processor.converter.kmapper
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.lib.kmapper.converter.SameTypeConverter
 import io.mcarle.lib.kmapper.converter.api.DEFAULT_KMAPPER_PRIORITY
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
+import io.mcarle.lib.kmapper.processor.converter.ConverterITest
+import io.mcarle.lib.kmapper.processor.converter.generatedSourceFor
+import io.mcarle.lib.kmapper.processor.kmapper.KMapperConverter
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
@@ -40,7 +43,7 @@ interface Mapper {
                 """.trimIndent()
             )
         )
-        val mapperCode = compilation.generatedSourceFor("MapperImpl.kt")
+        val mapperCode = compilation.generatedSourceFor("MapperKMap.kt")
         println(mapperCode)
 
         val converter = TypeConverterRegistry.firstIsInstanceOrNull<KMapperConverter>()
@@ -90,7 +93,7 @@ interface OtherMapper {
                 """.trimIndent()
             )
         )
-        val mapperCode = compilation.generatedSourceFor("MapperImpl.kt")
+        val mapperCode = compilation.generatedSourceFor("MapperKMap.kt")
         println(mapperCode)
 
         assertContains(mapperCode, "KMappers.get<OtherMapper>().toTarget(")

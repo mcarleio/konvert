@@ -1,9 +1,12 @@
-package io.mcarle.lib.kmapper.processor.converter.annotated
+package io.mcarle.lib.kmapper.processor.converter.kmapto
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.lib.kmapper.converter.SameTypeConverter
 import io.mcarle.lib.kmapper.converter.api.DEFAULT_KMAPTO_PRIORITY
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
+import io.mcarle.lib.kmapper.processor.converter.ConverterITest
+import io.mcarle.lib.kmapper.processor.converter.generatedSourceFor
+import io.mcarle.lib.kmapper.processor.kmapto.KMapToConverter
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
@@ -34,7 +37,7 @@ class TargetClass(
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKMapToExtensions.kt")
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKMap.kt")
         println(extensionFunctionCode)
 
         val converter = TypeConverterRegistry.firstIsInstanceOrNull<KMapToConverter>()
@@ -71,7 +74,7 @@ data class TargetProperty(val value: String)
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKMapToExtensions.kt")
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKMap.kt")
         println(extensionFunctionCode)
 
         assertContains(extensionFunctionCode, "sourceProperty.mapToTargetProperty()")
