@@ -47,7 +47,7 @@ class KMapProcessor(
         BuilderCache.all().forEach {
             it.build().writeTo(
                 codeGenerator,
-                aggregating = true,
+                aggregating = true, // always aggregating, as any new file could be a mapper with higher prio than a potentially used one.
                 it.originating
             )
         }
@@ -83,6 +83,6 @@ class KMapProcessor(
     private fun collectTypeConverters(resolver: Resolver): List<AnnotatedConverter> {
         return KMapToConverterCollector.collect(resolver) +
                 KMapFromConverterCollector.collect(resolver) +
-                KMapperConverterCollector.collect(resolver)
+                KMapperConverterCollector.collect(resolver, logger)
     }
 }
