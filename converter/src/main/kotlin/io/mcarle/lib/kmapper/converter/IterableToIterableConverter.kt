@@ -64,7 +64,7 @@ class IterableToIterableConverter : AbstractTypeConverter() {
             genericSourceType == genericTargetType -> fieldName
             needsNotNullAssertionOperator(genericSourceType, genericTargetType) -> {
                 listTypeChanged = true
-                "$fieldName$nc.map { it!! }"
+                "$fieldName$nc.map·{·it!!·}"
             }
 
             genericSourceType == genericTargetType.makeNotNullable() -> {
@@ -76,7 +76,7 @@ class IterableToIterableConverter : AbstractTypeConverter() {
 
             else -> {
                 listTypeChanged = true
-                "$fieldName$nc.map { ${typeConverter.convert("it", genericSourceType, genericTargetType)} }"
+                "$fieldName$nc.map·{ ${typeConverter.convert("it", genericSourceType, genericTargetType)} }"
             }
         }
 
@@ -100,7 +100,7 @@ class IterableToIterableConverter : AbstractTypeConverter() {
         val code = mapSourceContentCode + mapSourceContainerCode + appendNotNullAssertionOperatorIfNeeded(source, target)
 
         return if (castNeeded) {
-            "($code as $target)" // encapsulate with braces
+            "($code·as·$target)" // encapsulate with braces
         } else {
             code
         }

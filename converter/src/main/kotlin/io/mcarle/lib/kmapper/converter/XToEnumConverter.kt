@@ -42,83 +42,83 @@ abstract class XToEnumConverter(
 @AutoService(TypeConverter::class)
 class StringToEnumConverter : XToEnumConverter(String::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
-        return "$fieldName$nc.let { $enumFQ.valueOf(it) }"
+        return "$fieldName$nc.let·{ $enumFQ.valueOf(it) }"
     }
 }
 
 @AutoService(TypeConverter::class)
 class IntToEnumConverter : XToEnumConverter(Int::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
-        return "$fieldName$nc.let { $enumFQ.values()[it] }"
+        return "$fieldName$nc.let·{ $enumFQ.values()[it] }"
     }
 }
 
 @AutoService(TypeConverter::class)
 class UIntToEnumConverter : XToEnumConverter(UInt::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
-        return "$fieldName$nc.let { $enumFQ.values()[it.toInt()] }"
+        return "$fieldName$nc.let·{ $enumFQ.values()[it.toInt()] }"
     }
 }
 
 @AutoService(TypeConverter::class)
 class LongToEnumConverter : XToEnumConverter(Long::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
-        return "$fieldName$nc.let { $enumFQ.values()[it.toInt()] }"
+        return "$fieldName$nc.let·{ $enumFQ.values()[it.toInt()] }"
     }
 }
 
 @AutoService(TypeConverter::class)
 class ULongToEnumConverter : XToEnumConverter(ULong::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
-        return "$fieldName$nc.let { $enumFQ.values()[it.toInt()] }"
+        return "$fieldName$nc.let·{ $enumFQ.values()[it.toInt()] }"
     }
 }
 
 @AutoService(TypeConverter::class)
 class ShortToEnumConverter : XToEnumConverter(Short::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
-        return "$fieldName$nc.let { $enumFQ.values()[it.toInt()] }"
+        return "$fieldName$nc.let·{ $enumFQ.values()[it.toInt()] }"
     }
 }
 
 @AutoService(TypeConverter::class)
 class UShortToEnumConverter : XToEnumConverter(UShort::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
-        return "$fieldName$nc.let { $enumFQ.values()[it.toInt()] }"
+        return "$fieldName$nc.let·{ $enumFQ.values()[it.toInt()] }"
     }
 }
 
 @AutoService(TypeConverter::class)
 class NumberToEnumConverter : XToEnumConverter(Number::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
-        return "$fieldName$nc.let { $enumFQ.values()[it.toInt()] }"
+        return "$fieldName$nc.let·{ $enumFQ.values()[it.toInt()] }"
     }
 }
 
 @AutoService(TypeConverter::class)
 class DoubleToEnumConverter : XToEnumConverter(Double::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
-        return "$fieldName$nc.let { $enumFQ.values()[it.toInt()] }"
+        return "$fieldName$nc.let·{ $enumFQ.values()[it.toInt()] }"
     }
 }
 
 @AutoService(TypeConverter::class)
 class ByteToEnumConverter : XToEnumConverter(Byte::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
-        return "$fieldName$nc.let { $enumFQ.values()[it.toInt()] }"
+        return "$fieldName$nc.let·{ $enumFQ.values()[it.toInt()] }"
     }
 }
 
 @AutoService(TypeConverter::class)
 class UByteToEnumConverter : XToEnumConverter(UByte::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
-        return "$fieldName$nc.let { $enumFQ.values()[it.toInt()] }"
+        return "$fieldName$nc.let·{ $enumFQ.values()[it.toInt()] }"
     }
 }
 
 @AutoService(TypeConverter::class)
 class FloatToEnumConverter : XToEnumConverter(Float::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
-        return "$fieldName$nc.let { $enumFQ.values()[it.toInt()] }"
+        return "$fieldName$nc.let·{ $enumFQ.values()[it.toInt()] }"
     }
 }

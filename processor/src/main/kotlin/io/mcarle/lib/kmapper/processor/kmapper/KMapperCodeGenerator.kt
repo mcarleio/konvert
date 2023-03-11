@@ -7,7 +7,9 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
-import io.mcarle.lib.kmapper.processor.shared.*
+import io.mcarle.lib.kmapper.processor.shared.CodeBuilder
+import io.mcarle.lib.kmapper.processor.shared.MapStructureBuilder
+import io.mcarle.lib.kmapper.processor.shared.validated
 
 object KMapperCodeGenerator {
 
@@ -17,7 +19,6 @@ object KMapperCodeGenerator {
         }
 
         val mapper = MapStructureBuilder(
-            resolver = resolver,
             logger = logger
         )
 
@@ -33,7 +34,7 @@ object KMapperCodeGenerator {
                 .returns(converter.targetClassDeclaration.asType(emptyList()).toTypeName())
                 .addParameter(converter.paramName, converter.sourceClassDeclaration.asType(emptyList()).toTypeName())
                 .addCode(
-                    mapper.rules(
+                    mapper.generateCode(
                         converter.annotation.mappings.asIterable().validated(converter.mapKSFunctionDeclaration, logger),
                         converter.paramName,
                         converter.sourceClassDeclaration,
@@ -51,14 +52,11 @@ object KMapperCodeGenerator {
         interfaceType: KSType,
         interfaceName: String,
     ): CodeBuilder {
-        val qualifiedName = QualifiedName(packageName, interfaceName)
-        val codeBuilder = BuilderCache.getOrPut(qualifiedName) {
-            CodeBuilder.create(
-                qualifiedName = qualifiedName,
-                typeBuilder = TypeSpec.objectBuilder("${interfaceName}Impl").addSuperinterface(interfaceType.toTypeName()),
-            )
+        return CodeBuilder.getOrCreate(packageName, interfaceName) {
+            TypeSpec
+                .objectBuilder("${interfaceName}Impl")
+                .addSuperinterface(interfaceType.toTypeName())
         }
-        return codeBuilder
     }
 
 }

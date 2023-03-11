@@ -2,11 +2,14 @@ package io.mcarle.lib.kmapper.converter
 
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.lib.kmapper.converter.api.Priority
+import io.mcarle.lib.kmapper.converter.api.SAME_TYPE_PRIORITY
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 
 @AutoService(TypeConverter::class)
 class SameTypeConverter : AbstractTypeConverter() {
     override val enabledByDefault: Boolean = true
+    override val priority: Priority = SAME_TYPE_PRIORITY
 
     override fun matches(source: KSType, target: KSType): Boolean {
         return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->

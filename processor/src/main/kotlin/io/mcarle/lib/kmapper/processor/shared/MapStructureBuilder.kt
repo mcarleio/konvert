@@ -4,7 +4,6 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import io.mcarle.lib.kmapper.api.annotation.KMap
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
@@ -14,47 +13,48 @@ import org.paukov.combinatorics3.Generator
 import kotlin.reflect.KClass
 
 class MapStructureBuilder(
-    private val resolver: Resolver,
     private val logger: KSPLogger
 ) {
 
+    fun generateCode(mappings: List<KMap>, paramName: String?, source: KSClassDeclaration, target: KSClassDeclaration): String {
 
-    private fun callConstructor(
-        constructor: KSFunctionDeclaration,
-        sourceProperties: List<Property>,
-        indentLevel: Int
-    ): String {
-        return constructor.parameters.mapNotNull { ksValueParameter ->
-            val sourceHasParamNames = constructor.origin !in listOf(
-                Origin.JAVA,
-                Origin.JAVA_LIB
-            )
-            val valueParamHasDefault = ksValueParameter.hasDefault && sourceHasParamNames
-            val valueParamIsNullable = ksValueParameter.type.resolve().isNullable()
+        val sourceProperties = determineProperties(paramName, mappings, source).toList()
 
-            val sourceProperty = determineSourceProperty(sourceProperties, ksValueParameter)
-            val convertedValue = convertValue(
-                source = sourceProperty,
-                targetTypeRef = ksValueParameter.type,
-                ignorable = valueParamHasDefault || valueParamIsNullable
-            ) ?: if (valueParamHasDefault) {
-                null
-            } else if (valueParamIsNullable) {
-                "null"
+        val constructor = determineSingleOrEmptyConstructor(target)
+            ?: findMatchingConstructor(target, sourceProperties.toList())
+            ?: throw RuntimeException("Could not determine constructor")
+
+        val targetProperties = if (constructor.isEmptyConstructor()) {
+            determineMutableProperties(target).map { TargetPropertyOrParam(it) }
+        } else {
+            // non-empty constructor
+            val constructorParameters = constructor.parameters
+            val targetPropertiesOrParams = constructorParameters.map { TargetPropertyOrParam(it) }
+
+            if (propertiesMatching(sourceProperties, constructorParameters)) {
+                // constructor params matching sourceParams
+                targetPropertiesOrParams
             } else {
-                null
+                // constructor params not matching sourceParams, combine with mutable properties
+                val targetPropertiesWithParams = targetPropertiesOrParams +
+                        determineMutableProperties(target).map { TargetPropertyOrParam(it) }
+                targetPropertiesWithParams
+            }
+        }
+
+        verifyPropertiesAndMandatoryParamsExisting(sourceProperties, targetProperties)
+
+        val targetPropertiesWithoutParameters = targetProperties
+            .mapNotNull { it.property }
+            .filterNot { property ->
+                targetProperties
+                    .mapNotNull { it.parameter }
+                    .any { parameter ->
+                        property.simpleName.asString() == parameter.name?.asString() && property.type == parameter.type
+                    }
             }
 
-            if (convertedValue != null) {
-                (1..indentLevel).joinToString("") { " " } + if (sourceHasParamNames) {
-                    "${sourceProperty.targetName} = $convertedValue"
-                } else {
-                    convertedValue
-                }
-            } else {
-                null
-            }
-        }.joinToString(",\n")
+        return tryConvert(sourceProperties, constructor, targetPropertiesWithoutParameters)
     }
 
     private fun determineSourceProperty(props: List<Property>, ksValueParameter: KSValueParameter): Property {
@@ -178,7 +178,7 @@ class MapStructureBuilder(
         }
     }
 
-    private fun determineConstructor(ksClassDeclaration: KSClassDeclaration): KSFunctionDeclaration? {
+    private fun determineSingleOrEmptyConstructor(ksClassDeclaration: KSClassDeclaration): KSFunctionDeclaration? {
         val constructors = ksClassDeclaration.getConstructors().toList()
         return if (constructors.size <= 1) {
             constructors.firstOrNull()
@@ -194,12 +194,14 @@ class MapStructureBuilder(
         props: List<Property>
     ): KSFunctionDeclaration? {
         val constructors = ksClassDeclaration.getConstructors().toList()
-        return constructors.firstOrNull {
-            propertiesMatching(
-                props,
-                determineConstructorParameter(it)
-            )
-        }
+        return constructors
+            .filter {
+                propertiesMatching(
+                    props,
+                    it.parameters
+                )
+            }
+            .maxByOrNull { it.parameters.size } // TODO: is it always good to choose constructor with the most parameters?
     }
 
     private fun propertiesMatching(props: List<Property>, parameters: List<KSValueParameter>): Boolean {
@@ -234,127 +236,99 @@ class MapStructureBuilder(
         }
     }
 
-    private fun determineConstructorParameter(constructor: KSFunctionDeclaration): List<KSValueParameter> {
-        return constructor.parameters
-    }
-
     private fun KSFunctionDeclaration.isEmptyConstructor() = this.parameters.isEmpty()
-
-    fun rules(mappings: List<KMap>, paramName: String?, source: KSClassDeclaration, target: KSClassDeclaration): String {
-
-        val sourceProperties = determineProperties(paramName, mappings, source).toList()
-
-        var constructor = determineConstructor(target)
-        val targetProperties = if (constructor?.isEmptyConstructor() == true) {
-            determineMutableProperties(target).map { TargetPropertyOrParam(it) }.also {
-                verifyMandatoryPropertiesOrParamsExisting(sourceProperties, it)
-            }
-        } else {
-            if (constructor != null) {
-                // non-empty constructor
-                val constructorParameters = determineConstructorParameter(constructor)
-                val targetPropertiesOrParams = constructorParameters.map { TargetPropertyOrParam(it) }
-                verifyMandatoryPropertiesOrParamsExisting(sourceProperties, targetPropertiesOrParams)
-
-                if (propertiesMatching(sourceProperties, constructorParameters)) {
-                    // constructor params matching sourceParams
-                    targetPropertiesOrParams
-                } else {
-                    // constructor params not matching sourceParams, combine with mutable properties
-                    val targetPropertiesWithParams = targetPropertiesOrParams +
-                            determineMutableProperties(target).map { TargetPropertyOrParam(it) }
-                    targetPropertiesWithParams.also {
-                        verifyMandatoryPropertiesOrParamsExisting(sourceProperties, it)
-                    }
-                }
-            } else {
-                constructor = findMatchingConstructor(target, sourceProperties.toList())
-                    ?: throw RuntimeException("Could not determine constructor")
-
-                determineConstructorParameter(constructor).map { TargetPropertyOrParam(it) }
-            }
-        }
-
-        return tryConvert(sourceProperties, constructor, targetProperties)
-    }
 
     private fun tryConvert(
         sourceProperties: List<Property>,
         constructor: KSFunctionDeclaration,
-        targetProperties: List<TargetPropertyOrParam>
+        targetProperties: List<KSPropertyDeclaration>
     ): String {
-        if (constructor.isEmptyConstructor()) {
-            return """
-val gen = ${constructor.parentDeclaration!!.simpleName.asString()}()
-${ // @formatter:off
-                    setProperties(
-                        targetProperties = targetProperties.filter { it.isProperty() }.map { it.getProperty() },
-                        sourceProperties = sourceProperties,
-                        targetVarName = "gen",
-                        indentLevel = 0
-                    )
-                }
-return gen
-            """.trimIndent()
-                // @formatter:on
+        val constructorCode = constructorCode(constructor, sourceProperties)
+        return "return " + constructorCode + propertyCode(sourceProperties, targetProperties)
+//        return "return " + if (containsAdditional(targetProperties, constructor)) {
+//            constructorCode + propertyCode(sourceProperties, targetProperties)
+//        } else {
+//            constructorCode
+//        }
+    }
+
+    private fun constructorCode(
+        constructor: KSFunctionDeclaration,
+        sourceProperties: List<Property>
+    ): String {
+        val className = constructor.parentDeclaration!!.simpleName.asString()
+        return if (constructor.parameters.isEmpty()) {
+            "$className()"
         } else {
-            if (!containsAdditional(targetProperties, constructor)) {
-                return """
-return ${constructor.parentDeclaration!!.simpleName.asString()}(
-${ // @formatter:off
-                        callConstructor(
-                            constructor = constructor,
-                            sourceProperties = sourceProperties,
-                            indentLevel = 4
-                        )
-                    }
-)
-                """.trimIndent()
-                    // @formatter:on
+            """
+«$className(${"\n" + constructorParamsCode(constructor = constructor, sourceProperties = sourceProperties)}
+»)
+            """.trimIndent()
+        }
+    }
+
+    private fun constructorParamsCode(
+        constructor: KSFunctionDeclaration,
+        sourceProperties: List<Property>
+    ): String {
+        return constructor.parameters.mapNotNull { ksValueParameter ->
+            val sourceHasParamNames = constructor.origin !in listOf(
+                Origin.JAVA,
+                Origin.JAVA_LIB
+            )
+            val valueParamHasDefault = ksValueParameter.hasDefault && sourceHasParamNames
+            val valueParamIsNullable = ksValueParameter.type.resolve().isNullable()
+
+            val sourceProperty = determineSourceProperty(sourceProperties, ksValueParameter)
+            val convertedValue = convertValue(
+                source = sourceProperty,
+                targetTypeRef = ksValueParameter.type,
+                ignorable = valueParamHasDefault || valueParamIsNullable
+            ) ?: if (valueParamHasDefault) {
+                // when constructor param has a default value, ignore it
+                null
+            } else if (valueParamIsNullable) {
+                // when constructor param is nullable, set it to null
+                "null"
             } else {
-                return """
-val gen = ${constructor.parentDeclaration!!.simpleName.asString()}(
-${ // @formatter:off
-                        callConstructor(
-                            constructor = constructor,
-                            sourceProperties = sourceProperties,
-                            indentLevel = 2
-                        )
-                    }
-)
-${ // @formatter:off
-                        setProperties(
-                            targetProperties = targetProperties.filter { it.isProperty() }.map { it.getProperty() },
-                            sourceProperties = sourceProperties,
-                            targetVarName = "gen",
-                            indentLevel = 0
-                        )
-                    }
-return gen
-                """.trimIndent()
-                    // @formatter:on
+                null
             }
-        }
+
+            if (convertedValue != null) {
+                if (sourceHasParamNames) {
+                    "${sourceProperty.targetName}·=·$convertedValue"
+                } else {
+                    convertedValue
+                }
+            } else {
+                null
+            }
+        }.joinToString(separator = ",\n")
     }
 
-    private fun containsAdditional(
-        targetProperties: List<TargetPropertyOrParam>,
-        constructor: KSFunctionDeclaration
-    ): Boolean {
-        val parameters = constructor.parameters
-        return targetProperties.filter { it.isProperty() }.map { it.getProperty() }.any { prop ->
-            parameters.none { param ->
-                param.name?.asString() == prop.simpleName.asString() &&
-                        param.type == prop.type
-            }
-        }
+//    private fun propertyCode(
+//        sourceProperties: List<Property>,
+//        targetProperties: List<TargetPropertyOrParam>
+//    ): String {
+//        return propertyCode(sourceProperties, targetProperties.mapNotNull { it.property })
+//    }
+
+    private fun propertyCode(
+        sourceProperties: List<Property>,
+        targetProperties: List<KSPropertyDeclaration>
+    ): String {
+        if (targetProperties.isEmpty()) return ""
+        val varName = "gen"
+        return """
+«.also { $varName ->${"\n" + propertySettingCode(targetProperties, sourceProperties, varName)}
+»}
+        """.trimIndent()
     }
 
-    private fun setProperties(
+    private fun propertySettingCode(
         targetProperties: List<KSPropertyDeclaration>,
         sourceProperties: List<Property>,
-        targetVarName: String,
-        indentLevel: Int
+        targetVarName: String
     ): String {
         return targetProperties.mapNotNull { targetProperty ->
             val sourceProperty = determineSourceProperty(sourceProperties, targetProperty)
@@ -364,24 +338,102 @@ return gen
                 ignorable = true
             )
             if (convertedValue != null) {
-                (1..indentLevel).joinToString("") { " " } +
-                        "$targetVarName.${sourceProperty.targetName} = $convertedValue"
+                "$targetVarName.${sourceProperty.targetName}·=·$convertedValue"
             } else {
                 null
             }
         }.joinToString("\n")
     }
 
-    private fun verifyMandatoryPropertiesOrParamsExisting(
+//    private fun someArgsConstructorCode(
+//        constructor: KSFunctionDeclaration,
+//        sourceProperties: List<Property>,
+//        targetProperties: List<TargetPropertyOrParam>
+//    ): String {
+//        return """
+//val gen = ${constructor.parentDeclaration!!.simpleName.asString()}(
+//${ // @formatter:off
+//        constructorParamsCode(
+//            constructor = constructor,
+//            sourceProperties = sourceProperties,
+//            indentLevel = 2
+//        )
+//    }
+//)
+//${ // @formatter:off
+//        setProperties(
+//            targetProperties = targetProperties.filter { it.isProperty() }.map { it.getProperty() },
+//            sourceProperties = sourceProperties,
+//            targetVarName = "gen",
+//            indentLevel = 0
+//        )
+//    }
+//return gen
+//        """.trimIndent()
+//        // @formatter:on
+//    }
+//
+//    private fun allArgsConstructorCode(
+//        constructor: KSFunctionDeclaration,
+//        sourceProperties: List<Property>
+//    ): String {
+//        return """
+//return ${constructor.parentDeclaration!!.simpleName.asString()}(
+//${ // @formatter:off
+//        constructorParamsCode(
+//            constructor = constructor,
+//            sourceProperties = sourceProperties,
+//            indentLevel = 4
+//        )
+//    }
+//)
+//        """.trimIndent()
+//        // @formatter:on
+//    }
+//
+//    private fun noArgsConstructorCode(
+//        constructor: KSFunctionDeclaration,
+//        targetProperties: List<TargetPropertyOrParam>,
+//        sourceProperties: List<Property>
+//    ): String {
+//        return """
+//val gen = ${constructor.parentDeclaration!!.simpleName.asString()}()
+//${ // @formatter:off
+//        setProperties(
+//            targetProperties = targetProperties.filter { it.isProperty() }.map { it.getProperty() },
+//            sourceProperties = sourceProperties,
+//            targetVarName = "gen",
+//            indentLevel = 0
+//        )
+//    }
+//return gen
+//        """.trimIndent()
+//        // @formatter:on
+//    }
+
+    private fun containsAdditional(
+        targetProperties: List<KSPropertyDeclaration>,
+        constructor: KSFunctionDeclaration
+    ): Boolean {
+        val parameters = constructor.parameters
+        return targetProperties.any { prop ->
+            parameters.none { param -> param.name?.asString() == prop.simpleName.asString() && param.type == prop.type }
+        }
+    }
+
+    private fun verifyPropertiesAndMandatoryParamsExisting(
         sourceProperties: List<Property>,
         targetPropertiesOrParams: List<TargetPropertyOrParam>
     ) {
         val propertyOrParamWithoutSource = targetPropertiesOrParams.firstOrNull { propertyOrParam ->
-            val name = if (propertyOrParam.isProperty()) {
-                propertyOrParam.getProperty().simpleName.asString()
+            val name = if (propertyOrParam.property != null) {
+                propertyOrParam.property.simpleName.asString()
+            } else if (propertyOrParam.parameter != null) {
+                if (propertyOrParam.parameter.hasDefault) return@firstOrNull false // break, as optional
+                propertyOrParam.parameter.name?.asString()
             } else {
-                if (propertyOrParam.getParameter().hasDefault) return@firstOrNull false // break, as optional
-                propertyOrParam.getParameter().name?.asString()
+                // should not occur...
+                null
             }
             sourceProperties.none { name == it.targetName }
         }
@@ -390,23 +442,35 @@ return gen
         }
     }
 
-    data class TargetPropertyOrParam private constructor(
-        private val propertyDeclaration: KSPropertyDeclaration? = null,
-        private val valueParameter: KSValueParameter? = null
+    class TargetPropertyOrParam private constructor(
+        val property: KSPropertyDeclaration? = null,
+        val parameter: KSValueParameter? = null
     ) {
         constructor(propertyDeclaration: KSPropertyDeclaration) : this(propertyDeclaration, null)
         constructor(valueParameter: KSValueParameter) : this(null, valueParameter)
 
-        fun isProperty(): Boolean = propertyDeclaration != null
-        fun isValue(): Boolean = valueParameter != null
-
-        fun getProperty(): KSPropertyDeclaration {
-            return propertyDeclaration!!
+        fun isSame(other: TargetPropertyOrParam): Boolean {
+            val (thisName, thisType) = if (property != null) {
+                property.simpleName.asString() to property.type
+            } else {
+                parameter!!.name?.asString() to parameter.type
+            }
+            val (otherName, otherType) = if (other.property != null) {
+                other.property.simpleName.asString() to other.property.type
+            } else {
+                other.parameter!!.name?.asString() to other.parameter.type
+            }
+            return thisName == otherName && thisType == otherType
         }
 
-        fun getParameter(): KSValueParameter {
-            return valueParameter!!
+        override fun toString(): String {
+            return if (property != null) {
+                "propertyDeclaration=$property"
+            } else {
+                "valueParameter=$parameter"
+            }
         }
+
     }
 
 }

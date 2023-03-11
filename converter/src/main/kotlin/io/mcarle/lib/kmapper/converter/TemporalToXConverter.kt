@@ -88,15 +88,15 @@ class OffsetDateTimeToLongConverter : TemporalToXConverter<OffsetDateTime>(Offse
 
 @AutoService(TypeConverter::class)
 class InstantToDateConverter : TemporalToXConverter<Instant>(Instant::class, Date::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let { java.util.Date.from(it) }"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let·{ java.util.Date.from(it) }"
 }
 
 @AutoService(TypeConverter::class)
 class ZonedDateTimeToDateConverter : TemporalToXConverter<ZonedDateTime>(ZonedDateTime::class, Date::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let { java.util.Date.from(it.toInstant()) }"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let·{ java.util.Date.from(it.toInstant()) }"
 }
 
 @AutoService(TypeConverter::class)
 class OffsetDateTimeToDateConverter : TemporalToXConverter<OffsetDateTime>(OffsetDateTime::class, Date::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let { java.util.Date.from(it.toInstant()) }"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let·{ java.util.Date.from(it.toInstant()) }"
 }

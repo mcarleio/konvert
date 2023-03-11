@@ -168,7 +168,7 @@ class IntToCharConverter : BaseTypeConverter(Int::class, Char::class) {
 
 @AutoService(TypeConverter::class)
 class IntToBooleanConverter : BaseTypeConverter(Int::class, Boolean::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName == 1"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·1"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
@@ -239,7 +239,7 @@ class UIntToCharConverter : BaseTypeConverter(UInt::class, Char::class) {
 
 @AutoService(TypeConverter::class)
 class UIntToBooleanConverter : BaseTypeConverter(UInt::class, Boolean::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName == 1u"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·1u"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
@@ -310,7 +310,7 @@ class LongToCharConverter : BaseTypeConverter(Long::class, Char::class) {
 
 @AutoService(TypeConverter::class)
 class LongToBooleanConverter : BaseTypeConverter(Long::class, Boolean::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName == 1L"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·1L"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
@@ -381,7 +381,7 @@ class ULongToCharConverter : BaseTypeConverter(ULong::class, Char::class) {
 
 @AutoService(TypeConverter::class)
 class ULongToBooleanConverter : BaseTypeConverter(ULong::class, Boolean::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName == 1u.toULong()"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·1u.toULong()"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
@@ -451,7 +451,7 @@ class ShortToCharConverter : BaseTypeConverter(Short::class, Char::class) {
 
 @AutoService(TypeConverter::class)
 class ShortToBooleanConverter : BaseTypeConverter(Short::class, Boolean::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName == 1.toShort()"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·1.toShort()"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
@@ -522,7 +522,7 @@ class UShortToCharConverter : BaseTypeConverter(UShort::class, Char::class) {
 
 @AutoService(TypeConverter::class)
 class UShortToBooleanConverter : BaseTypeConverter(UShort::class, Boolean::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName == 1u.toUShort()"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·1u.toUShort()"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
@@ -598,7 +598,7 @@ class FloatToCharConverter : BaseTypeConverter(Float::class, Char::class) {
 
 @AutoService(TypeConverter::class)
 class FloatToBooleanConverter : BaseTypeConverter(Float::class, Boolean::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName == 1.0f"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·1.0f"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
@@ -668,7 +668,7 @@ class DoubleToCharConverter : BaseTypeConverter(Double::class, Char::class) {
 
 @AutoService(TypeConverter::class)
 class DoubleToBooleanConverter : BaseTypeConverter(Double::class, Boolean::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName == 1.0"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·1.0"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
@@ -738,7 +738,7 @@ class ByteToCharConverter : BaseTypeConverter(Byte::class, Char::class) {
 
 @AutoService(TypeConverter::class)
 class ByteToBooleanConverter : BaseTypeConverter(Byte::class, Boolean::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName == 1.toByte()"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·1.toByte()"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
@@ -804,7 +804,7 @@ class UByteToCharConverter : BaseTypeConverter(UByte::class, Char::class) {
 
 @AutoService(TypeConverter::class)
 class UByteToBooleanConverter : BaseTypeConverter(UByte::class, Boolean::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName == 1u.toUByte()"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·1u.toUByte()"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
@@ -874,7 +874,7 @@ class NumberToCharConverter : BaseTypeConverter(Number::class, Char::class) {
 
 @AutoService(TypeConverter::class)
 class NumberToBooleanConverter : BaseTypeConverter(Number::class, Boolean::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName == 1"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·1"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
@@ -950,7 +950,7 @@ class CharToUByteConverter : BaseTypeConverter(Char::class, UByte::class) {
 
 @AutoService(TypeConverter::class)
 class CharToBooleanConverter : BaseTypeConverter(Char::class, Boolean::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName == '1'"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·'1'"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
@@ -970,72 +970,72 @@ class BooleanToStringConverter : BaseTypeConverter(Boolean::class, String::class
 
 @AutoService(TypeConverter::class)
 class BooleanToIntConverter : BaseTypeConverter(Boolean::class, Int::class) {
-    override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1 else 0"
+    override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·1·else·0"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 @AutoService(TypeConverter::class)
 class BooleanToUIntConverter : BaseTypeConverter(Boolean::class, UInt::class) {
-    override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1u else 0u"
+    override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·1u·else·0u"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 @AutoService(TypeConverter::class)
 class BooleanToLongConverter : BaseTypeConverter(Boolean::class, Long::class) {
-    override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1L else 0L"
+    override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·1L·else·0L"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 @AutoService(TypeConverter::class)
 class BooleanToULongConverter : BaseTypeConverter(Boolean::class, ULong::class) {
-    override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1u else 0u"
+    override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·1u·else·0u"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 @AutoService(TypeConverter::class)
 class BooleanToShortConverter : BaseTypeConverter(Boolean::class, Short::class) {
-    override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1.toShort() else 0.toShort()"
+    override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·1.toShort()·else·0.toShort()"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 @AutoService(TypeConverter::class)
 class BooleanToUShortConverter : BaseTypeConverter(Boolean::class, UShort::class) {
-    override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1u else 0u"
+    override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·1u·else·0u"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 @AutoService(TypeConverter::class)
 class BooleanToNumberConverter : BaseTypeConverter(Boolean::class, Number::class) {
-    override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1 else 0"
+    override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·1·else·0"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 @AutoService(TypeConverter::class)
 class BooleanToDoubleConverter : BaseTypeConverter(Boolean::class, Double::class) {
-    override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1.0 else 0.0"
+    override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·1.0·else·0.0"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 @AutoService(TypeConverter::class)
 class BooleanToByteConverter : BaseTypeConverter(Boolean::class, Byte::class) {
-    override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1 else 0"
+    override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·1·else·0"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 @AutoService(TypeConverter::class)
 class BooleanToUByteConverter : BaseTypeConverter(Boolean::class, UByte::class) {
-    override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1u else 0u"
+    override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·1u·else·0u"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 @AutoService(TypeConverter::class)
 class BooleanToCharConverter : BaseTypeConverter(Boolean::class, Char::class) {
-    override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) '1' else '0'"
+    override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·'1'·else·'0'"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }
 
 @AutoService(TypeConverter::class)
 class BooleanToFloatConverter : BaseTypeConverter(Boolean::class, Float::class) {
-    override fun convert(fieldName: String, nc: String): String = "if ($fieldName == true) 1.0f else 0.0f"
+    override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·1.0f·else·0.0f"
     override fun appendNotNullAssertionOperator(code: String): String = code
 }

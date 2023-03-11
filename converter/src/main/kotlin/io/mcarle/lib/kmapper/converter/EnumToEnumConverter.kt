@@ -39,19 +39,18 @@ class EnumToEnumConverter : AbstractTypeConverter() {
 
         // @formatter:off
         return """
-when ($fieldName) {
-    ${
-        sourceEnumValues.joinToString("\n    ") {
-            "${source.declaration.simpleName.asString()}.${it.simpleName.asString()} -> ${target.declaration.simpleName.asString()}.${it.simpleName.asString()}"
+when·($fieldName)·{${ "\n⇥" +
+        sourceEnumValues.joinToString("\n") {
+            "${source.declaration.simpleName.asString()}.${it.simpleName.asString()}·->·${target.declaration.simpleName.asString()}.${it.simpleName.asString()}"
         }.let {
             if (source.isNullable()) {
-                "$it\n    null -> null"
+                "$it\nnull·->·null"
             } else {
                 it
             }
         }
-    }
-}${if (needsNotNullAssertionOperator(source, target)) "!!" else ""}
+}
+⇤}${if (needsNotNullAssertionOperator(source, target)) "!!" else ""}
         """.trimIndent()
         // @formatter:on
     }

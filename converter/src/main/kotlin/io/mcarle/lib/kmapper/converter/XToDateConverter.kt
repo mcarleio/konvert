@@ -40,11 +40,11 @@ abstract class XToDateConverter(
 @AutoService(TypeConverter::class)
 class StringToDateConverter : XToDateConverter(String::class) {
     override fun convert(fieldName: String, nc: String): String =
-        "$fieldName$nc.let { java.util.Date.from(java.time.Instant.parse(it)) }"
+        "$fieldName$nc.let·{ java.util.Date.from(java.time.Instant.parse(it)) }"
 }
 
 @AutoService(TypeConverter::class)
 class LongToDateConverter : XToDateConverter(Long::class) {
     override fun convert(fieldName: String, nc: String): String =
-        "$fieldName$nc.let { java.util.Date(it) }"
+        "$fieldName$nc.let·{ java.util.Date(it) }"
 }

@@ -85,7 +85,7 @@ class MapToMapConverter : AbstractTypeConverter() {
                 genericSourceValueType == genericTargetValueType -> fieldName
                 needsNotNullAssertionOperator(genericSourceValueType, genericTargetValueType) -> {
                     mapTypeChanged = true
-                    "$fieldName$nc.mapValues { it.value!! }"
+                    "$fieldName$nc.mapValues·{·it.value!!·}"
                 }
 
                 genericSourceValueType == genericTargetValueType.makeNotNullable() -> {
@@ -97,7 +97,7 @@ class MapToMapConverter : AbstractTypeConverter() {
 
                 else -> {
                     mapTypeChanged = true
-                    "$fieldName$nc.mapValues { (_, it) -> ${
+                    "$fieldName$nc.mapValues·{·(_,·it)·-> ${
                         valueTypeConverter.convert(
                             "it",
                             genericSourceValueType,
@@ -110,13 +110,13 @@ class MapToMapConverter : AbstractTypeConverter() {
             needsNotNullAssertionOperator(genericSourceKeyType, genericTargetKeyType) -> when {
                 genericSourceValueType == genericTargetValueType -> {
                     mapTypeChanged = true
-                    "$fieldName$nc.mapKeys { it.key!! }"
+                    "$fieldName$nc.mapKeys·{·it.key!!·}"
                 }
 
                 needsNotNullAssertionOperator(genericSourceValueType, genericTargetValueType) -> {
                     mapTypeChanged = true
                     mappedToListOfPairs = true
-                    "$fieldName$nc.map { it.key!! to it.value!! }"
+                    "$fieldName$nc.map·{·it.key!!·to·it.value!!·}"
                 }
 
                 genericSourceValueType == genericTargetValueType.makeNotNullable() -> {
@@ -124,18 +124,18 @@ class MapToMapConverter : AbstractTypeConverter() {
                         castNeeded = true
                     }
                     mapTypeChanged = true
-                    "$fieldName$nc.mapKeys { it.key!! }"
+                    "$fieldName$nc.mapKeys·{·it.key!!·}"
                 }
 
                 else -> {
                     mapTypeChanged = true
                     mappedToListOfPairs = true
                     """
-$fieldName$nc.map { (key, value) -> 
-    val newKey = key!!
-    val newValue = ${valueTypeConverter.convert("value", genericSourceValueType, genericTargetValueType)}
-    newKey to newValue
-}
+$fieldName$nc.map·{·(key,·value)·->
+⇥val·newKey·=·key!!
+val·newValue·=·${valueTypeConverter.convert("value", genericSourceValueType, genericTargetValueType)}
+newKey·to·newValue
+⇤}
                     """.trimIndent()
                 }
             }
@@ -148,7 +148,7 @@ $fieldName$nc.map { (key, value) ->
                     genericSourceValueType == genericTargetValueType -> fieldName
                     needsNotNullAssertionOperator(genericSourceValueType, genericTargetValueType) -> {
                         mapTypeChanged = true
-                        "$fieldName$nc.mapValues { it.value!! }"
+                        "$fieldName$nc.mapValues·{·it.value!!·}"
                     }
 
                     genericSourceValueType == genericTargetValueType.makeNotNullable() -> {
@@ -160,7 +160,7 @@ $fieldName$nc.map { (key, value) ->
 
                     else -> {
                         mapTypeChanged = true
-                        "$fieldName$nc.mapValues { (_, it) -> ${
+                        "$fieldName$nc.mapValues·{·(_,·it)·-> ${
                             valueTypeConverter.convert(
                                 "it",
                                 genericSourceValueType,
@@ -174,18 +174,24 @@ $fieldName$nc.map { (key, value) ->
             else -> when {
                 genericSourceValueType == genericTargetValueType -> {
                     mapTypeChanged = true
-                    "$fieldName$nc.mapKeys { (it, _) -> ${keyTypeConverter.convert("it", genericSourceKeyType, genericTargetKeyType)} }"
+                    "$fieldName$nc.mapKeys·{·(it,·_)·-> ${
+                        keyTypeConverter.convert(
+                            "it",
+                            genericSourceKeyType,
+                            genericTargetKeyType
+                        )
+                    } }"
                 }
 
                 needsNotNullAssertionOperator(genericSourceValueType, genericTargetValueType) -> {
                     mapTypeChanged = true
                     mappedToListOfPairs = true
                     """
-$fieldName$nc.map { (key, value) -> 
-    val newKey = ${keyTypeConverter.convert("key", genericSourceKeyType, genericTargetKeyType)}
-    val newValue = value!!
-    newKey to newValue
-}
+$fieldName$nc.map·{·(key,·value)·-> 
+⇥val·newKey·=·${keyTypeConverter.convert("key", genericSourceKeyType, genericTargetKeyType)}
+val·newValue·=·value!!
+newKey·to·newValue
+⇤}
                     """.trimIndent()
                 }
 
@@ -194,18 +200,20 @@ $fieldName$nc.map { (key, value) ->
                         castNeeded = true
                     }
                     mapTypeChanged = true
-                    "$fieldName$nc.mapKeys { (it, _) -> ${keyTypeConverter.convert("it", genericSourceKeyType, genericTargetKeyType)} }"
+                    "$fieldName$nc.mapKeys·{·(it,·_)·-> ${
+                        keyTypeConverter.convert("it", genericSourceKeyType, genericTargetKeyType)
+                    } }"
                 }
 
                 else -> {
                     mapTypeChanged = true
                     mappedToListOfPairs = true
                     """
-$fieldName$nc.map { (key, value) -> 
-    val newKey = ${keyTypeConverter.convert("key", genericSourceKeyType, genericTargetKeyType)}
-    val newValue = ${valueTypeConverter.convert("value", genericSourceValueType, genericTargetValueType)}
-    newKey to newValue
-}
+$fieldName$nc.map·{·(key,·value)·-> 
+⇥val·newKey·=·${keyTypeConverter.convert("key", genericSourceKeyType, genericTargetKeyType)}
+val·newValue·=·${valueTypeConverter.convert("value", genericSourceValueType, genericTargetValueType)}
+newKey·to·newValue
+⇤}
                     """.trimIndent()
                 }
             }
@@ -223,7 +231,7 @@ $fieldName$nc.map { (key, value) ->
         val code = mapSourceContentCode + mapSourceContainerCode + appendNotNullAssertionOperatorIfNeeded(source, target)
 
         return if (castNeeded) {
-            "($code as $target)" // encapsulate with braces
+            "($code·as·$target)" // encapsulate with braces
         } else {
             code
         }

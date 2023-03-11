@@ -19,7 +19,7 @@ import io.mcarle.lib.kmapper.processor.kmapto.KMapToCodeGenerator
 import io.mcarle.lib.kmapper.processor.kmapto.KMapToConverter
 import io.mcarle.lib.kmapper.processor.kmapto.KMapToConverterCollector
 import io.mcarle.lib.kmapper.processor.shared.AnnotatedConverter
-import io.mcarle.lib.kmapper.processor.shared.BuilderCache
+import io.mcarle.lib.kmapper.processor.shared.CodeBuilder
 
 class KMapProcessor(
     private val codeGenerator: CodeGenerator,
@@ -33,7 +33,7 @@ class KMapProcessor(
         val typeConverters = collectTypeConverters(resolver)
         registerTypeConverters(typeConverters)
 
-        initBuilderCache()
+        initCodeBuilder()
         initTypeConverters(resolver)
 
         generateMappingCode(resolver, typeConverters)
@@ -44,7 +44,7 @@ class KMapProcessor(
     }
 
     private fun writeFiles() {
-        BuilderCache.all().forEach {
+        CodeBuilder.all().forEach {
             it.build().writeTo(
                 codeGenerator,
                 aggregating = true, // always aggregating, as any new file could be a mapper with higher prio than a potentially used one.
@@ -76,8 +76,8 @@ class KMapProcessor(
         TypeConverterRegistry.initConverters(ConverterConfig(resolver, options))
     }
 
-    private fun initBuilderCache() {
-        BuilderCache.clear()
+    private fun initCodeBuilder() {
+        CodeBuilder.clear()
     }
 
     private fun collectTypeConverters(resolver: Resolver): List<AnnotatedConverter> {
