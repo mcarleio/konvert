@@ -157,10 +157,10 @@ class MapStructureBuilder(
                 return source.constant
             }
             if (source.expression != null) {
-                if (source.mappingParamName != null) {
-                    return "${source.mappingParamName}.let { ${source.expression} }"
+                return if (source.mappingParamName != null) {
+                    "${source.mappingParamName}.let { ${source.expression} }"
                 } else {
-                    return "let { ${source.expression} }"
+                    "let { ${source.expression} }"
                 }
             }
             throw IllegalStateException("Could not convert value $source")
@@ -207,12 +207,12 @@ class MapStructureBuilder(
     private fun propertiesMatching(props: List<Property>, parameters: List<KSValueParameter>): Boolean {
         if (props.size <= parameters.size && props.size >= parameters.filter { !it.hasDefault }.size) {
             val combinations = calcCombinations(parameters, props.size)
-            return combinations.any { propertiesMatchingExcat(props, it) }
+            return combinations.any { propertiesMatchingExact(props, it) }
         }
         return false
     }
 
-    private fun propertiesMatchingExcat(props: List<Property>, parameters: List<KSValueParameter>): Boolean {
+    private fun propertiesMatchingExact(props: List<Property>, parameters: List<KSValueParameter>): Boolean {
         if (props.size != parameters.size) return false
         return props.all { prop ->
             parameters.any { param ->
@@ -245,11 +245,6 @@ class MapStructureBuilder(
     ): String {
         val constructorCode = constructorCode(constructor, sourceProperties)
         return "return " + constructorCode + propertyCode(sourceProperties, targetProperties)
-//        return "return " + if (containsAdditional(targetProperties, constructor)) {
-//            constructorCode + propertyCode(sourceProperties, targetProperties)
-//        } else {
-//            constructorCode
-//        }
     }
 
     private fun constructorCode(
@@ -306,13 +301,6 @@ class MapStructureBuilder(
         }.joinToString(separator = ",\n")
     }
 
-//    private fun propertyCode(
-//        sourceProperties: List<Property>,
-//        targetProperties: List<TargetPropertyOrParam>
-//    ): String {
-//        return propertyCode(sourceProperties, targetProperties.mapNotNull { it.property })
-//    }
-
     private fun propertyCode(
         sourceProperties: List<Property>,
         targetProperties: List<KSPropertyDeclaration>
@@ -345,82 +333,6 @@ class MapStructureBuilder(
         }.joinToString("\n")
     }
 
-//    private fun someArgsConstructorCode(
-//        constructor: KSFunctionDeclaration,
-//        sourceProperties: List<Property>,
-//        targetProperties: List<TargetPropertyOrParam>
-//    ): String {
-//        return """
-//val gen = ${constructor.parentDeclaration!!.simpleName.asString()}(
-//${ // @formatter:off
-//        constructorParamsCode(
-//            constructor = constructor,
-//            sourceProperties = sourceProperties,
-//            indentLevel = 2
-//        )
-//    }
-//)
-//${ // @formatter:off
-//        setProperties(
-//            targetProperties = targetProperties.filter { it.isProperty() }.map { it.getProperty() },
-//            sourceProperties = sourceProperties,
-//            targetVarName = "gen",
-//            indentLevel = 0
-//        )
-//    }
-//return gen
-//        """.trimIndent()
-//        // @formatter:on
-//    }
-//
-//    private fun allArgsConstructorCode(
-//        constructor: KSFunctionDeclaration,
-//        sourceProperties: List<Property>
-//    ): String {
-//        return """
-//return ${constructor.parentDeclaration!!.simpleName.asString()}(
-//${ // @formatter:off
-//        constructorParamsCode(
-//            constructor = constructor,
-//            sourceProperties = sourceProperties,
-//            indentLevel = 4
-//        )
-//    }
-//)
-//        """.trimIndent()
-//        // @formatter:on
-//    }
-//
-//    private fun noArgsConstructorCode(
-//        constructor: KSFunctionDeclaration,
-//        targetProperties: List<TargetPropertyOrParam>,
-//        sourceProperties: List<Property>
-//    ): String {
-//        return """
-//val gen = ${constructor.parentDeclaration!!.simpleName.asString()}()
-//${ // @formatter:off
-//        setProperties(
-//            targetProperties = targetProperties.filter { it.isProperty() }.map { it.getProperty() },
-//            sourceProperties = sourceProperties,
-//            targetVarName = "gen",
-//            indentLevel = 0
-//        )
-//    }
-//return gen
-//        """.trimIndent()
-//        // @formatter:on
-//    }
-
-    private fun containsAdditional(
-        targetProperties: List<KSPropertyDeclaration>,
-        constructor: KSFunctionDeclaration
-    ): Boolean {
-        val parameters = constructor.parameters
-        return targetProperties.any { prop ->
-            parameters.none { param -> param.name?.asString() == prop.simpleName.asString() && param.type == prop.type }
-        }
-    }
-
     private fun verifyPropertiesAndMandatoryParamsExisting(
         sourceProperties: List<Property>,
         targetPropertiesOrParams: List<TargetPropertyOrParam>
@@ -448,20 +360,6 @@ class MapStructureBuilder(
     ) {
         constructor(propertyDeclaration: KSPropertyDeclaration) : this(propertyDeclaration, null)
         constructor(valueParameter: KSValueParameter) : this(null, valueParameter)
-
-        fun isSame(other: TargetPropertyOrParam): Boolean {
-            val (thisName, thisType) = if (property != null) {
-                property.simpleName.asString() to property.type
-            } else {
-                parameter!!.name?.asString() to parameter.type
-            }
-            val (otherName, otherType) = if (other.property != null) {
-                other.property.simpleName.asString() to other.property.type
-            } else {
-                other.parameter!!.name?.asString() to other.parameter.type
-            }
-            return thisName == otherName && thisType == otherType
-        }
 
         override fun toString(): String {
             return if (property != null) {
