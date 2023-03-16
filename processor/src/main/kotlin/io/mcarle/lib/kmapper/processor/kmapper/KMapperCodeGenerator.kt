@@ -8,7 +8,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.lib.kmapper.processor.shared.CodeBuilder
-import io.mcarle.lib.kmapper.processor.shared.MapStructureBuilder
+import io.mcarle.lib.kmapper.processor.shared.CodeGenerator
 import io.mcarle.lib.kmapper.processor.shared.validated
 
 object KMapperCodeGenerator {
@@ -18,7 +18,7 @@ object KMapperCodeGenerator {
             return
         }
 
-        val mapper = MapStructureBuilder(
+        val mapper = CodeGenerator(
             logger = logger
         )
 

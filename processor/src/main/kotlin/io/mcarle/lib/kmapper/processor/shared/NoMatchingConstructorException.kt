@@ -9,7 +9,7 @@ class NoMatchingConstructorException(classDeclaration: KSClassDeclaration, avail
         availableProperties.map { it.simpleName.asString() }
     )
 
-    constructor(classDeclaration: KSClassDeclaration, vararg availableProperties: MapStructureBuilder.Property) : this(
+    constructor(classDeclaration: KSClassDeclaration, vararg availableProperties: PropertyMappingInfo) : this(
         classDeclaration,
         availableProperties.map { it.targetName }
     )
