@@ -1,46 +1,39 @@
 package io.mcarle.lib.kmapper.processor.shared
 
-import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.getConstructors
-import com.google.devtools.ksp.isAnnotationPresent
+import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.*
 import io.mcarle.lib.kmapper.api.annotation.KMap
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
 import io.mcarle.lib.kmapper.converter.api.isNullable
-import org.paukov.combinatorics3.Generator
+import java.util.*
 import kotlin.reflect.KClass
 
 class MapStructureBuilder(
     private val logger: KSPLogger
 ) {
 
-    fun generateCode(mappings: List<KMap>, paramName: String?, source: KSClassDeclaration, target: KSClassDeclaration): String {
+    fun generateCode(
+        mappings: List<KMap>,
+        constructorTypes: List<KSClassDeclaration>,
+        paramName: String?,
+        source: KSClassDeclaration,
+        target: KSClassDeclaration,
+        mappingCodeParentDeclaration: KSDeclaration
+    ): String {
 
-        val sourceProperties = determineProperties(paramName, mappings, source).toList()
+        val sourceProperties = determineProperties(paramName, mappings, source)
 
-        val constructor = determineSingleOrEmptyConstructor(target)
-            ?: findMatchingConstructor(target, sourceProperties.toList())
-            ?: throw RuntimeException("Could not determine constructor")
+        val constructor = determineConstructor(mappingCodeParentDeclaration, target, sourceProperties, constructorTypes)
 
-        val targetProperties = if (constructor.isEmptyConstructor()) {
-            determineMutableProperties(target).map { TargetPropertyOrParam(it) }
+        val targetProperties = if (propertiesMatchingExact(sourceProperties, constructor.parameters)) {
+            // constructor params matching sourceParams
+            constructor.parameters
         } else {
-            // non-empty constructor
-            val constructorParameters = constructor.parameters
-            val targetPropertiesOrParams = constructorParameters.map { TargetPropertyOrParam(it) }
-
-            if (propertiesMatching(sourceProperties, constructorParameters)) {
-                // constructor params matching sourceParams
-                targetPropertiesOrParams
-            } else {
-                // constructor params not matching sourceParams, combine with mutable properties
-                val targetPropertiesWithParams = targetPropertiesOrParams +
-                        determineMutableProperties(target).map { TargetPropertyOrParam(it) }
-                targetPropertiesWithParams
-            }
-        }
+            // constructor params not matching sourceParams, combine with mutable properties
+            constructor.parameters + determineMutableProperties(target)
+        }.map { TargetPropertyOrParam(it) }
 
         verifyPropertiesAndMandatoryParamsExisting(sourceProperties, targetProperties)
 
@@ -50,17 +43,20 @@ class MapStructureBuilder(
                 targetProperties
                     .mapNotNull { it.parameter }
                     .any { parameter ->
-                        property.simpleName.asString() == parameter.name?.asString() && property.type == parameter.type
+                        property.simpleName.asString() == parameter.name?.asString() && property.type.resolve() == parameter.type.resolve()
                     }
             }
 
-        return tryConvert(sourceProperties, constructor, targetPropertiesWithoutParameters)
+        return convertCode(sourceProperties.sortedByDescending { it.isBasedOnAnnotation }, constructor, targetPropertiesWithoutParameters)
     }
 
-    private fun determineSourceProperty(props: List<Property>, ksValueParameter: KSValueParameter): Property {
+    private fun determineSourceProperty(
+        props: List<Property>,
+        ksValueParameter: KSValueParameter
+    ): Property {
         return props.firstOrNull {
             it.targetName == ksValueParameter.name?.asString()
-        } ?: TODO("handle no matching source property")
+        } ?: throw UnexpectedStateException("No property for $ksValueParameter existing in $props")
     }
 
     private fun determineSourceProperty(
@@ -69,68 +65,88 @@ class MapStructureBuilder(
     ): Property {
         return props.firstOrNull {
             it.targetName == ksPropertyDeclaration.simpleName.asString()
-        } ?: TODO("handle no matching source property")
+        } ?: throw UnexpectedStateException("No property for $ksPropertyDeclaration existing in $props")
     }
-
-    data class Property constructor(
-        val mappingParamName: String?,
-        val sourceName: String?,
-        val targetName: String,
-        val constant: String?,
-        val expression: String?,
-        val ignore: Boolean,
-        val enableConverters: List<KClass<out TypeConverter>>,
-        val declaration: KSPropertyDeclaration?
-    )
 
     private fun determineProperties(
         mappingParamName: String?,
         mappings: List<KMap>,
         ksClassDeclaration: KSClassDeclaration
     ): List<Property> {
-        val sourceMappings = mappings.map { it.source }
         val properties = ksClassDeclaration.getAllProperties().toList()
 
-        verifyAllPropertiesExist(sourceMappings, properties, ksClassDeclaration)
+        verifyAllPropertiesExist(mappings, properties, ksClassDeclaration)
 
-        val result = mappings.filter { it.source.isEmpty() }.map { annotation ->
-            Property(
-                mappingParamName = mappingParamName,
-                sourceName = null,
-                targetName = annotation.target,
-                constant = annotation.constant.takeIf { it.isNotEmpty() },
-                expression = annotation.expression.takeIf { it.isNotEmpty() },
-                ignore = annotation.ignore,
-                enableConverters = annotation.enable.toList(),
-                declaration = null
-            )
-        }
+        val propertiesWithoutSource = getPropertiesWithoutSource(mappings, mappingParamName)
+        val propertiesWithSource = getPropertiesWithSource(mappings, properties, mappingParamName)
+        val propertiesWithoutMappings = getPropertiesWithoutMappings(properties, mappingParamName)
 
-        return result + properties.map { property ->
+        return propertiesWithoutSource + propertiesWithSource + propertiesWithoutMappings
+    }
 
-            val annotation = mappings.firstOrNull {
-                property.simpleName.asString() == it.source
-            }
-
+    private fun getPropertiesWithoutMappings(
+        properties: List<KSPropertyDeclaration>,
+        mappingParamName: String?
+    ) = properties
+        .map { property ->
             Property(
                 mappingParamName = mappingParamName,
                 sourceName = property.simpleName.asString(),
-                targetName = annotation?.target ?: property.simpleName.asString(),
-                constant = annotation?.constant?.takeIf { it.isNotEmpty() },
-                expression = annotation?.expression?.takeIf { it.isNotEmpty() },
-                ignore = annotation?.ignore == true,
-                enableConverters = annotation?.enable?.toList() ?: emptyList(),
-                declaration = property
+                targetName = property.simpleName.asString(),
+                constant = null,
+                expression = null,
+                ignore = false,
+                enableConverters = emptyList(),
+                declaration = property,
+                isBasedOnAnnotation = false
             )
         }
+
+    private fun getPropertiesWithSource(
+        mappings: List<KMap>,
+        properties: List<KSPropertyDeclaration>,
+        mappingParamName: String?
+    ) = mappings.filter { it.source.isNotEmpty() }.mapNotNull { annotation ->
+        properties.firstOrNull { property ->
+            property.simpleName.asString() == annotation.source
+        }?.let { annotation to it }
+    }.map { (annotation, property) ->
+        Property(
+            mappingParamName = mappingParamName,
+            sourceName = property.simpleName.asString(),
+            targetName = annotation.target,
+            constant = annotation.constant.takeIf { it.isNotEmpty() },
+            expression = annotation.expression.takeIf { it.isNotEmpty() },
+            ignore = annotation.ignore,
+            enableConverters = annotation.enable.toList(),
+            declaration = property,
+            isBasedOnAnnotation = true
+        )
+    }
+
+    private fun getPropertiesWithoutSource(
+        mappings: List<KMap>,
+        mappingParamName: String?
+    ) = mappings.filter { it.source.isEmpty() }.map { annotation ->
+        Property(
+            mappingParamName = mappingParamName,
+            sourceName = null,
+            targetName = annotation.target,
+            constant = annotation.constant.takeIf { it.isNotEmpty() },
+            expression = annotation.expression.takeIf { it.isNotEmpty() },
+            ignore = annotation.ignore,
+            enableConverters = annotation.enable.toList(),
+            declaration = null,
+            isBasedOnAnnotation = true
+        )
     }
 
     private fun verifyAllPropertiesExist(
-        sourceMappings: List<String>,
+        mappings: List<KMap>,
         properties: List<KSPropertyDeclaration>,
         ksClassDeclaration: KSClassDeclaration
     ) {
-        sourceMappings.filter { it.isNotEmpty() }.forEach { source ->
+        mappings.map { it.source }.filter { it.isNotEmpty() }.forEach { source ->
             if (properties.none { it.simpleName.asString() == source }) {
                 logger.warn("Ignoring mapping: $source not existing in ${ksClassDeclaration.simpleName.asString()}")
             }
@@ -178,8 +194,54 @@ class MapStructureBuilder(
         }
     }
 
-    private fun determineSingleOrEmptyConstructor(ksClassDeclaration: KSClassDeclaration): KSFunctionDeclaration? {
-        val constructors = ksClassDeclaration.getConstructors().toList()
+    private fun determineConstructor(
+        mappingCodeParentDeclaration: KSDeclaration,
+        targetClassDeclaration: KSClassDeclaration,
+        sourceProperties: List<Property>,
+        constructorTypes: List<KSClassDeclaration>
+    ): KSFunctionDeclaration {
+        val visibleConstructors = targetClassDeclaration.getConstructors()
+            .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }.toList()
+
+        return if (constructorTypes.firstOrNull()?.qualifiedName?.asString() == Unit::class.qualifiedName) {
+            if (targetClassDeclaration.primaryConstructor != null
+                && targetClassDeclaration.primaryConstructor!!.isVisibleFrom(mappingCodeParentDeclaration)
+                && propertiesMatching(
+                    sourceProperties,
+                    targetClassDeclaration.primaryConstructor!!.parameters
+                )
+            ) {
+                // Primary constructor
+                targetClassDeclaration.primaryConstructor!!
+            } else {
+                determineSingleOrEmptyConstructor(visibleConstructors)
+                    ?: findMatchingConstructors(visibleConstructors, sourceProperties)
+                        .let {
+                            if (it.size > 1) {
+                                throw AmbiguousConstructorException(targetClassDeclaration, it)
+                            } else if (it.isEmpty()) {
+                                throw NoMatchingConstructorException(targetClassDeclaration, *sourceProperties.toTypedArray())
+                            } else {
+                                it.first()
+                            }
+                        }
+            }
+        } else {
+            findConstructorByParameterTypes(visibleConstructors, constructorTypes)
+                ?: throw NoMatchingConstructorException(targetClassDeclaration, *constructorTypes.toTypedArray())
+        }
+    }
+
+    private fun findConstructorByParameterTypes(
+        constructors: List<KSFunctionDeclaration>,
+        constructorTypes: List<KSClassDeclaration>
+    ): KSFunctionDeclaration? {
+        return constructors.firstOrNull { constructor ->
+            constructor.parameters.mapNotNull { it.typeClassDeclaration() } == constructorTypes
+        }
+    }
+
+    private fun determineSingleOrEmptyConstructor(constructors: List<KSFunctionDeclaration>): KSFunctionDeclaration? {
         return if (constructors.size <= 1) {
             constructors.firstOrNull()
         } else {
@@ -189,11 +251,10 @@ class MapStructureBuilder(
         }
     }
 
-    private fun findMatchingConstructor(
-        ksClassDeclaration: KSClassDeclaration,
+    private fun findMatchingConstructors(
+        constructors: List<KSFunctionDeclaration>,
         props: List<Property>
-    ): KSFunctionDeclaration? {
-        val constructors = ksClassDeclaration.getConstructors().toList()
+    ): List<KSFunctionDeclaration> {
         return constructors
             .filter {
                 propertiesMatching(
@@ -201,63 +262,52 @@ class MapStructureBuilder(
                     it.parameters
                 )
             }
-            .maxByOrNull { it.parameters.size } // TODO: is it always good to choose constructor with the most parameters?
     }
 
     private fun propertiesMatching(props: List<Property>, parameters: List<KSValueParameter>): Boolean {
-        if (props.size <= parameters.size && props.size >= parameters.filter { !it.hasDefault }.size) {
-            val combinations = calcCombinations(parameters, props.size)
-            return combinations.any { propertiesMatchingExact(props, it) }
+        if (props.size >= parameters.filter { !it.hasDefault }.size) {
+            return parameters.all { parameter ->
+                props.any { property ->
+                    property.targetName == parameter.name?.asString() && !property.ignore
+                }
+            }
         }
         return false
     }
 
     private fun propertiesMatchingExact(props: List<Property>, parameters: List<KSValueParameter>): Boolean {
-        if (props.size != parameters.size) return false
-        return props.all { prop ->
-            parameters.any { param ->
-                prop.targetName == param.name!!.asString()
+        if (parameters.isEmpty()) return props.isEmpty()
+        return props
+            .filter { it.isBasedOnAnnotation }
+            .filterNot { it.ignore }
+            .all { property ->
+                parameters.any { parameter ->
+                    property.targetName == parameter.name?.asString()
+                }
             }
-        }
     }
 
-    private fun calcCombinations(parameters: List<KSValueParameter>, parameterCount: Int): List<List<KSValueParameter>> {
-        val defaultParameter = parameters.filter { it.hasDefault }
-        val nonDefaultParameter = parameters.filter { !it.hasDefault }
-
-        return if (parameterCount == nonDefaultParameter.size) {
-            listOf(nonDefaultParameter)
-        } else {
-            val missingParameter = parameterCount - nonDefaultParameter.size
-            Generator
-                .combination(defaultParameter)
-                .simple(missingParameter)
-                .map { nonDefaultParameter + it }
-        }
-    }
-
-    private fun KSFunctionDeclaration.isEmptyConstructor() = this.parameters.isEmpty()
-
-    private fun tryConvert(
+    private fun convertCode(
         sourceProperties: List<Property>,
         constructor: KSFunctionDeclaration,
         targetProperties: List<KSPropertyDeclaration>
     ): String {
-        val constructorCode = constructorCode(constructor, sourceProperties)
-        return "return " + constructorCode + propertyCode(sourceProperties, targetProperties)
+        val className = constructor.parentDeclaration!!.simpleName.asString()
+        val constructorCode = constructorCode(className, constructor, sourceProperties)
+        return "return·" + constructorCode + propertyCode(className, sourceProperties, targetProperties)
     }
 
     private fun constructorCode(
+        className: String,
         constructor: KSFunctionDeclaration,
         sourceProperties: List<Property>
     ): String {
-        val className = constructor.parentDeclaration!!.simpleName.asString()
         return if (constructor.parameters.isEmpty()) {
             "$className()"
         } else {
             """
-«$className(${"\n" + constructorParamsCode(constructor = constructor, sourceProperties = sourceProperties)}
-»)
+$className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourceProperties = sourceProperties)}
+⇤)
             """.trimIndent()
         }
     }
@@ -302,14 +352,15 @@ class MapStructureBuilder(
     }
 
     private fun propertyCode(
+        className: String,
         sourceProperties: List<Property>,
         targetProperties: List<KSPropertyDeclaration>
     ): String {
         if (targetProperties.isEmpty()) return ""
-        val varName = "gen"
+        val varName = className.replaceFirstChar { it.lowercase(Locale.getDefault()) }
         return """
-«.also { $varName ->${"\n" + propertySettingCode(targetProperties, sourceProperties, varName)}
-»}
+.also { $varName ->${"⇥\n" + propertySettingCode(targetProperties, sourceProperties, varName)}
+⇤}
         """.trimIndent()
     }
 
@@ -354,12 +405,25 @@ class MapStructureBuilder(
         }
     }
 
+    data class Property constructor(
+        val mappingParamName: String?,
+        val sourceName: String?,
+        val targetName: String,
+        val constant: String?,
+        val expression: String?,
+        val ignore: Boolean,
+        val enableConverters: List<KClass<out TypeConverter>>,
+        val declaration: KSPropertyDeclaration?,
+        val isBasedOnAnnotation: Boolean
+    )
+
     class TargetPropertyOrParam private constructor(
         val property: KSPropertyDeclaration? = null,
         val parameter: KSValueParameter? = null
     ) {
         constructor(propertyDeclaration: KSPropertyDeclaration) : this(propertyDeclaration, null)
         constructor(valueParameter: KSValueParameter) : this(null, valueParameter)
+        constructor(annotated: KSAnnotated) : this(annotated as? KSPropertyDeclaration, annotated as? KSValueParameter)
 
         override fun toString(): String {
             return if (property != null) {

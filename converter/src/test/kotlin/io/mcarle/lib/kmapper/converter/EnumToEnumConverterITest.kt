@@ -38,17 +38,19 @@ class EnumToEnumConverterITest : ConverterITest() {
         name = "MyEnums.kt",
         contents =
         """
-enum class MyFirstEnum { 
+enum class FirstEnum { 
     XXX,
     YYY,
     ZZZ
 }
-enum class MySecondEnum {
+enum class SecondEnum {
     AAA,
     ZZZ,
     XXX,
     YYY,
 }
+typealias MyFirstEnum = FirstEnum
+typealias MySecondEnum = SecondEnum
         """.trimIndent()
     )
 

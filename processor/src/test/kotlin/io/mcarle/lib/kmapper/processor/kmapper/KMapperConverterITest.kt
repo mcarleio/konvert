@@ -1,15 +1,13 @@
-package io.mcarle.lib.kmapper.processor.converter.kmapper
+package io.mcarle.lib.kmapper.processor.kmapper
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.lib.kmapper.api.annotation.KMap
-import io.mcarle.lib.kmapper.api.annotation.KMapping
 import io.mcarle.lib.kmapper.converter.SameTypeConverter
 import io.mcarle.lib.kmapper.converter.api.DEFAULT_KMAPPER_NO_ANNOTATION_PRIORITY
 import io.mcarle.lib.kmapper.converter.api.DEFAULT_KMAPPER_PRIORITY
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
-import io.mcarle.lib.kmapper.processor.converter.ConverterITest
-import io.mcarle.lib.kmapper.processor.converter.generatedSourceFor
-import io.mcarle.lib.kmapper.processor.kmapper.KMapperConverter
+import io.mcarle.lib.kmapper.processor.ConverterITest
+import io.mcarle.lib.kmapper.processor.generatedSourceFor
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -58,7 +56,7 @@ interface Mapper {
         assertEquals("TargetClass", converter.targetClassDeclaration.simpleName.asString())
         assertEquals("Mapper", converter.mapKSClassDeclaration.simpleName.asString())
         assertEquals(true, converter.enabledByDefault)
-        assertEquals(KMapping(mappings = arrayOf(KMap(source = "sourceProperty", target = "targetProperty"))), converter.annotation)
+        assertEquals(listOf(KMap(source = "sourceProperty", target = "targetProperty")), converter.annotation?.mappings)
         assertEquals(DEFAULT_KMAPPER_PRIORITY, converter.priority)
     }
 
@@ -97,7 +95,7 @@ interface Mapper {
         assertEquals("TargetClass", converter.targetClassDeclaration.simpleName.asString())
         assertEquals("Mapper", converter.mapKSClassDeclaration.simpleName.asString())
         assertEquals(true, converter.enabledByDefault)
-        assertEquals(KMapping(), converter.annotation)
+        assertEquals(listOf(), converter.annotation?.mappings)
         assertEquals(DEFAULT_KMAPPER_PRIORITY, converter.priority)
     }
 

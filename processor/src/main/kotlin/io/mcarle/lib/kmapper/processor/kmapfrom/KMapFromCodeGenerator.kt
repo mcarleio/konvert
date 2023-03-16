@@ -28,9 +28,11 @@ object KMapFromCodeGenerator {
                 .addCode(
                     mapper.generateCode(
                         converter.annotationData.mappings.validated(converter.sourceClassDeclaration, logger),
+                        converter.annotationData.constructor,
                         converter.paramName,
                         converter.sourceClassDeclaration,
-                        converter.targetClassDeclaration
+                        converter.targetClassDeclaration,
+                        converter.targetCompanionDeclaration // TODO: check if this is actual right
                     )
                 )
                 .build(),

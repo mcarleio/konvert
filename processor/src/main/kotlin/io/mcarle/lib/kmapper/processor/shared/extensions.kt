@@ -1,14 +1,13 @@
 package io.mcarle.lib.kmapper.processor.shared
 
 import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.*
 import io.mcarle.lib.kmapper.api.annotation.KMap
-import io.mcarle.lib.kmapper.api.annotation.MoreThanOneParamDefinedException
 import io.mcarle.lib.kmapper.api.annotation.NoParamDefinedException
+import io.mcarle.lib.kmapper.api.annotation.NotAllowedParameterCombinationException
 import io.mcarle.lib.kmapper.api.annotation.validate
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
+import io.mcarle.lib.kmapper.converter.api.classDeclaration
 import kotlin.reflect.KClass
 
 fun Iterable<KMap>.validated(reference: KSNode, logger: KSPLogger) = filter { annotation ->
@@ -19,7 +18,7 @@ fun Iterable<KMap>.validated(reference: KSNode, logger: KSPLogger) = filter { an
         // Filter out, as it is not defined how the target field should be set
         logger.warn(e.message!!, reference)
         false
-    } catch (e: MoreThanOneParamDefinedException) {
+    } catch (e: NotAllowedParameterCombinationException) {
         // Only warn
         logger.warn(e.message!!, reference)
         true
@@ -46,3 +45,5 @@ fun KMap.Companion.from(annotation: KSAnnotation) = KMap(
         .filterIsInstance<KClass<out TypeConverter>>()
         .toTypedArray(),
 )
+
+fun KSValueParameter.typeClassDeclaration(): KSClassDeclaration? = this.type.resolve().classDeclaration()

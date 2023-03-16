@@ -49,7 +49,7 @@ class SameTypeConverterITest : ConverterITest() {
             expected = """
                 public object FooMapperImpl : FooMapper {
                   public override fun toYyy(it: Xxx): Yyy = Yyy(
-                      test = it.test$enforceNotNull
+                    test = it.test$enforceNotNull
                   )
                 }
             """.trimIndent(),

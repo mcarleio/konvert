@@ -1,5 +1,6 @@
 package io.mcarle.lib.kmapper.converter
 
+import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -32,7 +33,7 @@ class MapToMapConverterITest : ConverterITest() {
                     arguments(it[0], "String, String?", it[1], "String, String?"),
                     arguments(it[0], "String, String?", it[1], "String?, String?"),
                     arguments(it[0], "String?, String", it[1], "String?, String"),
-                    arguments(it[0], "String?, String", it[1], "String?, String?"),
+                    arguments(it[0], "MyString?, MyString", it[1], "MyString?, MyString?"),
                     arguments(it[0], "String?, String?", it[1], "String?, String?"),
                     arguments(it[0], "String, String", it[1], "Int, Int"),
                     arguments(it[0], "String, String", it[1], "Int?, Int"),
@@ -40,7 +41,7 @@ class MapToMapConverterITest : ConverterITest() {
                     arguments(it[0], "String, String", it[1], "Int?, Int?"),
                     arguments(it[0], "String, String?", it[1], "Int, Int?"),
                     arguments(it[0], "String, String?", it[1], "Int?, Int?"),
-                    arguments(it[0], "String?, String", it[1], "Int?, Int"),
+                    arguments(it[0], "MyString?, MyString", it[1], "MyInt?, MyInt"),
                     arguments(it[0], "String?, String", it[1], "Int?, Int?"),
                     arguments(it[0], "String?, String?", it[1], "Int?, Int?"),
                 )
@@ -68,6 +69,17 @@ class MapToMapConverterITest : ConverterITest() {
         )
     }
 
+    override fun generateAdditionalCode(): SourceFile = SourceFile.kotlin(
+        name = "MyTypealiases.kt",
+        contents =
+        """
+typealias MyString = String
+typealias ReallyMyInt = Int
+typealias MyInt = ReallyMyInt
+        """.trimIndent()
+    )
+
+
     override fun verifyMapper(
         sourceTypeName: String,
         targetTypeName: String,
@@ -78,13 +90,17 @@ class MapToMapConverterITest : ConverterITest() {
     ) {
         val keyTypeName = sourceTypeName.substringAfter("<").split(",").first().trim()
         val key = when {
+            keyTypeName.startsWith("MyString") -> "888"
             keyTypeName.startsWith("String") -> "888"
+            keyTypeName.startsWith("MyInt") -> 73
             keyTypeName.startsWith("Int") -> 73
             else -> null
         }
         val valueTypeName = sourceTypeName.substringBefore(">").split(",").last().trim()
         val value = when {
+            valueTypeName.startsWith("MyString") -> "37173"
             valueTypeName.startsWith("String") -> "37173"
+            valueTypeName.startsWith("MyInt") -> 42
             valueTypeName.startsWith("Int") -> 42
             else -> null
         }

@@ -18,9 +18,6 @@ dependencies {
     implementation("com.squareup:kotlinpoet-ksp:1.12.0")
 
 
-    implementation("com.github.dpaukov:combinatoricslib3:3.3.3")
-
-
     // auto service
     implementation("com.google.auto.service:auto-service-annotations:1.0.1")
     ksp("dev.zacsweers.autoservice:auto-service-ksp:1.0.0")

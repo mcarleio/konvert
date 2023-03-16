@@ -5,6 +5,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.*
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
+import io.mcarle.lib.kmapper.converter.api.classDeclaration
 import io.mcarle.lib.kmapper.converter.api.isNullable
 
 @AutoService(TypeConverter::class)
@@ -239,25 +240,12 @@ newKey·to·newValue
 
 
     private fun KSType.isExactly(qualifiedName: String): Boolean {
-        return this.declaration.resolveTypealias() == resolver.getClassDeclarationByName(qualifiedName)
+        return this.classDeclaration() == resolver.getClassDeclarationByName(qualifiedName)
     }
 
     private fun KSType.isInstanceOf(qualifiedName: String): Boolean {
         return resolver.getClassDeclarationByName(qualifiedName)!!.asStarProjectedType()
             .isAssignableFrom(this.starProjection().makeNotNullable())
-    }
-
-    private fun KSDeclaration.resolveTypealias(): KSDeclaration {
-        return if (this is KSTypeAlias) this.findActualType() else this
-    }
-
-    fun KSTypeAlias.findActualType(): KSClassDeclaration {
-        val resolvedType = this.type.resolve().declaration
-        return if (resolvedType is KSTypeAlias) {
-            resolvedType.findActualType()
-        } else {
-            resolvedType as KSClassDeclaration
-        }
     }
 
 }

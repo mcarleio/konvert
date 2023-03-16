@@ -1,11 +1,11 @@
-package io.mcarle.lib.kmapper.processor.converter.kmapfrom
+package io.mcarle.lib.kmapper.processor.kmapfrom
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.lib.kmapper.converter.SameTypeConverter
 import io.mcarle.lib.kmapper.converter.api.DEFAULT_KMAPFROM_PRIORITY
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
-import io.mcarle.lib.kmapper.processor.converter.ConverterITest
-import io.mcarle.lib.kmapper.processor.converter.generatedSourceFor
+import io.mcarle.lib.kmapper.processor.ConverterITest
+import io.mcarle.lib.kmapper.processor.generatedSourceFor
 import io.mcarle.lib.kmapper.processor.kmapfrom.KMapFromConverter
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.junit.jupiter.api.Test

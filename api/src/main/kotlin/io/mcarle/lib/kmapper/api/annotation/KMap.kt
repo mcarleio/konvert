@@ -100,17 +100,16 @@ annotation class KMap(
 }
 
 /**
- * Throws exceptions when no params (beside [KMap.target]) are defined or more than one param (beside [KMap.target]) is defined.
+ * Throws exceptions when no params (beside [KMap.target]) are defined or an illegal parameter combination is defined.
  */
 fun KMap.validate() {
-    fun noParam() = !ignore && source.isBlank() && constant.isBlank() && expression.isBlank()
-    fun moreThanOneParam(): List<String>? {
+    fun noParam() = !ignore && source.isBlank() && constant.isBlank() && expression.isBlank() && enable.isEmpty()
+    fun notAllowedParameterCombination(): List<String>? {
         val result = mutableListOf<String>()
         if (ignore) result += KMap::ignore.name
         if (source.isNotBlank()) result += KMap::source.name
         if (constant.isNotBlank()) result += KMap::constant.name
         if (expression.isNotBlank()) result += KMap::expression.name
-        if (enable.isNotEmpty()) result += KMap::enable.name
 
         return if (result.size > 1) {
             result
@@ -120,10 +119,10 @@ fun KMap.validate() {
     }
 
     if (noParam()) throw NoParamDefinedException(target)
-    moreThanOneParam()?.let { throw MoreThanOneParamDefinedException(target, it) }
+    notAllowedParameterCombination()?.let { throw NotAllowedParameterCombinationException(target, it) }
 }
 
 class NoParamDefinedException(target: String) : RuntimeException("Missing parameter for target=$target")
 
-class MoreThanOneParamDefinedException(target: String, params: List<String>) :
-    RuntimeException("More than one parameter for target=$target defined: $params")
+class NotAllowedParameterCombinationException(target: String, params: List<String>) :
+    RuntimeException("Not allowed parameter combination for target=$target: $params")

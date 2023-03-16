@@ -1,10 +1,9 @@
-package io.mcarle.lib.kmapper.processor.converter
+package io.mcarle.lib.kmapper.processor
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.kspWithCompilation
 import com.tschuchort.compiletesting.symbolProcessorProviders
-import io.mcarle.lib.kmapper.processor.KMapProcessorProvider
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
 import org.intellij.lang.annotations.Language
@@ -17,9 +16,26 @@ abstract class ConverterITest {
     protected lateinit var temporaryFolder: File
 
     fun compileWith(enabledConverters: List<TypeConverter>, vararg code: SourceFile): Pair<KotlinCompilation, KotlinCompilation.Result> {
-        TypeConverterRegistry.reinitConverterList(*enabled(*enabledConverters.toTypedArray()))
+        return compileWith(enabledConverters, emptyList(), *code)
+    }
 
-        return compile(*code)
+    fun compileWith(
+        enabledConverters: List<TypeConverter>,
+        otherConverters: List<TypeConverter>,
+        vararg code: SourceFile
+    ): Pair<KotlinCompilation, KotlinCompilation.Result> {
+        return compileWith(enabledConverters, otherConverters, true, *code)
+    }
+
+    fun compileWith(
+        enabledConverters: List<TypeConverter>,
+        otherConverters: List<TypeConverter>,
+        expectSuccess: Boolean,
+        vararg code: SourceFile
+    ): Pair<KotlinCompilation, KotlinCompilation.Result> {
+        TypeConverterRegistry.reinitConverterList(*enabled(*enabledConverters.toTypedArray()), *otherConverters.toTypedArray())
+
+        return compile(expectSuccess, *code)
     }
 
     private fun enabled(vararg converter: TypeConverter): Array<out TypeConverter> {
@@ -30,11 +46,13 @@ abstract class ConverterITest {
         }.toTypedArray()
     }
 
-    private fun compile(vararg sourceFiles: SourceFile): Pair<KotlinCompilation, KotlinCompilation.Result> {
+    private fun compile(expectSuccess: Boolean, vararg sourceFiles: SourceFile): Pair<KotlinCompilation, KotlinCompilation.Result> {
         val compilation = prepareCompilation(sourceFiles.toList())
 
         val result = compilation.compile()
-        assertEquals(expected = KotlinCompilation.ExitCode.OK, actual = result.exitCode)
+        if (expectSuccess) {
+            assertEquals(expected = KotlinCompilation.ExitCode.OK, actual = result.exitCode)
+        }
 
         return compilation to result
     }

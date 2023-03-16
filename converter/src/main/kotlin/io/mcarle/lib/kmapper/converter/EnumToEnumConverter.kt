@@ -2,9 +2,11 @@ package io.mcarle.lib.kmapper.converter
 
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
+import io.mcarle.lib.kmapper.converter.api.classDeclaration
 import io.mcarle.lib.kmapper.converter.api.isNullable
 
 @AutoService(TypeConverter::class)
@@ -23,10 +25,12 @@ class EnumToEnumConverter : AbstractTypeConverter() {
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): String {
-        val sourceEnumValues =
-            (source.declaration as? KSClassDeclaration)?.declarations?.filterIsInstance<KSClassDeclaration>()?.toList() ?: emptyList()
-        val targetEnumValues =
-            (target.declaration as? KSClassDeclaration)?.declarations?.filterIsInstance<KSClassDeclaration>()?.toList() ?: emptyList()
+        val sourceEnumValues = source.classDeclaration()?.declarations
+            ?.filter { it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY }
+            ?.toList() ?: emptyList()
+        val targetEnumValues = target.classDeclaration()?.declarations
+            ?.filter { it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY }
+            ?.toList() ?: emptyList()
 
         val missingEnumValue = sourceEnumValues.firstOrNull { sourceEnumValue ->
             targetEnumValues.none { it.simpleName.asString() == sourceEnumValue.simpleName.asString() }

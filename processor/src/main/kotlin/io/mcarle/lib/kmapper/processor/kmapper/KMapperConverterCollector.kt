@@ -1,17 +1,16 @@
 package io.mcarle.lib.kmapper.processor.kmapper
 
-import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.lib.kmapper.api.annotation.KMapper
 import io.mcarle.lib.kmapper.api.annotation.KMapping
 
 object KMapperConverterCollector {
 
-    @OptIn(KspExperimental::class)
     fun collect(resolver: Resolver, logger: KSPLogger): List<KMapperConverter> {
         return resolver.getSymbolsWithAnnotation(KMapper::class.qualifiedName!!)
             .flatMap { ksAnnotated ->
@@ -33,7 +32,13 @@ object KMapperConverterCollector {
                             else it.parameters.first().type.resolve().declaration as? KSClassDeclaration
                         val target = it.returnType?.resolve()?.declaration as? KSClassDeclaration
 
-                        val annotation = it.getAnnotationsByType(KMapping::class).firstOrNull()
+                        val annotation = it.annotations.firstOrNull { annotation ->
+                            (annotation.annotationType.toTypeName() as? ClassName)?.canonicalName == KMapping::class.qualifiedName
+                        }?.let { annotation ->
+                            // cannot use getAnnotationsByType, as the KMapping.constructor classes may be part of this compilation and
+                            // therefore results in ClassNotFoundExceptions when accessing it
+                            KMapperConverter.AnnotationData.from(annotation)
+                        }
 
                         if (annotation != null && it.isAbstract) {
                             if (source == null || target == null) {
@@ -49,7 +54,7 @@ object KMapperConverterCollector {
                             )
                         } else if (source != null && target != null) {
                             KMapperConverter(
-                                annotation = if (it.isAbstract) KMapping() else null,
+                                annotation = if (it.isAbstract) KMapperConverter.AnnotationData.default(resolver) else null,
                                 sourceClassDeclaration = source,
                                 targetClassDeclaration = target,
                                 mapKSClassDeclaration = ksClassDeclaration,

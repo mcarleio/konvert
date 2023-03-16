@@ -1,5 +1,6 @@
 package io.mcarle.lib.kmapper.converter
 
+import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -37,11 +38,11 @@ class IterableToIterableConverterITest : ConverterITest() {
                     arguments(it[0], "String?", it[1], "String?"),
                     arguments(it[0], "String", it[1], "Int"),
                     arguments(it[0], "String", it[1], "Int?"),
-                    arguments(it[0], "String?", it[1], "Int?"),
+                    arguments(it[0], "MyString?", it[1], "MyInt?"), // special case: typealiases
                     arguments(it[0], "Collection<String>", it[1], "MutableCollection<String?>"),
                     arguments(it[0], "Collection<String>", it[1], "MutableCollection<String?>?"),
                     arguments(it[0], "Collection<String>?", it[1], "MutableCollection<String?>?"),
-                    arguments(it[0], "Collection<String>", it[1], "MutableIterable<String?>"),
+                    arguments(it[0], "Collection<MyString>", it[1], "MutableIterable<MyString?>"), // special case: typealias
                     arguments(it[0], "Collection<String>", it[1], "MutableIterable<String?>?"),
                     arguments(it[0], "Collection<String>?", it[1], "MutableIterable<String?>?"),
                 )
@@ -61,6 +62,17 @@ class IterableToIterableConverterITest : ConverterITest() {
         )
     }
 
+    override fun generateAdditionalCode(): SourceFile = SourceFile.kotlin(
+        name = "MyTypealiases.kt",
+        contents =
+        """
+typealias MyString = String
+typealias ReallyMyInt = Int
+typealias MyInt = ReallyMyInt
+        """.trimIndent()
+    )
+
+
     override fun additionalConverter(): Array<TypeConverter> {
         return arrayOf(
             SameTypeConverter(),
@@ -79,8 +91,10 @@ class IterableToIterableConverterITest : ConverterITest() {
         val genericTypeName = sourceTypeName.substringAfter("<").removeSuffix(">").trim()
         val collectionValue: Any? = when {
             genericTypeName.startsWith("String") -> "888"
+            genericTypeName.startsWith("MyString") -> "888"
             genericTypeName.startsWith("Int") -> 73
             genericTypeName.startsWith("Collection<String>") -> listOf("123")
+            genericTypeName.startsWith("Collection<MyString>") -> listOf("123")
             else -> null
         }
 
@@ -109,4 +123,3 @@ class IterableToIterableConverterITest : ConverterITest() {
     }
 
 }
-

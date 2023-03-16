@@ -14,10 +14,10 @@ abstract class BaseTypeConverter(
 ) : AbstractTypeConverter() {
 
     private val sourceType: KSType by lazy {
-        resolver.getClassDeclarationByName(sourceClass.qualifiedName!!)!!.asType(emptyList())
+        resolver.getClassDeclarationByName(sourceClass.qualifiedName!!)!!.asStarProjectedType()
     }
     private val targetType: KSType by lazy {
-        resolver.getClassDeclarationByName(targetClass.qualifiedName!!)!!.asType(emptyList())
+        resolver.getClassDeclarationByName(targetClass.qualifiedName!!)!!.asStarProjectedType()
     }
 
     override fun matches(source: KSType, target: KSType): Boolean {

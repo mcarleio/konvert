@@ -48,6 +48,7 @@ class KMapToConverter(
     data class AnnotationData(
         val value: KSClassDeclaration,
         val mappings: List<KMap>,
+        val constructor: List<KSClassDeclaration>,
         val mapFunctionName: String,
         val priority: Priority
     ) {
@@ -58,6 +59,7 @@ class KMapToConverter(
                 mappings = (annotation.arguments.first { it.name?.asString() == KMapTo::mappings.name }.value as List<*>)
                     .filterIsInstance<KSAnnotation>()
                     .map { KMap.from(it) },
+                constructor = (annotation.arguments.first { it.name?.asString() == KMapTo::constructor.name }.value as List<*>).mapNotNull { (it as? KSType)?.declaration as? KSClassDeclaration },
                 mapFunctionName = annotation.arguments.first { it.name?.asString() == KMapTo::mapFunctionName.name }.value as String,
                 priority = annotation.arguments.first { it.name?.asString() == KMapTo::priority.name }.value as Priority,
             )

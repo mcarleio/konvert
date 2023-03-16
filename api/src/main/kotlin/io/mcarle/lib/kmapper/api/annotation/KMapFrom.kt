@@ -26,11 +26,24 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.CLASS)
 @Repeatable
 annotation class KMapFrom(
+    /**
+     * The source class of the mapping
+     */
     val value: KClass<*>,
+    /**
+     * TODO
+     */
     val mappings: Array<KMap> = [],
+    /**
+     * Define the parameter types of a specific constructor of the target class which should be used.
+     */
+    val constructor: Array<KClass<*>> = [Unit::class],
     /**
      * If not set, defaults to `from${value.simpleName}`
      */
     val mapFunctionName: String = "",
+    /**
+     * The generated converter will get the defined priority.
+     */
     val priority: Priority = DEFAULT_KMAPFROM_PRIORITY
 )

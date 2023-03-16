@@ -36,9 +36,11 @@ object KMapperCodeGenerator {
                 .addCode(
                     mapper.generateCode(
                         converter.annotation.mappings.asIterable().validated(converter.mapKSFunctionDeclaration, logger),
+                        converter.annotation.constructor,
                         converter.paramName,
                         converter.sourceClassDeclaration,
-                        converter.targetClassDeclaration
+                        converter.targetClassDeclaration,
+                        converter.mapKSFunctionDeclaration
                     )
                 )
                 .build(),

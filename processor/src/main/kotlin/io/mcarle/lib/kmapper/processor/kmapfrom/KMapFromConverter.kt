@@ -5,6 +5,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import io.mcarle.lib.kmapper.api.annotation.KMap
 import io.mcarle.lib.kmapper.api.annotation.KMapFrom
+import io.mcarle.lib.kmapper.api.annotation.KMapTo
 import io.mcarle.lib.kmapper.converter.api.ConverterConfig
 import io.mcarle.lib.kmapper.converter.api.Priority
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
@@ -44,15 +45,16 @@ class KMapFromConverter(
 
     override fun convert(fieldName: String, source: KSType, target: KSType): String {
         return if (source.isNullable()) {
-            return "$fieldName?.let { ${targetClassDeclaration.qualifiedName?.asString()}.$mapFunctionName($paramName = it) }"
+            return "$fieldName?.let·{ ${targetClassDeclaration.qualifiedName?.asString()}.$mapFunctionName($paramName·=·it) }"
         } else {
-            "${targetClassDeclaration.qualifiedName?.asString()}.$mapFunctionName($paramName = $fieldName)"
+            "${targetClassDeclaration.qualifiedName?.asString()}.$mapFunctionName($paramName·=·$fieldName)"
         }
     }
 
     data class AnnotationData(
         val value: KSClassDeclaration,
         val mappings: List<KMap>,
+        val constructor: List<KSClassDeclaration>,
         val mapFunctionName: String,
         val priority: Priority
     ) {
@@ -63,6 +65,7 @@ class KMapFromConverter(
                 mappings = (annotation.arguments.first { it.name?.asString() == KMapFrom::mappings.name }.value as List<*>)
                     .filterIsInstance<KSAnnotation>()
                     .map { KMap.from(it) },
+                constructor = (annotation.arguments.first { it.name?.asString() == KMapFrom::constructor.name }.value as List<*>).mapNotNull { (it as? KSType)?.declaration as? KSClassDeclaration },
                 mapFunctionName = annotation.arguments.first { it.name?.asString() == KMapFrom::mapFunctionName.name }.value as String,
                 priority = annotation.arguments.first { it.name?.asString() == KMapFrom::priority.name }.value as Priority,
             )

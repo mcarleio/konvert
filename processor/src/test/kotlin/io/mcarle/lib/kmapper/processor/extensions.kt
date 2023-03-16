@@ -1,4 +1,4 @@
-package io.mcarle.lib.kmapper.processor.converter
+package io.mcarle.lib.kmapper.processor
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import java.io.File
