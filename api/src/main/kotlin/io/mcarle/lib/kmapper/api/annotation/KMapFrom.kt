@@ -31,7 +31,8 @@ annotation class KMapFrom(
      */
     val value: KClass<*>,
     /**
-     * TODO
+     * List of user defined mappings for non-default use-cases.
+     * During code generation all properties from source are appended (like `KMap(source=sourcePropertyName, target=sourcePropertyName)`)
      */
     val mappings: Array<KMap> = [],
     /**

@@ -8,7 +8,8 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.FUNCTION)
 annotation class KMapping(
     /**
-     * TODO
+     * List of user defined mappings for non-default use-cases.
+     * During code generation all properties from source are appended (like `KMap(source=sourcePropertyName, target=sourcePropertyName)`)
      */
     val mappings: Array<KMap> = [],
     /**
