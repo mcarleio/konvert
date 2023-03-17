@@ -1,9 +1,13 @@
 package io.mcarle.lib.kmapper.processor.shared
 
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.Origin
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
 import io.mcarle.lib.kmapper.converter.api.isNullable
-import java.util.*
+import java.util.Locale
 
 class MappingCodeGenerator {
 

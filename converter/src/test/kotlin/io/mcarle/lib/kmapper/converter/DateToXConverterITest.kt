@@ -7,7 +7,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.reflections.Reflections
 import java.time.Instant
-import java.util.*
+import java.util.Date
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 

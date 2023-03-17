@@ -1,9 +1,12 @@
 package io.mcarle.lib.kmapper.converter
 
-import com.tschuchort.compiletesting.*
-import io.mcarle.lib.kmapper.processor.KMapProcessorProvider
+import com.tschuchort.compiletesting.KotlinCompilation
+import com.tschuchort.compiletesting.SourceFile
+import com.tschuchort.compiletesting.kspWithCompilation
+import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
+import io.mcarle.lib.kmapper.processor.KMapProcessorProvider
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.io.TempDir
 import java.io.File

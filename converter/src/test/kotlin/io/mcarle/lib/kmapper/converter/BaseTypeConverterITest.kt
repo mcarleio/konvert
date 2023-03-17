@@ -2,9 +2,7 @@ package io.mcarle.lib.kmapper.converter
 
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import org.paukov.combinatorics3.Generator
 import org.reflections.Reflections
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass

@@ -6,7 +6,6 @@ import io.mcarle.lib.kmapper.converter.api.DEFAULT_KMAPTO_PRIORITY
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
 import io.mcarle.lib.kmapper.processor.ConverterITest
 import io.mcarle.lib.kmapper.processor.generatedSourceFor
-import io.mcarle.lib.kmapper.processor.kmapto.KMapToConverter
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains

@@ -2,7 +2,8 @@ package io.mcarle.lib.kmapper.converter
 
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.Variance
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
 import io.mcarle.lib.kmapper.converter.api.classDeclaration

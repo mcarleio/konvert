@@ -4,7 +4,6 @@ package io.mcarle.lib.kmapper.converter.api
 value class Options(val options: Map<String, String>)
 
 
-
 interface Option {
     val configKey: String
     val defaultValue: Any?

@@ -1,6 +1,6 @@
 package io.mcarle.lib.kmapper.converter.api
 
-import java.util.*
+import java.util.ServiceLoader
 import kotlin.reflect.KClass
 
 object TypeConverterRegistry : Iterable<TypeConverter> {

@@ -8,7 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.reflections.Reflections
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.*
+import java.util.Date
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.test.assertTrue

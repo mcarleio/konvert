@@ -1,7 +1,11 @@
 package io.mcarle.lib.kmapper.processor.shared
 
 import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.lib.kmapper.api.annotation.KMap
 import io.mcarle.lib.kmapper.api.annotation.NoParamDefinedException
 import io.mcarle.lib.kmapper.api.annotation.NotAllowedParameterCombinationException

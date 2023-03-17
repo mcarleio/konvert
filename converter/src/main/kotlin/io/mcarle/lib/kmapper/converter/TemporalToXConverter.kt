@@ -5,9 +5,13 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import io.mcarle.lib.kmapper.converter.api.isNullable
-import java.time.*
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZonedDateTime
 import java.time.temporal.Temporal
-import java.util.*
+import java.util.Date
 import kotlin.reflect.KClass
 
 abstract class TemporalToXConverter<T : Temporal>(
