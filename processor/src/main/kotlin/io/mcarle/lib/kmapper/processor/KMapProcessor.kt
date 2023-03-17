@@ -19,6 +19,7 @@ import io.mcarle.lib.kmapper.processor.kmapto.KMapToCodeGenerator
 import io.mcarle.lib.kmapper.processor.kmapto.KMapToConverter
 import io.mcarle.lib.kmapper.processor.kmapto.KMapToConverterCollector
 import io.mcarle.lib.kmapper.processor.codegen.CodeBuilder
+import io.mcarle.lib.kmapper.processor.exceptions.UnexpectedTypeConverter
 
 class KMapProcessor(
     private val codeGenerator: CodeGenerator,
@@ -58,7 +59,7 @@ class KMapProcessor(
                 is KMapToConverter -> KMapToCodeGenerator.generate(it, resolver, logger)
                 is KMapFromConverter -> KMapFromCodeGenerator.generate(it, resolver, logger)
                 is KMapperConverter -> KMapperCodeGenerator.generate(it, resolver, logger)
-                else -> throw RuntimeException("Unknown converter: ${it::class}")
+                else -> throw UnexpectedTypeConverter(it)
             }
         }
     }

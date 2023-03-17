@@ -227,7 +227,7 @@ newKey·to·newValue
             target.isExactly(HASHMAP) -> if (!mapTypeChanged && source.isInstanceOf(HASHMAP)) "" else "$nc.toMap(kotlin.collections.HashMap())"
             target.isExactly(LINKEDHASHMAP) -> if (!mapTypeChanged && source.isInstanceOf(LINKEDHASHMAP)) "" else "$nc.toMap(kotlin.collections.LinkedHashMap())"
 
-            else -> throw RuntimeException("target $target is an unknown type and could not be converted")
+            else -> throw UnsupportedTargetMapException(target)
         }
 
         val code = mapSourceContentCode + mapSourceContainerCode + appendNotNullAssertionOperatorIfNeeded(source, target)
@@ -250,3 +250,7 @@ newKey·to·newValue
     }
 
 }
+
+class UnsupportedTargetMapException(type: KSType) : RuntimeException(
+    "Maps of $type are not supported as target by ${MapToMapConverter::class.simpleName}"
+)

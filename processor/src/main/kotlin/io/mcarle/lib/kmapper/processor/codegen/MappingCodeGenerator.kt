@@ -7,7 +7,7 @@ import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Origin
 import io.mcarle.lib.kmapper.converter.api.TypeConverterRegistry
 import io.mcarle.lib.kmapper.converter.api.isNullable
-import io.mcarle.lib.kmapper.processor.exceptions.UnexpectedStateException
+import io.mcarle.lib.kmapper.processor.exceptions.PropertyMappingNotExistingException
 import java.util.Locale
 
 class MappingCodeGenerator {
@@ -115,7 +115,7 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
     ): PropertyMappingInfo {
         return propertyMappings.firstOrNull {
             it.targetName == ksValueParameter.name?.asString()
-        } ?: throw UnexpectedStateException("No property for $ksValueParameter existing in $propertyMappings")
+        } ?: throw PropertyMappingNotExistingException(ksValueParameter, propertyMappings)
     }
 
     private fun determinePropertyMappingInfo(
@@ -124,7 +124,7 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
     ): PropertyMappingInfo {
         return propertyMappings.firstOrNull {
             it.targetName == ksPropertyDeclaration.simpleName.asString()
-        } ?: throw UnexpectedStateException("No property for $ksPropertyDeclaration existing in $propertyMappings")
+        } ?: throw PropertyMappingNotExistingException(ksPropertyDeclaration, propertyMappings)
     }
 
     private fun convertValue(source: PropertyMappingInfo, targetTypeRef: KSTypeReference, ignorable: Boolean): String? {

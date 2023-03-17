@@ -95,7 +95,7 @@ class IterableToIterableConverter : AbstractTypeConverter() {
             target.isExactly(HASHSET) -> if (!listTypeChanged && source.isInstanceOf(HASHSET)) "" else "$nc.toCollection(kotlin.collections.HashSet())"
             target.isExactly(LINKEDHASHSET) -> if (!listTypeChanged && source.isInstanceOf(LINKEDHASHSET)) "" else "$nc.toCollection(kotlin.collections.LinkedHashSet())"
 
-            else -> throw RuntimeException("target $target is an unknown type and could not be converted")
+            else -> throw UnsupportedTargetIterableException(target)
         }
 
 
@@ -118,3 +118,7 @@ class IterableToIterableConverter : AbstractTypeConverter() {
     }
 
 }
+
+class UnsupportedTargetIterableException(type: KSType) : RuntimeException(
+    "Iterables of $type are not supported as target by ${IterableToIterableConverter::class.simpleName}"
+)

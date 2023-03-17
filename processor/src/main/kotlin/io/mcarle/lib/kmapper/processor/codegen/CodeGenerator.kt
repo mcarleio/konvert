@@ -10,6 +10,7 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.lib.kmapper.api.annotation.KMap
+import io.mcarle.lib.kmapper.processor.exceptions.PropertyMappingNotExistingException
 
 class CodeGenerator(
     private val logger: KSPLogger
@@ -64,23 +65,23 @@ class CodeGenerator(
     }.map { TargetElement(it) }
 
     private fun verifyPropertiesAndMandatoryParametersExist(
-        sourceProperties: List<PropertyMappingInfo>,
+        propertyMappings: List<PropertyMappingInfo>,
         targetElements: List<TargetElement>
     ) {
-        val propertyOrParamWithoutSource = targetElements.firstOrNull { propertyOrParam ->
-            val name = if (propertyOrParam.property != null) {
-                propertyOrParam.property.simpleName.asString()
-            } else if (propertyOrParam.parameter != null) {
-                if (propertyOrParam.parameter.hasDefault) return@firstOrNull false // break, as optional
-                propertyOrParam.parameter.name?.asString()
+        val targetElement = targetElements.firstOrNull { targetElement ->
+            val name = if (targetElement.property != null) {
+                targetElement.property.simpleName.asString()
+            } else if (targetElement.parameter != null) {
+                if (targetElement.parameter.hasDefault) return@firstOrNull false // break, as optional
+                targetElement.parameter.name?.asString()
             } else {
                 // should not occur...
                 null
             }
-            sourceProperties.none { name == it.targetName }
+            propertyMappings.none { name == it.targetName }
         }
-        if (propertyOrParamWithoutSource != null) {
-            throw RuntimeException("Could not determine source property for property/parameter $propertyOrParamWithoutSource")
+        if (targetElement != null) {
+            throw PropertyMappingNotExistingException(targetElement, propertyMappings)
         }
     }
 
