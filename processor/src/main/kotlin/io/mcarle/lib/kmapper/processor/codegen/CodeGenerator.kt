@@ -1,4 +1,4 @@
-package io.mcarle.lib.kmapper.processor.shared
+package io.mcarle.lib.kmapper.processor.codegen
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.isAnnotationPresent

@@ -1,6 +1,7 @@
-package io.mcarle.lib.kmapper.processor.shared
+package io.mcarle.lib.kmapper.processor.exceptions
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import io.mcarle.lib.kmapper.processor.codegen.PropertyMappingInfo
 
 class NoMatchingConstructorException(classDeclaration: KSClassDeclaration, availableProperties: List<String>) :
     RuntimeException("No constructor for $classDeclaration matching the available properties $availableProperties found") {

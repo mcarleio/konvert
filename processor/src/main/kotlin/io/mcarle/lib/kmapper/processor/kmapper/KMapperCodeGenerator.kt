@@ -7,9 +7,9 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
-import io.mcarle.lib.kmapper.processor.shared.CodeBuilder
-import io.mcarle.lib.kmapper.processor.shared.CodeGenerator
-import io.mcarle.lib.kmapper.processor.shared.validated
+import io.mcarle.lib.kmapper.processor.codegen.CodeBuilder
+import io.mcarle.lib.kmapper.processor.codegen.CodeGenerator
+import io.mcarle.lib.kmapper.processor.validated
 
 object KMapperCodeGenerator {
 

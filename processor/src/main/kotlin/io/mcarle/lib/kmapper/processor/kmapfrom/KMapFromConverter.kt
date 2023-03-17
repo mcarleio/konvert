@@ -9,8 +9,8 @@ import io.mcarle.lib.kmapper.converter.api.ConverterConfig
 import io.mcarle.lib.kmapper.converter.api.Priority
 import io.mcarle.lib.kmapper.converter.api.TypeConverter
 import io.mcarle.lib.kmapper.converter.api.isNullable
-import io.mcarle.lib.kmapper.processor.shared.AnnotatedConverter
-import io.mcarle.lib.kmapper.processor.shared.from
+import io.mcarle.lib.kmapper.processor.AnnotatedConverter
+import io.mcarle.lib.kmapper.processor.from
 import java.util.Locale
 
 class KMapFromConverter(

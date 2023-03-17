@@ -1,4 +1,4 @@
-package io.mcarle.lib.kmapper.processor.shared
+package io.mcarle.lib.kmapper.processor.codegen
 
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.isVisibleFrom
@@ -7,6 +7,9 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
+import io.mcarle.lib.kmapper.processor.exceptions.AmbiguousConstructorException
+import io.mcarle.lib.kmapper.processor.exceptions.NoMatchingConstructorException
+import io.mcarle.lib.kmapper.processor.typeClassDeclaration
 
 class ConstructorResolver(
     private val logger: KSPLogger

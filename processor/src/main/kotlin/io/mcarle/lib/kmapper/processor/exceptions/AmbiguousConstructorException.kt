@@ -1,4 +1,4 @@
-package io.mcarle.lib.kmapper.processor.shared
+package io.mcarle.lib.kmapper.processor.exceptions
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration

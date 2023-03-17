@@ -18,8 +18,7 @@ import io.mcarle.lib.kmapper.processor.kmapper.KMapperConverterCollector
 import io.mcarle.lib.kmapper.processor.kmapto.KMapToCodeGenerator
 import io.mcarle.lib.kmapper.processor.kmapto.KMapToConverter
 import io.mcarle.lib.kmapper.processor.kmapto.KMapToConverterCollector
-import io.mcarle.lib.kmapper.processor.shared.AnnotatedConverter
-import io.mcarle.lib.kmapper.processor.shared.CodeBuilder
+import io.mcarle.lib.kmapper.processor.codegen.CodeBuilder
 
 class KMapProcessor(
     private val codeGenerator: CodeGenerator,

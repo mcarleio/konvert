@@ -4,8 +4,8 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.lib.kmapper.converter.SameTypeConverter
 import io.mcarle.lib.kmapper.converter.StringToIntConverter
-import io.mcarle.lib.kmapper.processor.shared.AmbiguousConstructorException
-import io.mcarle.lib.kmapper.processor.shared.NoMatchingConstructorException
+import io.mcarle.lib.kmapper.processor.exceptions.AmbiguousConstructorException
+import io.mcarle.lib.kmapper.processor.exceptions.NoMatchingConstructorException
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
