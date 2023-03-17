@@ -44,3 +44,15 @@ tasks.test {
     useJUnitPlatform()
     maxParallelForks = 1.coerceAtLeast(Runtime.getRuntime().availableProcessors() / 2)
 }
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "io.mcarle.lib"
+            artifactId = "kmapper-converter"
+            version = "1.0"
+
+            from(components["kotlin"])
+        }
+    }
+}
