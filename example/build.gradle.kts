@@ -1,23 +1,25 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    kotlin("jvm") version "1.7.22"
-    id("java-library")
-    id("com.google.devtools.ksp").version("1.7.22-1.0.8")
+    kotlin("jvm") version "1.8.10"
+    id("com.google.devtools.ksp").version("1.8.10-1.0.9")
 }
+
+val kmapVersion = "0.1.0-SNAPSHOT"
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation(project(":api"))
-    implementation(project(":converter-api"))
-
-    // only needed in case we enable specific converter
-    compileOnly(project(":converter"))
+    implementation("io.mcarle:kmap-api:$kmapVersion")
 
     // KSP to generate mapping code
-    ksp(project(":processor"))
-    ksp(project(":converter"))
+    ksp("io.mcarle:kmap-processor:$kmapVersion")
+    ksp("io.mcarle:kmap-converter:$kmapVersion")
+    // only needed if you need to enable specific converter through KMap(enable=...)
+    compileOnly("io.mcarle:kmap-converter:$kmapVersion")
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -33,4 +35,9 @@ kotlin {
     sourceSets.test {
         kotlin.srcDir("build/generated/ksp/test/kotlin")
     }
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.javaParameters = true
 }

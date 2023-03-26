@@ -1,58 +1,49 @@
 plugins {
-    kotlin("jvm") version "1.7.22"
-    id("com.google.devtools.ksp").version("1.7.22-1.0.8")
-
-    id("java-library")
-    id("maven-publish")
+    id("kmap.kotlin")
+    id("kmap.mvn-publish")
+    id("com.google.devtools.ksp").version("${Versions.kotlin}-${Versions.ksp}")
+    id("org.jetbrains.kotlinx.kover")
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
     api(project(":api"))
-    compileOnly(project(":converter-api"))
-    compileOnly("com.google.devtools.ksp:symbol-processing-api:1.7.22-1.0.8")
+    api(project(":converter-api"))
+    api(symbolProcessingApi)
 
     // auto service
     implementation("com.google.auto.service:auto-service-annotations:1.0.1")
     ksp("dev.zacsweers.autoservice:auto-service-ksp:1.0.0")
 
-
-    testImplementation("com.github.dpaukov:combinatoricslib3:3.3.3")
-    testImplementation("com.google.devtools.ksp:symbol-processing:1.7.22-1.0.8")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.7.22")
     testImplementation(project(":processor"))
     testImplementation(project(":converter-api"))
-    testImplementation(kotlin("test"))
-    testImplementation(kotlin("reflect"))
+    testImplementation(kotlinTest)
+    testImplementation(kotlinReflect)
+    testImplementation(kotlinCompilerEmbeddable)
+    testImplementation(symbolProcessing)
+    testImplementation(kotlinCompileTesting)
+    testImplementation(kotlinCompileTestingKsp)
+
+    testImplementation("com.github.dpaukov:combinatoricslib3:3.3.3")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
     testImplementation("org.reflections:reflections:0.10.2")
-    testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.9")
-    testImplementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:1.4.9")
 }
 
-repositories {
-    mavenCentral()
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+ksp {
+    arg("autoserviceKsp.verify", "true")
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags = setOf("detailed")
+    }
     maxParallelForks = 1.coerceAtLeast(Runtime.getRuntime().availableProcessors() / 2)
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = "io.mcarle.lib"
-            artifactId = "kmapper-converter"
-            version = "1.0"
-
-            from(components["kotlin"])
-        }
+tasks.register<Test>("detailedTests") {
+    useJUnitPlatform {
+        includeTags = setOf("detailed")
     }
+    maxParallelForks = 1.coerceAtLeast(Runtime.getRuntime().availableProcessors() / 2)
+    shouldRunAfter(tasks.check)
 }
