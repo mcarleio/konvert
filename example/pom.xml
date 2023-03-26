@@ -4,13 +4,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.mcarle</groupId>
-    <artifactId>kmap-maven-example</artifactId>
+    <artifactId>konvert-maven-example</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
         <kotlin.version>1.7.22</kotlin.version>
-        <kmap.version>0.1.0-SNAPSHOT</kmap.version>
+        <konvert.version>0.1.0-SNAPSHOT</konvert.version>
     </properties>
 
     <dependencies>
@@ -21,22 +21,30 @@
         </dependency>
         <dependency>
             <groupId>io.mcarle</groupId>
-            <artifactId>kmap-api</artifactId>
-            <version>${kmap.version}</version>
+            <artifactId>konvert-api</artifactId>
+            <version>${konvert.version}</version>
         </dependency>
 
-        <!-- only needed if you need to enable specific converter through KMap(enable=...) -->
+        <!-- only needed if you need to enable specific converter through Mapping(enable=...) -->
         <dependency>
             <groupId>io.mcarle</groupId>
-            <artifactId>kmap-converter</artifactId>
-            <version>${kmap.version}</version>
+            <artifactId>konvert-converter</artifactId>
+            <version>${konvert.version}</version>
             <scope>provided</scope>
         </dependency>
 
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.9.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
+        <testSourceDirectory>src/test/kotlin</testSourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -72,13 +80,8 @@
                     </dependency>
                     <dependency>
                         <groupId>io.mcarle</groupId>
-                        <artifactId>kmap-processor</artifactId>
-                        <version>${kmap.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>io.mcarle</groupId>
-                        <artifactId>kmap-converter</artifactId>
-                        <version>${kmap.version}</version>
+                        <artifactId>konvert</artifactId>
+                        <version>${konvert.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -100,6 +103,12 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0</version>
             </plugin>
 
         </plugins>

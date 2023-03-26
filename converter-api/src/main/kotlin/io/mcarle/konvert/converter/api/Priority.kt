@@ -1,0 +1,12 @@
+package io.mcarle.konvert.converter.api
+
+typealias Priority = Int
+
+const val LOWEST_PRIORITY = Int.MAX_VALUE
+const val HIGHEST_PRIORITY = Int.MIN_VALUE
+const val SAME_TYPE_PRIORITY = 1000
+const val DEFAULT_KONVERTER_PRIORITY = 2000
+const val DEFAULT_KONVERT_TO_PRIORITY = 3000
+const val DEFAULT_KONVERT_FROM_PRIORITY = 4000
+const val DEFAULT_KONVERT_PRIORITY = 5000
+const val DEFAULT_PRIORITY = 10000

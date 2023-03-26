@@ -1,1 +1,1 @@
-rootProject.name = "kmap-gradle-example"
+rootProject.name = "konvert-gradle-example"

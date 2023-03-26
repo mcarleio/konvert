@@ -14,7 +14,7 @@
 // KopyKat -- already taken: https://kopyk.at/
 // ChatGPT: Kodezilla: A playful name that suggests the library is powerful and can handle even the most monstrous data structures.
 
-rootProject.name = "kmap"
+rootProject.name = "konvert"
 include("api")
 include("processor")
 include("converter")

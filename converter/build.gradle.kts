@@ -1,6 +1,6 @@
 plugins {
-    id("kmap.kotlin")
-    id("kmap.mvn-publish")
+    id("konvert.kotlin")
+    id("konvert.mvn-publish")
     id("com.google.devtools.ksp").version("${Versions.kotlin}-${Versions.ksp}")
     id("org.jetbrains.kotlinx.kover")
 }
@@ -15,7 +15,6 @@ dependencies {
     ksp("dev.zacsweers.autoservice:auto-service-ksp:1.0.0")
 
     testImplementation(project(":processor"))
-    testImplementation(project(":converter-api"))
     testImplementation(kotlinTest)
     testImplementation(kotlinReflect)
     testImplementation(kotlinCompilerEmbeddable)
@@ -35,15 +34,12 @@ ksp {
 
 tasks.test {
     useJUnitPlatform {
-        excludeTags = setOf("detailed")
+        if (project.hasProperty("runAllTests")) {
+            // gradle test -PrunAllTests
+            includeTags = setOf("detailed", "none()")
+        } else {
+            excludeTags = setOf("detailed")
+        }
     }
     maxParallelForks = 1.coerceAtLeast(Runtime.getRuntime().availableProcessors() / 2)
-}
-
-tasks.register<Test>("detailedTests") {
-    useJUnitPlatform {
-        includeTags = setOf("detailed")
-    }
-    maxParallelForks = 1.coerceAtLeast(Runtime.getRuntime().availableProcessors() / 2)
-    shouldRunAfter(tasks.check)
 }

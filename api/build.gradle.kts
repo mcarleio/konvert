@@ -1,6 +1,6 @@
 plugins {
-    id("kmap.kotlin")
-    id("kmap.mvn-publish")
+    id("konvert.kotlin")
+    id("konvert.mvn-publish")
 }
 
 dependencies {

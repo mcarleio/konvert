@@ -5,22 +5,27 @@ plugins {
     id("com.google.devtools.ksp").version("1.8.10-1.0.9")
 }
 
-val kmapVersion = "0.1.0-SNAPSHOT"
+val konvertVersion = "0.1.0-SNAPSHOT"
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("io.mcarle:kmap-api:$kmapVersion")
+    implementation("io.mcarle:konvert-api:$konvertVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
 
     // KSP to generate mapping code
-    ksp("io.mcarle:kmap-processor:$kmapVersion")
-    ksp("io.mcarle:kmap-converter:$kmapVersion")
-    // only needed if you need to enable specific converter through KMap(enable=...)
-    compileOnly("io.mcarle:kmap-converter:$kmapVersion")
+    ksp("io.mcarle:konvert:$konvertVersion")
+    // only needed if you need to enable specific converter through Mapping(enable=...)
+    compileOnly("io.mcarle:konvert-converter:$konvertVersion")
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 java {
