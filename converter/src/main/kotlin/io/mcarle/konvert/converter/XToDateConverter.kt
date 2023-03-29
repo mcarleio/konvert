@@ -3,8 +3,12 @@ package io.mcarle.konvert.converter
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.konvert.converter.api.DEFAULT_PRIORITY
+import io.mcarle.konvert.converter.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.isNullable
+import java.text.DateFormat
+import java.util.Date
 import kotlin.reflect.KClass
 
 abstract class XToDateConverter(
@@ -44,7 +48,15 @@ class StringToDateConverter : XToDateConverter(String::class) {
 }
 
 @AutoService(TypeConverter::class)
-class LongToDateConverter : XToDateConverter(Long::class) {
+class LongEpochMillisToDateConverter : XToDateConverter(Long::class) {
     override fun convert(fieldName: String, nc: String): String =
         "$fieldName$nc.let·{ java.util.Date(it) }"
+}
+
+@AutoService(TypeConverter::class)
+class LongEpochSecondsToDateConverter : XToDateConverter(Long::class) {
+    override fun convert(fieldName: String, nc: String): String =
+        "$fieldName$nc.let·{ java.util.Date(it * 1000) }"
+
+    override val priority: Priority = DEFAULT_PRIORITY + 1
 }

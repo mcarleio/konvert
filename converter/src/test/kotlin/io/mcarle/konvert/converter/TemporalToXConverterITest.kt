@@ -1,5 +1,6 @@
 package io.mcarle.konvert.converter
 
+import io.mcarle.konvert.converter.api.TypeConverter
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -8,7 +9,6 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.reflections.Reflections
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.Date
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.test.assertTrue
@@ -23,17 +23,19 @@ class TemporalToXConverterITest : ConverterITest() {
             OffsetDateTimeToStringConverter(),
             LocalDateTimeToStringConverter(),
             LocalDateToStringConverter(),
-            InstantToLongConverter(),
-            ZonedDateTimeToLongConverter(),
-            OffsetDateTimeToLongConverter(),
-            InstantToDateConverter(),
-            ZonedDateTimeToDateConverter(),
-            OffsetDateTimeToDateConverter(),
+            OffsetTimeToStringConverter(),
+            LocalTimeToStringConverter(),
+            InstantToLongEpochMillisConverter(),
+            InstantToLongEpochSecondsConverter(),
+            ZonedDateTimeToLongEpochMillisConverter(),
+            ZonedDateTimeToLongEpochSecondsConverter(),
+            OffsetDateTimeToLongEpochMillisConverter(),
+            OffsetDateTimeToLongEpochSecondsConverter(),
         ).toConverterTestArgumentsWithType {
             it.sourceClass.qualifiedName to it.targetClass.qualifiedName
         }
 
-        private val temporalToXConverterClasses: Set<Class<out TemporalToXConverter<*>>> = Reflections(TemporalToXConverter::class.java)
+        private val temporalToXConverterClasses: Set<Class<out TemporalToXConverter>> = Reflections(TemporalToXConverter::class.java)
             .getSubTypesOf(TemporalToXConverter::class.java)
     }
 
@@ -48,6 +50,7 @@ class TemporalToXConverterITest : ConverterITest() {
     }
 
     override fun verifyMapper(
+        converter: TypeConverter,
         sourceTypeName: String,
         targetTypeName: String,
         mapperInstance: Any,
@@ -63,6 +66,8 @@ class TemporalToXConverterITest : ConverterITest() {
                 sourceTypeName.startsWith("java.time.OffsetDateTime") -> instant.atOffset(ZoneOffset.UTC)
                 sourceTypeName.startsWith("java.time.LocalDateTime") -> instant.atOffset(ZoneOffset.UTC).toLocalDateTime()
                 sourceTypeName.startsWith("java.time.LocalDate") -> instant.atOffset(ZoneOffset.UTC).toLocalDate()
+                sourceTypeName.startsWith("java.time.OffsetTime") -> instant.atOffset(ZoneOffset.UTC).toOffsetTime()
+                sourceTypeName.startsWith("java.time.LocalTime") -> instant.atOffset(ZoneOffset.UTC).toLocalTime()
                 else -> null
             }
         )
@@ -76,17 +81,19 @@ class TemporalToXConverterITest : ConverterITest() {
             targetTypeName.startsWith("kotlin.String") -> {
                 targetValue as String
                 assertTrue(instant.toString().contains(targetValue))
-//                    Assertions.assertEquals(instant.toString(), targetValue)
             }
 
             targetTypeName.startsWith("kotlin.Long") -> {
                 targetValue as Long
-                Assertions.assertEquals(instant.toEpochMilli(), targetValue)
-            }
+                when (converter) {
+                    is InstantToLongEpochMillisConverter,
+                    is ZonedDateTimeToLongEpochMillisConverter,
+                    is OffsetDateTimeToLongEpochMillisConverter -> Assertions.assertEquals(instant.toEpochMilli(), targetValue)
 
-            targetTypeName.startsWith("java.util.Date") -> {
-                targetValue as Date
-                Assertions.assertEquals(Date.from(instant), targetValue)
+                    is InstantToLongEpochSecondsConverter,
+                    is ZonedDateTimeToLongEpochSecondsConverter,
+                    is OffsetDateTimeToLongEpochSecondsConverter -> Assertions.assertEquals(instant.toEpochMilli() / 1000, targetValue)
+                }
             }
         }
     }

@@ -3,14 +3,14 @@ package io.mcarle.konvert.converter
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
-import io.mcarle.konvert.converter.api.DEFAULT_PRIORITY
-import io.mcarle.konvert.converter.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.isNullable
+import java.time.Instant
+import java.time.temporal.Temporal
 import kotlin.reflect.KClass
 
-abstract class DateToXConverter(
-    internal val targetClass: KClass<*>
+abstract class DateToTemporalConverter(
+    internal val targetClass: KClass<out Temporal>
 ) : AbstractTypeConverter() {
 
     private val dateType: KSType by lazy {
@@ -38,20 +38,7 @@ abstract class DateToXConverter(
 }
 
 @AutoService(TypeConverter::class)
-class DateToStringConverter : DateToXConverter(String::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toInstant()$nc.toString()"
+class DateToInstantConverter : DateToTemporalConverter(Instant::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toInstant()"
     override val enabledByDefault = true
-}
-
-@AutoService(TypeConverter::class)
-class DateToLongEpochMillisConverter : DateToXConverter(Long::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.time"
-    override val enabledByDefault = true
-}
-
-@AutoService(TypeConverter::class)
-class DateToLongEpochSecondsConverter : DateToXConverter(Long::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let { it.time / 1000 }"
-    override val enabledByDefault = false
-    override val priority: Priority = DEFAULT_PRIORITY - 1 // if enabled, it should have priority over DateToLongEpochMillisConverter
 }

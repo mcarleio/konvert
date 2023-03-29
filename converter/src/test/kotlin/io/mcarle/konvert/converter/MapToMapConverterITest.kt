@@ -93,6 +93,7 @@ typealias MyInt = ReallyMyInt
 
 
     override fun verifyMapper(
+        converter: TypeConverter,
         sourceTypeName: String,
         targetTypeName: String,
         mapperInstance: Any,

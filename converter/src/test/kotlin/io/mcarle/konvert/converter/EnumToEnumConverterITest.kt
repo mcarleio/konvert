@@ -2,6 +2,7 @@ package io.mcarle.konvert.converter
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
+import io.mcarle.konvert.converter.api.TypeConverter
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -54,6 +55,7 @@ typealias MySecondEnum = SecondEnum
     )
 
     override fun verifyMapper(
+        converter: TypeConverter,
         sourceTypeName: String,
         targetTypeName: String,
         mapperInstance: Any,

@@ -58,6 +58,7 @@ abstract class ConverterITest {
             val mapperKClass = compilationResult.classLoader.loadClass("${mapperClassName}Impl").kotlin
 
             verifyMapper(
+                converter = converter,
                 sourceTypeName = sourceTypeName,
                 targetTypeName = targetTypeName,
                 mapperInstance = mapperKClass.objectInstance!!,
@@ -88,6 +89,7 @@ abstract class ConverterITest {
     open fun validateGeneratedSourceCode(code: String, sourceTypeNullable: Boolean, targetTypeNullable: Boolean) {}
 
     open fun verifyMapper(
+        converter: TypeConverter,
         sourceTypeName: String,
         targetTypeName: String,
         mapperInstance: Any,
@@ -96,10 +98,11 @@ abstract class ConverterITest {
         targetKClass: KClass<*>,
         classLoader: ClassLoader
     ) {
-        verifyMapper(sourceTypeName, targetTypeName, mapperInstance, mapperFunction, sourceKClass, targetKClass)
+        verifyMapper(converter, sourceTypeName, targetTypeName, mapperInstance, mapperFunction, sourceKClass, targetKClass)
     }
 
     open fun verifyMapper(
+        converter: TypeConverter,
         sourceTypeName: String,
         targetTypeName: String,
         mapperInstance: Any,

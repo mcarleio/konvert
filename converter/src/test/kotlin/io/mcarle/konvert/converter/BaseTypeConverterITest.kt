@@ -1,5 +1,6 @@
 package io.mcarle.konvert.converter
 
+import io.mcarle.konvert.converter.api.TypeConverter
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -228,6 +229,7 @@ class BaseTypeConverterITest : ConverterITest() {
     }
 
     override fun verifyMapper(
+        converter: TypeConverter,
         sourceTypeName: String,
         targetTypeName: String,
         mapperInstance: Any,

@@ -3,19 +3,22 @@ package io.mcarle.konvert.converter
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.konvert.converter.api.DEFAULT_PRIORITY
+import io.mcarle.konvert.converter.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.isNullable
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.OffsetTime
 import java.time.ZonedDateTime
 import java.time.temporal.Temporal
-import java.util.Date
 import kotlin.reflect.KClass
 
-abstract class TemporalToXConverter<T : Temporal>(
-    internal val sourceClass: KClass<T>,
+abstract class TemporalToXConverter(
+    internal val sourceClass: KClass<out Temporal>,
     internal val targetClass: KClass<*>,
 ) : AbstractTypeConverter() {
 
@@ -25,10 +28,6 @@ abstract class TemporalToXConverter<T : Temporal>(
 
     private val targetType: KSType by lazy {
         resolver.getClassDeclarationByName(targetClass.qualifiedName!!)!!.asStarProjectedType()
-    }
-
-    private val sourceType: KSType by lazy {
-        resolver.getClassDeclarationByName(sourceClass.qualifiedName!!)!!.asStarProjectedType()
     }
 
     override fun matches(source: KSType, target: KSType): Boolean {
@@ -50,57 +49,75 @@ abstract class TemporalToXConverter<T : Temporal>(
 }
 
 @AutoService(TypeConverter::class)
-class InstantToStringConverter : TemporalToXConverter<Instant>(Instant::class, String::class) {
+class InstantToStringConverter : TemporalToXConverter(Instant::class, String::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toString()"
 }
 
 @AutoService(TypeConverter::class)
-class ZonedDateTimeToStringConverter : TemporalToXConverter<ZonedDateTime>(ZonedDateTime::class, String::class) {
+class ZonedDateTimeToStringConverter : TemporalToXConverter(ZonedDateTime::class, String::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toString()"
 }
 
 @AutoService(TypeConverter::class)
-class OffsetDateTimeToStringConverter : TemporalToXConverter<OffsetDateTime>(OffsetDateTime::class, String::class) {
+class OffsetDateTimeToStringConverter : TemporalToXConverter(OffsetDateTime::class, String::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toString()"
 }
 
 @AutoService(TypeConverter::class)
-class LocalDateTimeToStringConverter : TemporalToXConverter<LocalDateTime>(LocalDateTime::class, String::class) {
+class LocalDateTimeToStringConverter : TemporalToXConverter(LocalDateTime::class, String::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toString()"
 }
 
 @AutoService(TypeConverter::class)
-class LocalDateToStringConverter : TemporalToXConverter<LocalDate>(LocalDate::class, String::class) {
+class LocalDateToStringConverter : TemporalToXConverter(LocalDate::class, String::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toString()"
+}
+
+@AutoService(TypeConverter::class)
+class OffsetTimeToStringConverter : TemporalToXConverter(OffsetTime::class, String::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toString()"
+}
+
+@AutoService(TypeConverter::class)
+class LocalTimeToStringConverter : TemporalToXConverter(LocalTime::class, String::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toString()"
 }
 
 
 @AutoService(TypeConverter::class)
-class InstantToLongConverter : TemporalToXConverter<Instant>(Instant::class, Long::class) {
+class InstantToLongEpochMillisConverter : TemporalToXConverter(Instant::class, Long::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toEpochMilli()"
 }
 
 @AutoService(TypeConverter::class)
-class ZonedDateTimeToLongConverter : TemporalToXConverter<ZonedDateTime>(ZonedDateTime::class, Long::class) {
+class InstantToLongEpochSecondsConverter : TemporalToXConverter(Instant::class, Long::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let { it.toEpochMilli() / 1000 }"
+    override val enabledByDefault: Boolean = false
+    override val priority: Priority = DEFAULT_PRIORITY - 1 // if enabled, it should have priority over InstantToLongEpochMillisConverter
+}
+
+@AutoService(TypeConverter::class)
+class ZonedDateTimeToLongEpochMillisConverter : TemporalToXConverter(ZonedDateTime::class, Long::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toInstant()$nc.toEpochMilli()"
 }
 
 @AutoService(TypeConverter::class)
-class OffsetDateTimeToLongConverter : TemporalToXConverter<OffsetDateTime>(OffsetDateTime::class, Long::class) {
+class ZonedDateTimeToLongEpochSecondsConverter : TemporalToXConverter(ZonedDateTime::class, Long::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toEpochSecond()"
+    override val enabledByDefault: Boolean = false
+    override val priority: Priority =
+        DEFAULT_PRIORITY - 1 // if enabled, it should have priority over ZonedDateTimeToLongEpochMillisConverter
+}
+
+@AutoService(TypeConverter::class)
+class OffsetDateTimeToLongEpochMillisConverter : TemporalToXConverter(OffsetDateTime::class, Long::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toInstant()$nc.toEpochMilli()"
 }
 
 @AutoService(TypeConverter::class)
-class InstantToDateConverter : TemporalToXConverter<Instant>(Instant::class, Date::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let·{ java.util.Date.from(it) }"
-}
-
-@AutoService(TypeConverter::class)
-class ZonedDateTimeToDateConverter : TemporalToXConverter<ZonedDateTime>(ZonedDateTime::class, Date::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let·{ java.util.Date.from(it.toInstant()) }"
-}
-
-@AutoService(TypeConverter::class)
-class OffsetDateTimeToDateConverter : TemporalToXConverter<OffsetDateTime>(OffsetDateTime::class, Date::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let·{ java.util.Date.from(it.toInstant()) }"
+class OffsetDateTimeToLongEpochSecondsConverter : TemporalToXConverter(OffsetDateTime::class, Long::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toEpochSecond()"
+    override val enabledByDefault: Boolean = false
+    override val priority: Priority =
+        DEFAULT_PRIORITY - 1 // if enabled, it should have priority over OffsetDateTimeToLongEpochMillisConverter
 }

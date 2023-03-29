@@ -1,6 +1,7 @@
 package io.mcarle.konvert.converter
 
 import com.tschuchort.compiletesting.SourceFile
+import io.mcarle.konvert.converter.api.TypeConverter
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -59,6 +60,7 @@ enum class MyEnum {
     )
 
     override fun verifyMapper(
+        converter: TypeConverter,
         sourceTypeName: String,
         targetTypeName: String,
         mapperInstance: Any,

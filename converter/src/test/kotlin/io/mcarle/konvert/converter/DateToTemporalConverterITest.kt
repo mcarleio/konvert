@@ -7,32 +7,31 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.reflections.Reflections
+import java.time.Instant
 import java.util.Date
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 
-class DateToXConverterITest : ConverterITest() {
+class DateToTemporalConverterITest : ConverterITest() {
 
     companion object {
         @JvmStatic
         fun converterList(): List<Arguments> = listOf(
-            DateToStringConverter(),
-            DateToLongEpochMillisConverter(),
-            DateToLongEpochSecondsConverter(),
+            DateToInstantConverter(),
         ).toConverterTestArgumentsWithType {
             "java.util.Date" to it.targetClass.qualifiedName
         }
 
-        private val dateToXConverterClasses: Set<Class<out DateToXConverter>> =
-            Reflections(DateToXConverter::class.java)
-                .getSubTypesOf(DateToXConverter::class.java)
+        private val dateToTemporalConverterClasses: Set<Class<out DateToTemporalConverter>> =
+            Reflections(DateToTemporalConverter::class.java)
+                .getSubTypesOf(DateToTemporalConverter::class.java)
     }
 
     @ParameterizedTest
     @MethodSource("converterList")
     fun converterTest(simpleConverterName: String, sourceTypeName: String, targetTypeName: String) {
         super.converterTest(
-            converter = dateToXConverterClasses.newConverterInstance(simpleConverterName),
+            converter = dateToTemporalConverterClasses.newConverterInstance(simpleConverterName),
             sourceTypeName = sourceTypeName,
             targetTypeName = targetTypeName
         )
@@ -56,17 +55,9 @@ class DateToXConverterITest : ConverterITest() {
             targetKClass.members.first { it.name == "test" }.call(targetInstance)
         }
         when {
-            targetTypeName.startsWith("kotlin.String") -> {
-                targetValue as String
-                assertEquals("2023-01-18T16:42:54.913Z", targetValue)
-            }
-
-            targetTypeName.startsWith("kotlin.Long") -> {
-                targetValue as Long
-                when (converter) {
-                    is DateToLongEpochMillisConverter -> assertEquals(epochMillis, targetValue)
-                    is DateToLongEpochSecondsConverter -> assertEquals(epochMillis / 1000, targetValue)
-                }
+            targetTypeName.startsWith("java.time.Instant") -> {
+                targetValue as Instant
+                assertEquals(epochMillis, targetValue.toEpochMilli())
             }
         }
     }

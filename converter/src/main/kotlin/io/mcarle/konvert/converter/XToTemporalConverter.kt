@@ -3,19 +3,23 @@ package io.mcarle.konvert.converter
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.konvert.converter.api.DEFAULT_PRIORITY
+import io.mcarle.konvert.converter.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.isNullable
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.OffsetTime
 import java.time.ZonedDateTime
 import java.time.temporal.Temporal
 import kotlin.reflect.KClass
 
-abstract class XToTemporalConverter<T : Temporal>(
+abstract class XToTemporalConverter(
     internal val sourceClass: KClass<*>,
-    internal val targetClass: KClass<T>,
+    internal val targetClass: KClass<out Temporal>,
 ) : AbstractTypeConverter() {
 
     private val temporalType: KSType by lazy {
@@ -45,36 +49,56 @@ abstract class XToTemporalConverter<T : Temporal>(
 }
 
 @AutoService(TypeConverter::class)
-class StringToInstantConverter : XToTemporalConverter<Instant>(String::class, Instant::class) {
+class StringToInstantConverter : XToTemporalConverter(String::class, Instant::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let·{ java.time.Instant.parse(it) }"
 }
 
 @AutoService(TypeConverter::class)
-class StringToZonedDateTimeConverter : XToTemporalConverter<ZonedDateTime>(String::class, ZonedDateTime::class) {
+class StringToZonedDateTimeConverter : XToTemporalConverter(String::class, ZonedDateTime::class) {
     override fun convert(fieldName: String, nc: String): String =
         "$fieldName$nc.let·{ java.time.ZonedDateTime.parse(it) }"
 }
 
 @AutoService(TypeConverter::class)
-class StringToOffsetDateTimeConverter : XToTemporalConverter<OffsetDateTime>(String::class, OffsetDateTime::class) {
+class StringToOffsetDateTimeConverter : XToTemporalConverter(String::class, OffsetDateTime::class) {
     override fun convert(fieldName: String, nc: String): String =
         "$fieldName$nc.let·{ java.time.OffsetDateTime.parse(it) }"
 }
 
 @AutoService(TypeConverter::class)
-class StringToLocalDateTimeConverter : XToTemporalConverter<LocalDateTime>(String::class, LocalDateTime::class) {
+class StringToLocalDateTimeConverter : XToTemporalConverter(String::class, LocalDateTime::class) {
     override fun convert(fieldName: String, nc: String): String =
         "$fieldName$nc.let·{ java.time.LocalDateTime.parse(it) }"
 }
 
 @AutoService(TypeConverter::class)
-class StringToLocalDateConverter : XToTemporalConverter<LocalDate>(String::class, LocalDate::class) {
+class StringToLocalDateConverter : XToTemporalConverter(String::class, LocalDate::class) {
     override fun convert(fieldName: String, nc: String): String =
         "$fieldName$nc.let·{ java.time.LocalDate.parse(it) }"
 }
 
 @AutoService(TypeConverter::class)
-class LongToInstantConverter : XToTemporalConverter<Instant>(Long::class, Instant::class) {
+class StringToOffsetTimeConverter : XToTemporalConverter(String::class, OffsetTime::class) {
+    override fun convert(fieldName: String, nc: String): String =
+        "$fieldName$nc.let·{ java.time.OffsetTime.parse(it) }"
+}
+
+@AutoService(TypeConverter::class)
+class StringToLocalTimeConverter : XToTemporalConverter(String::class, LocalTime::class) {
+    override fun convert(fieldName: String, nc: String): String =
+        "$fieldName$nc.let·{ java.time.LocalTime.parse(it) }"
+}
+
+@AutoService(TypeConverter::class)
+class LongEpochMillisToInstantConverter : XToTemporalConverter(Long::class, Instant::class) {
     override fun convert(fieldName: String, nc: String): String =
         "$fieldName$nc.let·{ java.time.Instant.ofEpochMilli(it) }"
+}
+
+@AutoService(TypeConverter::class)
+class LongEpochSecondsToInstantConverter : XToTemporalConverter(Long::class, Instant::class) {
+    override fun convert(fieldName: String, nc: String): String =
+        "$fieldName$nc.let·{ java.time.Instant.ofEpochSecond(it) }"
+
+    override val priority: Priority = DEFAULT_PRIORITY + 1
 }
