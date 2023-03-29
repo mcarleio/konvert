@@ -360,7 +360,7 @@ class ULongToUShortConverter : BaseTypeConverter(ULong::class, UShort::class) {
 }
 
 @AutoService(TypeConverter::class)
-class ULongToNumberConverter : BaseTypeConverter(ULong::class, Number::class) {
+class ULongToNumberConverter : BaseTypeConverter(ULong::class, Number::class, true) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()"
 }
 
@@ -391,7 +391,7 @@ class ULongToFloatConverter : BaseTypeConverter(ULong::class, Float::class) {
 }
 
 @AutoService(TypeConverter::class)
-class ULongToDoubleConverter : BaseTypeConverter(ULong::class, Double::class) {
+class ULongToDoubleConverter : BaseTypeConverter(ULong::class, Double::class, true) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
 }
 
@@ -501,7 +501,7 @@ class UShortToShortConverter : BaseTypeConverter(UShort::class, Short::class) {
 }
 
 @AutoService(TypeConverter::class)
-class UShortToNumberConverter : BaseTypeConverter(UShort::class, Number::class) {
+class UShortToNumberConverter : BaseTypeConverter(UShort::class, Number::class, true) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toInt()"
 }
 
@@ -788,7 +788,7 @@ class UByteToUShortConverter : BaseTypeConverter(UByte::class, UShort::class, tr
 }
 
 @AutoService(TypeConverter::class)
-class UByteToNumberConverter : BaseTypeConverter(UByte::class, Number::class) {
+class UByteToNumberConverter : BaseTypeConverter(UByte::class, Number::class, true) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toShort()"
 }
 
