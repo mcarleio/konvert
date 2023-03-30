@@ -361,7 +361,7 @@ class ULongToUShortConverter : BaseTypeConverter(ULong::class, UShort::class) {
 
 @AutoService(TypeConverter::class)
 class ULongToNumberConverter : BaseTypeConverter(ULong::class, Number::class, true) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
 }
 
 @AutoService(TypeConverter::class)
