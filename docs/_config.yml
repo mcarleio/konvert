@@ -1,0 +1,9 @@
+title: Konvert
+description: Usage documentation of Konvert
+theme: just-the-docs
+baseurl: "/konvert"
+
+url: https://mcarleio.github.io
+
+aux_links:
+  Konvert Repository: https://github.com/mcarleio/konvert
