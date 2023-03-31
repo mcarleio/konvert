@@ -3,9 +3,11 @@
 This is a kotlin compiler plugin (using [KSP](https://github.com/google/ksp)) to generate mapping code from one class to another.
 
 ## Usage
+### Build Tool
+Have a look into the [usage](USAGE.md) to see how to include `Konvert` to your project step-by-step
+or for a simple project have a look into the [example directory](example).
 
-To use `Konvert` with Gradle have a look [here](example/build.gradle.kts) and with Maven have a look [here](example/pom.xml)
-
+### Code
 There are three different ways to use `Konvert`:
 
 1. Using `@KonvertTo`:
@@ -62,7 +64,9 @@ For simple type mappings, like from `Instant` to `Date`, there already is a type
 data class Person(val name: String, val birthday: Instant)
 data class PersonDto(val name: String, val birthday: Date)
 ```
+
 This will generate the following extension function
+
 ```kotlin
 fun Person.toPersonDto(): PersonDto = PersonDto(
    name = name,
@@ -70,10 +74,11 @@ fun Person.toPersonDto(): PersonDto = PersonDto(
 )
 ```
 
-Have a look [here](converter/src/main/kotlin/io/mcarle/konvert/converter) for a list of provided type converters.
+Have a look [in the wiki](https://github.com/mcarleio/konvert/wiki/Provided-TypeConverters) for a list of provided type converters.
 
-Hint: You can also create your own type converter library by implementing [TypeConverter](converter-api/src/main/kotlin/io/mcarle/konvert/converter/api/TypeConverter.kt) and register it using [SPI](https://en.wikipedia.org/wiki/Service_provider_interface).
-
+Hint: You can also create your own type converter library by
+implementing [TypeConverter](converter-api/src/main/kotlin/io/mcarle/konvert/converter/api/TypeConverter.kt) and register it
+using [SPI](https://en.wikipedia.org/wiki/Service_provider_interface).
 
 ### Fine tuning
 
@@ -92,7 +97,9 @@ You can configure specific mappings and rename the generated extension function 
 data class Person(val firstName: String, val lastName: String)
 data class PersonDto(val givenName: String, val familyName: String)
 ```
+
 This will generate the following extension function
+
 ```kotlin
 fun Person.asDto(): PersonDto = PersonDto(
    givenName = firstName,
@@ -101,6 +108,7 @@ fun Person.asDto(): PersonDto = PersonDto(
 ```
 
 For further functionality, have a look into
+the [wiki](https://github.com/mcarleio/konvert/wiki),
 the KDocs of the [api](api/src/main/kotlin/io/mcarle/konvert/api),
 the [example project](example/src/main/kotlin/io/mcarle/konvert/example)
 or the [tests](processor/src/test/kotlin/io/mcarle/konvert/processor).
