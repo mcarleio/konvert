@@ -56,7 +56,7 @@ class LongEpochMillisToDateConverter : XToDateConverter(Long::class) {
 @AutoService(TypeConverter::class)
 class LongEpochSecondsToDateConverter : XToDateConverter(Long::class) {
     override fun convert(fieldName: String, nc: String): String =
-        "$fieldName$nc.let·{ java.util.Date(it * 1000) }"
+        "$fieldName$nc.let·{ java.util.Date(it·*·1000) }"
 
     override val priority: Priority = DEFAULT_PRIORITY + 1
 }

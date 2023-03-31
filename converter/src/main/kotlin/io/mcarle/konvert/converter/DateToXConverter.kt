@@ -51,7 +51,7 @@ class DateToLongEpochMillisConverter : DateToXConverter(Long::class) {
 
 @AutoService(TypeConverter::class)
 class DateToLongEpochSecondsConverter : DateToXConverter(Long::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let { it.time / 1000 }"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let·{ it.time·/·1000 }"
     override val enabledByDefault = false
     override val priority: Priority = DEFAULT_PRIORITY - 1 // if enabled, it should have priority over DateToLongEpochMillisConverter
 }

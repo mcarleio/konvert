@@ -91,7 +91,7 @@ class InstantToLongEpochMillisConverter : TemporalToXConverter(Instant::class, L
 
 @AutoService(TypeConverter::class)
 class InstantToLongEpochSecondsConverter : TemporalToXConverter(Instant::class, Long::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let { it.toEpochMilli() / 1000 }"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let·{ it.toEpochMilli()·/·1000 }"
     override val enabledByDefault: Boolean = false
     override val priority: Priority = DEFAULT_PRIORITY - 1 // if enabled, it should have priority over InstantToLongEpochMillisConverter
 }
