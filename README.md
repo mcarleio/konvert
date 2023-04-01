@@ -2,12 +2,17 @@
 
 This is a kotlin compiler plugin (using [KSP](https://github.com/google/ksp)) to generate mapping code from one class to another.
 
+> This README provides basic information, for more details have a look at the [documentation](https://mcarleio.github.io/konvert).
+
 ## Usage
+
 ### Build Tool
+
 Have a look into the [usage](USAGE.md) to see how to include `Konvert` to your project step-by-step
 or for a simple project have a look into the [example directory](example).
 
 ### Code
+
 There are three different ways to use `Konvert`:
 
 1. Using `@KonvertTo`:
@@ -74,9 +79,9 @@ fun Person.toPersonDto(): PersonDto = PersonDto(
 )
 ```
 
-Have a look [in the wiki](https://github.com/mcarleio/konvert/wiki/Provided-TypeConverters) for a list of provided type converters.
+Have a look at the [documentation](https://mcarleio.github.io/konvert/typeconverter/provided.html) for a list of provided type converters.
 
-Hint: You can also create your own type converter library by
+🛈: You can also create your own type converter library by
 implementing [TypeConverter](converter-api/src/main/kotlin/io/mcarle/konvert/converter/api/TypeConverter.kt) and register it
 using [SPI](https://en.wikipedia.org/wiki/Service_provider_interface).
 
@@ -112,6 +117,34 @@ the [wiki](https://github.com/mcarleio/konvert/wiki),
 the KDocs of the [api](api/src/main/kotlin/io/mcarle/konvert/api),
 the [example project](example/src/main/kotlin/io/mcarle/konvert/example)
 or the [tests](processor/src/test/kotlin/io/mcarle/konvert/processor).
+
+## Building
+
+### Gradle
+
+To build the project, simply run
+
+> gradle build
+
+#### Run all tests
+
+By default, only a subset of available tests are executed, which should verify most of `Konvert`'s functionality.
+To run all tests, append the property `runAllTests`, e.g.:
+
+> gradle test -PrunAllTests
+
+### Documentation
+
+To serve the Jekyll site locally, simply run the following command inside `docs`:
+
+> docker run --rm -it -v "$PWD":/srv/jekyll -p 4000:4000 jekyll/jekyll jekyll serve
+
+### CI
+
+GitHub Actions are used to:
+
+* [build the project](.github/workflows/build.yml) and publish it (only for tags) to a Maven repository
+* [generate and deploy](.github/workflows/pages.yml) the documentation to GitHub Pages.
 
 ## License
 

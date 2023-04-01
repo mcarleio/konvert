@@ -7,3 +7,8 @@ url: https://mcarleio.github.io
 
 aux_links:
   Konvert Repository: https://github.com/mcarleio/konvert
+
+color_scheme: wider
+
+plugins:
+  - jekyll-target-blank
