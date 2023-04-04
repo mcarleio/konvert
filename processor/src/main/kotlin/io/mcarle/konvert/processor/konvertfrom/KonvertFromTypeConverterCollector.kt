@@ -15,6 +15,10 @@ object KonvertFromTypeConverterCollector {
                 val annotatedDeclaration = ksAnnotated as? KSClassDeclaration
                     ?: throw IllegalStateException("KonvertFrom can only target class declarations or companion objects")
 
+                if (annotatedDeclaration.typeParameters.isNotEmpty()) {
+                    throw IllegalStateException("${KonvertFrom::class.simpleName} not allowed on types with generics: $ksAnnotated")
+                }
+
                 val (targetKsClassDeclaration, targetCompanionDeclaration) = determineClassAndCompanion(
                     annotatedDeclaration = annotatedDeclaration
                 )

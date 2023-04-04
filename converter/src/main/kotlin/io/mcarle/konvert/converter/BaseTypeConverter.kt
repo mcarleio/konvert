@@ -3,13 +3,14 @@ package io.mcarle.konvert.converter
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.isNullable
 import kotlin.reflect.KClass
 
 abstract class BaseTypeConverter(
-    internal val sourceClass: KClass<*>,
-    internal val targetClass: KClass<*>,
+    val sourceClass: KClass<*>,
+    val targetClass: KClass<*>,
     override val enabledByDefault: Boolean = false
 ) : AbstractTypeConverter() {
 

@@ -19,6 +19,9 @@ All notable changes to this project will be documented in this file.
    * `ZonedDateTimeToLongConverter` -> `ZonedDateTimeToLongEpochMillisConverter`
    * `OffsetDateTimeToLongConverter` -> `OffsetDateTimeToLongEpochMillisConverter`
    * `LongToInstantConverter` -> `LongEpochMillisToInstantConverter`
+* moved from `converter` to `converter-api` module:
+  * `AbstractTypeConverter`
+  * `ConverterOptions`
 
 #### New features
 
@@ -48,6 +51,11 @@ All notable changes to this project will be documented in this file.
    * `LocalDateTimeToLocalDateConverter`
    * `LocalDateTimeToLocalTimeConverter`
    * `OffsetTimeToLocalTimeConverter`
+
+#### Bug fixes
+
+* Types with generics on a function in interfaces annotated with `Konverter` work
+* The generated `TypeConverter` for `KonvertTo`, `KonvertFrom` and `Konvert` can handle nullable source with not nullable target
 
 ## [1.0.0] - 2023-03-27
 

@@ -7,6 +7,7 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
+import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.validated
@@ -31,8 +32,8 @@ object KonvertCodeGenerator {
         codeBuilder.addFunction(
             funSpec = FunSpec.builder(converter.mapFunctionName)
                 .addModifiers(KModifier.OVERRIDE)
-                .returns(converter.targetClassDeclaration.asType(emptyList()).toTypeName())
-                .addParameter(converter.paramName, converter.sourceClassDeclaration.asType(emptyList()).toTypeName())
+                .returns(converter.targetType.toTypeName())
+                .addParameter(converter.paramName, converter.sourceType.toTypeName())
                 .addCode(
                     mapper.generateCode(
                         converter.annotation.mappings.asIterable().validated(converter.mapKSFunctionDeclaration, logger),

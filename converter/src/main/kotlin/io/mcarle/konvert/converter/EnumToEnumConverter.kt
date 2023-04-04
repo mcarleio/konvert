@@ -5,6 +5,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.converter.api.isNullable

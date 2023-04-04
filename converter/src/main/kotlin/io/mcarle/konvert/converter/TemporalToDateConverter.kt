@@ -3,6 +3,7 @@ package io.mcarle.konvert.converter
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.isNullable
 import java.time.Instant
@@ -12,7 +13,7 @@ import java.time.temporal.Temporal
 import kotlin.reflect.KClass
 
 abstract class TemporalToDateConverter(
-    internal val sourceClass: KClass<out Temporal>,
+    val sourceClass: KClass<out Temporal>,
 ) : AbstractTypeConverter() {
 
     private val temporalType: KSType by lazy {

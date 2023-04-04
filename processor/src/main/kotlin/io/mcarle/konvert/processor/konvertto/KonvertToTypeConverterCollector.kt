@@ -16,7 +16,9 @@ object KonvertToTypeConverterCollector {
                 if (ksClassDeclaration == null || ksClassDeclaration.classKind != ClassKind.CLASS) {
                     throw IllegalStateException("Mapping can only target classes and companion objects")
                 }
-
+                if (ksClassDeclaration.typeParameters.isNotEmpty()) {
+                    throw IllegalStateException("${KonvertTo::class.simpleName} not allowed on types with generics: $ksAnnotated")
+                }
 
                 ksClassDeclaration.annotations
                     .filter { (it.annotationType.toTypeName() as? ClassName)?.canonicalName == KonvertTo::class.qualifiedName }

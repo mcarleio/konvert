@@ -79,4 +79,71 @@ data class TargetProperty(val value: String)
         assertContains(extensionFunctionCode, "sourceProperty.toTargetProperty()")
     }
 
+    @Test
+    fun useOtherMapperOnNull() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(TargetClass::class, mappings=[Mapping(source="sourceProperty", target="targetProperty")])
+class SourceClass(
+    val sourceProperty: SourceProperty
+)
+class TargetClass(
+    val targetProperty: TargetProperty?
+)
+
+@KonvertTo(TargetProperty::class)
+data class SourceProperty(val value: String)
+data class TargetProperty(val value: String)
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertContains(extensionFunctionCode, "sourceProperty.toTargetProperty()")
+    }
+
+    @Test
+    fun useOtherMapperWithList() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(TargetClass::class, mappings=[Mapping(source="sourceProperty", target="targetProperty")])
+class SourceClass(
+    val sourceProperty: List<SourceProperty<String>>
+)
+class TargetClass(
+    val targetProperty: List<TargetProperty<String>>
+)
+
+@Konverter
+interface KonvertInterface {
+    fun toTargetProperty(sourceProperty: List<SourceProperty<String>>): List<TargetProperty<String>> = listOf()
+}
+
+class SourceProperty<E>(val value: E)
+class TargetProperty<E>(val value: E)
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertContains(extensionFunctionCode, "get<KonvertInterface>().toTargetProperty(sourceProperty = ")
+    }
+
 }

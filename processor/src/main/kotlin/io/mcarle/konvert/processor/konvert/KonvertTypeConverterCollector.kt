@@ -8,6 +8,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.converter.api.classDeclaration
 
 object KonvertTypeConverterCollector {
 
@@ -27,10 +28,12 @@ object KonvertTypeConverterCollector {
                             return@mapNotNull null
                         }
 
-                        val source =
+                        val sourceType =
                             if (it.parameters.size > 1 || it.parameters.isEmpty()) null
-                            else it.parameters.first().type.resolve().declaration as? KSClassDeclaration
-                        val target = it.returnType?.resolve()?.declaration as? KSClassDeclaration
+                            else it.parameters.first().type.resolve()
+                        val source = sourceType?.classDeclaration()
+                        val targetType = it.returnType?.resolve()
+                        val target = targetType?.classDeclaration()
 
                         val annotation = it.annotations.firstOrNull { annotation ->
                             (annotation.annotationType.toTypeName() as? ClassName)?.canonicalName == Konvert::class.qualifiedName
@@ -48,7 +51,9 @@ object KonvertTypeConverterCollector {
                             KonvertTypeConverter(
                                 annotation = annotation,
                                 sourceClassDeclaration = source,
+                                sourceType = sourceType,
                                 targetClassDeclaration = target,
+                                targetType = targetType,
                                 mapKSClassDeclaration = ksClassDeclaration,
                                 mapKSFunctionDeclaration = it
                             )
@@ -56,7 +61,9 @@ object KonvertTypeConverterCollector {
                             KonvertTypeConverter(
                                 annotation = if (it.isAbstract) KonvertTypeConverter.AnnotationData.default(resolver) else null,
                                 sourceClassDeclaration = source,
+                                sourceType = sourceType,
                                 targetClassDeclaration = target,
+                                targetType = targetType,
                                 mapKSClassDeclaration = ksClassDeclaration,
                                 mapKSFunctionDeclaration = it
                             )

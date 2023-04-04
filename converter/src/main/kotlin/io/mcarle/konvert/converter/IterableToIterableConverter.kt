@@ -4,6 +4,7 @@ import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Variance
+import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.classDeclaration
@@ -24,6 +25,19 @@ class IterableToIterableConverter : AbstractTypeConverter() {
         private val MUTABLESET = "kotlin.collections.MutableSet"
         private val HASHSET = "java.util.HashSet"
         private val LINKEDHASHSET = "java.util.LinkedHashSet"
+        fun supported() = listOf(
+            ITERABLE,
+            MUTABLEITERABLE,
+            COLLECTION,
+            MUTABLECOLLECTION,
+            LIST,
+            MUTABLELIST,
+            ARRAYLIST,
+            SET,
+            MUTABLESET,
+            HASHSET,
+            LINKEDHASHSET,
+        )
     }
 
     private val iterableType: KSType by lazy { resolver.builtIns.iterableType }

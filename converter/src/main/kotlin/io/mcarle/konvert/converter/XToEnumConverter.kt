@@ -3,12 +3,13 @@ package io.mcarle.konvert.converter
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.isNullable
 import kotlin.reflect.KClass
 
 abstract class XToEnumConverter(
-    internal val sourceClass: KClass<*>
+    val sourceClass: KClass<*>
 ) : AbstractTypeConverter() {
 
     private val enumType: KSType by lazy {

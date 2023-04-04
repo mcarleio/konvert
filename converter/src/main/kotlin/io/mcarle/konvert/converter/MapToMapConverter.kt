@@ -4,6 +4,7 @@ import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Variance
+import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.classDeclaration
@@ -19,6 +20,13 @@ class MapToMapConverter : AbstractTypeConverter() {
         private val HASHMAP = "java.util.HashMap" // not "kotlin.collections.HashMap"
 
         private val LINKEDHASHMAP = "java.util.LinkedHashMap" // not "kotlin.collections.LinkedHashMap"
+
+        fun supported() = listOf(
+            MAP,
+            MUTABLEMAP,
+            HASHMAP,
+            LINKEDHASHMAP
+        )
     }
 
     private val mapType: KSType by lazy {

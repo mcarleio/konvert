@@ -3,6 +3,7 @@ package io.mcarle.konvert.converter
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.DEFAULT_PRIORITY
 import io.mcarle.konvert.converter.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
@@ -18,8 +19,8 @@ import java.time.temporal.Temporal
 import kotlin.reflect.KClass
 
 abstract class XToTemporalConverter(
-    internal val sourceClass: KClass<*>,
-    internal val targetClass: KClass<out Temporal>,
+    val sourceClass: KClass<*>,
+    val targetClass: KClass<out Temporal>,
 ) : AbstractTypeConverter() {
 
     private val temporalType: KSType by lazy {

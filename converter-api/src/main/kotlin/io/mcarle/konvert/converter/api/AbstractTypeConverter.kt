@@ -1,17 +1,15 @@
-package io.mcarle.konvert.converter
+package io.mcarle.konvert.converter.api
 
 import com.google.devtools.ksp.symbol.KSType
-import io.mcarle.konvert.converter.api.TypeConverter
-import io.mcarle.konvert.converter.api.isNullable
-import io.mcarle.konvert.converter.config.enforceNotNull
+import io.mcarle.konvert.converter.api.config.enforceNotNull
 
 abstract class AbstractTypeConverter : TypeConverter {
-    protected lateinit var config: io.mcarle.konvert.converter.api.ConverterConfig
+    protected lateinit var config: ConverterConfig
     protected val resolver by lazy {
         config.resolver
     }
 
-    override fun init(config: io.mcarle.konvert.converter.api.ConverterConfig) {
+    override fun init(config: ConverterConfig) {
         this.config = config
     }
 

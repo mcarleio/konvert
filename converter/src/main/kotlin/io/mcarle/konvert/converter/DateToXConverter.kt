@@ -3,6 +3,7 @@ package io.mcarle.konvert.converter
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.DEFAULT_PRIORITY
 import io.mcarle.konvert.converter.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
@@ -10,7 +11,7 @@ import io.mcarle.konvert.converter.api.isNullable
 import kotlin.reflect.KClass
 
 abstract class DateToXConverter(
-    internal val targetClass: KClass<*>
+    val targetClass: KClass<*>
 ) : AbstractTypeConverter() {
 
     private val dateType: KSType by lazy {

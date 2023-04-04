@@ -2,6 +2,7 @@ package io.mcarle.konvert.converter
 
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.Priority
 import io.mcarle.konvert.converter.api.SAME_TYPE_PRIORITY
 import io.mcarle.konvert.converter.api.TypeConverter

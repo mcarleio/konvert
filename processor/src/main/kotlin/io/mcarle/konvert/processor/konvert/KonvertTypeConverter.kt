@@ -9,21 +9,22 @@ import com.google.devtools.ksp.symbol.KSType
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Mapping
+import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.DEFAULT_KONVERTER_PRIORITY
 import io.mcarle.konvert.converter.api.Priority
-import io.mcarle.konvert.converter.api.TypeConverter
+import io.mcarle.konvert.converter.api.classDeclaration
+import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.from
 
 class KonvertTypeConverter constructor(
     val annotation: AnnotationData?,
     val sourceClassDeclaration: KSClassDeclaration,
+    val sourceType: KSType,
     val targetClassDeclaration: KSClassDeclaration,
+    val targetType: KSType,
     val mapKSClassDeclaration: KSClassDeclaration,
     val mapKSFunctionDeclaration: KSFunctionDeclaration,
-) : TypeConverter, io.mcarle.konvert.processor.AnnotatedConverter {
-
-    private val sourceType: KSType = sourceClassDeclaration.asStarProjectedType()
-    private val targetType: KSType = targetClassDeclaration.asStarProjectedType()
+) : AbstractTypeConverter(), AnnotatedConverter {
 
     val mapFunctionName: String = mapKSFunctionDeclaration.simpleName.asString()
     val paramName: String = mapKSFunctionDeclaration.parameters.first().name!!.asString()
@@ -31,16 +32,17 @@ class KonvertTypeConverter constructor(
     override val enabledByDefault: Boolean = true
     override val priority: Priority = annotation?.priority ?: DEFAULT_KONVERTER_PRIORITY
 
-    override fun init(config: io.mcarle.konvert.converter.api.ConverterConfig) {
-        // Nothing to initialize
-    }
-
     override fun matches(source: KSType, target: KSType): Boolean {
-        return sourceType == source && targetType == target
+        return handleNullable(source, target) { _, targetNotNullable ->
+            // the source type must be assignable (e.g. String? and String are assignable from String)
+            sourceType.isAssignableFrom(source) && targetType == targetNotNullable
+        }
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): String {
-        return "${Konverter::class.qualifiedName}.get<${mapKSClassDeclaration.qualifiedName?.asString()}>().$mapFunctionName($paramName·=·$fieldName)"
+        val getKonverterCode = "${Konverter::class.qualifiedName}.get<${mapKSClassDeclaration.qualifiedName?.asString()}>()"
+        val mappingCode = "$getKonverterCode.$mapFunctionName($paramName·=·$fieldName)"
+        return mappingCode + appendNotNullAssertionOperatorIfNeeded(source, target)
     }
 
     data class AnnotationData(
@@ -54,7 +56,7 @@ class KonvertTypeConverter constructor(
                 mappings = (annotation.arguments.first { it.name?.asString() == Konvert::mappings.name }.value as List<*>)
                     .filterIsInstance<KSAnnotation>()
                     .map { Mapping.from(it) },
-                constructor = (annotation.arguments.first { it.name?.asString() == Konvert::constructor.name }.value as List<*>).mapNotNull { (it as? KSType)?.declaration as? KSClassDeclaration },
+                constructor = (annotation.arguments.first { it.name?.asString() == Konvert::constructor.name }.value as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() },
                 priority = annotation.arguments.first { it.name?.asString() == Konvert::priority.name }.value as Priority,
             )
 
