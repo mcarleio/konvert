@@ -2,16 +2,83 @@
 
 This is a kotlin compiler plugin (using [KSP](https://github.com/google/ksp)) to generate mapping code from one class to another.
 
-> This README provides basic information, for more details have a look at the [documentation](https://mcarleio.github.io/konvert).
+> This README provides a basic overview, for more details have a look at the [documentation](https://mcarleio.github.io/konvert).
+
+> See [here](https://central.sonatype.com/artifact/io.mcarle/konvert/1.0.0/versions) for the current version.
 
 ## Usage
 
-### Build Tool
+### Gradle
 
-Have a look into the [usage](USAGE.md) to see how to include `Konvert` to your project step-by-step
-or for a simple project have a look into the [example directory](example).
+To use `Konvert` with Gradle, you have to do the following steps:
+
+1. Add `konvert-api` as a dependency:
+   ```kotlin
+   dependencies {
+      implementation("io.mcarle:konvert-api:$konvertVersion")
+   }
+   ```
+
+2. Add the KSP plugin matching your Kotlin version:
+   ```kotlin
+   plugins {
+       id("com.google.devtools.ksp").version("1.8.10-1.0.9")
+   }
+   ```
+
+3. Add `konvert` as a `ksp` dependency:
+   ```kotlin
+   dependencies {
+      ksp("io.mcarle:konvert:$konvertVersion")
+   }
+   ```
+
+### Maven
+
+To use `Konvert` with Maven, you have to do the following steps:
+
+1. Add `konvert-api` as a dependency:
+   ```xml
+   <dependency>
+       <groupId>io.mcarle</groupId>
+       <artifactId>konvert-api</artifactId>
+       <version>${konvert.version}</version>
+   </dependency>
+   ```
+
+2. Configure the `kotlin-maven-plugin` to use `Konvert`:
+   ```xml
+   <plugin>
+       <groupId>org.jetbrains.kotlin</groupId>
+       <artifactId>kotlin-maven-plugin</artifactId>
+       <configuration>
+           <jvmTarget>17</jvmTarget>
+           <compilerPlugins>
+               <plugin>ksp</plugin>
+           </compilerPlugins>
+       </configuration>
+       <dependencies>
+           <dependency>
+               <groupId>com.dyescape</groupId>
+               <artifactId>kotlin-maven-symbol-processing</artifactId>
+               <version>1.4</version>
+           </dependency>
+           <dependency>
+               <groupId>io.mcarle</groupId>
+               <artifactId>konvert</artifactId>
+               <version>${konvert.version}</version>
+           </dependency>
+       </dependencies>
+   </plugin>
+   ```
+
+   > At the time of writing, `kotlin-maven-symbol-processing` does not support Kotlin >=1.8.
+   Please verify the details regarding the plugin by referring to the corresponding project's
+   > [GitHub page](https://github.com/Dyescape/kotlin-maven-symbol-processing).
 
 ### Code
+
+For a simple example project have a look into the [example directory](example).
 
 There are three different ways to use `Konvert`:
 
@@ -118,6 +185,11 @@ the KDocs of the [api](api/src/main/kotlin/io/mcarle/konvert/api),
 the [example project](example/src/main/kotlin/io/mcarle/konvert/example)
 or the [tests](processor/src/test/kotlin/io/mcarle/konvert/processor).
 
+## Further information
+
+* `Konvert` is primarily compiled and tested with JDK >=17. It is not guaranteed to work with anything below JDK 17.
+* `Konvert` is able to convert classes from and to classes written in Java (and probably also in other JVM languages).
+
 ## Building
 
 ### Gradle
@@ -145,6 +217,10 @@ GitHub Actions are used to:
 
 * [build the project](.github/workflows/build.yml) and publish it (only for tags) to a Maven repository
 * [generate and deploy](.github/workflows/pages.yml) the documentation to GitHub Pages.
+
+## Changelog
+
+The [changelog](CHANGELOG.md) contains all notable changes.
 
 ## License
 
