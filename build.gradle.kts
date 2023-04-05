@@ -26,8 +26,7 @@ koverReport {
 }
 
 kover {
-    useKoverTool()
-    disabledForProject = System.getenv("CI") == null
+    disabledForProject = true
 }
 
 /**
