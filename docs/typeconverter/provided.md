@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Provided `TypeConverter`s
+title: Provided TypeConverters
 nav_order: 3
 ---
 
@@ -10,80 +10,55 @@ The following tables share this legend:
 
 * `✔` = `TypeConverter` exists and is enabled by default
 * `☑` = `TypeConverter` exists but is not enabled by default
-* `-` = no `TypeConverter` existing
+* empty = no `TypeConverter` existing
 
 ## Basic Types
 
-| From\To | String | Int | UInt | Long | ULong | Short | UShort | Number | Byte | UByte | Char | Boolean | Float | Double |
-|---------|:------:|:---:|:----:|:----:|:-----:|:-----:|:------:|:------:|:----:|:-----:|:----:|:-------:|:-----:|:------:|
-| String  |   ✔    |  ☑  |  ☑   |  ☑   |   ☑   |   ☑   |   ☑    |   ☑    |  ☑   |   ☑   |  ☑   |    ☑    |   ☑   |   ☑    |
-| Int     |   ✔    |  ✔  |  ☑   |  ✔   |   ☑   |   ☑   |   ☑    |   ✔    |  ☑   |   ☑   |  ☑   |    ☑    |   ✔   |   ✔    |
-| UInt    |   ✔    |  ☑  |  ✔   |  ✔   |   ✔   |   ☑   |   ☑    |   ✔    |  ☑   |   ☑   |  ☑   |    ☑    |   ✔   |   ✔    |
-| Long    |   ✔    |  ☑  |  ☑   |  ✔   |   ☑   |   ☑   |   ☑    |   ✔    |  ☑   |   ☑   |  ☑   |    ☑    |   ☑   |   ✔    |
-| ULong   |   ✔    |  ☑  |  ☑   |  ☑   |   ✔   |   ☑   |   ☑    |   ✔    |  ☑   |   ☑   |  ☑   |    ☑    |   ☑   |   ✔    |
-| Short   |   ✔    |  ✔  |  ☑   |  ✔   |   ☑   |   ✔   |   ☑    |   ✔    |  ☑   |   ☑   |  ☑   |    ☑    |   ✔   |   ✔    |
-| UShort  |   ✔    |  ✔  |  ✔   |  ✔   |   ✔   |   ☑   |   ✔    |   ✔    |  ☑   |   ☑   |  ☑   |    ☑    |   ✔   |   ✔    |
-| Number  |   ✔    |  ☑  |  ☑   |  ☑   |   ☑   |   ☑   |   ☑    |   ✔    |  ☑   |   ☑   |  ☑   |    ☑    |   ☑   |   ☑    |
-| Byte    |   ✔    |  ✔  |  ☑   |  ✔   |   ☑   |   ✔   |   ☑    |   ✔    |  ✔   |   ☑   |  ☑   |    ☑    |   ✔   |   ✔    |
-| UByte   |   ✔    |  ✔  |  ✔   |  ✔   |   ✔   |   ✔   |   ✔    |   ✔    |  ☑   |   ✔   |  ☑   |    ☑    |   ✔   |   ✔    |
-| Char    |   ✔    |  ☑  |  ☑   |  ☑   |   ☑   |   ☑   |   ☑    |   ☑    |  ☑   |   ☑   |  ✔   |    ☑    |   ☑   |   ☑    |
-| Boolean |   ✔    |  ☑  |  ☑   |  ☑   |   ☑   |   ☑   |   ☑    |   ☑    |  ☑   |   ☑   |  ☑   |    ✔    |   ☑   |   ☑    |
-| Float   |   ✔    |  ☑  |  ☑   |  ☑   |   ☑   |   ☑   |   ☑    |   ✔    |  ☑   |   ☑   |  ☑   |    ☑    |   ✔   |   ✔    |
-| Double  |   ✔    |  ☑  |  ☑   |  ☑   |   ☑   |   ☑   |   ☑    |   ✔    |  ☑   |   ☑   |  ☑   |    ☑    |   ☑   |   ✔    |
-
-Hint: All `TypeConverter` for basic types are enabled by default, if for each source value, when you convert it to target type and then back
-to source type, the value is the same as the source value.
+{% include_relative gen/basic.md %}
 
 ## Temporal Types
 
-| From\To         | Date | Instant | ZonedDateTime | OffsetDateTime | LocalDateTime | LocalDate | OffsetTime | LocalTime |
-|-----------------|:----:|:-------:|:-------------:|:--------------:|:-------------:|:---------:|:----------:|:---------:|
-| String          |  -   |    ☑    |       ☑       |       ☑        |       ☑       |     ☑     |     ☑      |     ☑     |
-| Long (Epoch ms) |  ☑   |    ☑    |       -       |       -        |       -       |     -     |     -      |     -     |
-| Long (Epoch s)  |  ☑   |    ☑    |       -       |       -        |       -       |     -     |     -      |     -     |
-| Date            |  ✔   |    ✔    |       -       |       -        |       -       |     -     |     -      |     -     |
-| Instant         |  ✔   |    ✔    |       -       |       -        |       -       |     -     |     -      |     -     |
-| ZonedDateTime   |  ✔   |    ✔    |       ✔       |       ✔        |       ✔       |     ✔     |     ✔      |     ✔     |
-| OffsetDateTime  |  ✔   |    ✔    |       ✔       |       ✔        |       ✔       |     ✔     |     ✔      |     ✔     |
-| LocalDateTime   |  -   |    -    |       -       |       -        |       ✔       |     ✔     |     -      |     ✔     |
-| LocalDate       |  -   |    -    |       -       |       -        |       -       |     ✔     |     -      |     -     |
-| OffsetTime      |  -   |    -    |       -       |       -        |       -       |     -     |     ✔      |     ✔     |
-| LocalTime       |  -   |    -    |       -       |       -        |       -       |     -     |     -      |     ✔     |
+{% include_relative gen/to_temporal.md %}
 
-| From\To        | String | Long (Epoch ms) | Long (Epoch s) |
-|----------------|:------:|:---------------:|:--------------:|
-| Date           |   ✔    |        ✔        |       ☑        |
-| Instant        |   ✔    |        ✔        |       ☑        |
-| ZonedDateTime  |   ✔    |        ✔        |       ☑        |
-| OffsetDateTime |   ✔    |        ✔        |       ☑        |
-| LocalDateTime  |   ✔    |        -        |       -        |
-| LocalDate      |   ✔    |        -        |       -        |
-| OffsetTime     |   ✔    |        -        |       -        |
-| LocalTime      |   ✔    |        -        |       -        |
+{% include_relative gen/from_temporal.md %}
 
 ## Enum
 
-TODO: document
+{% include_relative gen/to_enum.md %}
 
-* EnumToEnumConverter
-* EnumToXConverter
-* XToEnumConverter
+{% include_relative gen/from_enum.md %}
+
+The `EnumToEnumConverter` will fail, if the target enum does not provide all possible values as the source enum.
 
 ## Iterables
 
-TODO: document
+{% include_relative gen/iterable.md %}
 
-* IterableToIterableConverter
+The values inside are also mapped, if a `TypeConverter` for them is enabled.
 
 ## Maps
 
-TODO: document
+{% include_relative gen/map.md %}
 
-* MapToMapConverter
+The key and value type parameters are also mapped, if a `TypeConverter` for both is enabled.
 
 ## Other
 
-TODO: document
+### ToAnyConverter
 
-* ToAny
-* SameType
+Special and simple case: target is the `Any` type from which all types inherit.
+
+|   From\To    | kotlin.Any |
+|:------------:|:----------:|
+| **any type** |     ✔      |
+{: .fixed-first-column-120 }
+
+### SameTypeConverter
+
+Special and simple case: source and target are exactly the same type.
+
+|  From\To   | &lt;T> |
+|:----------:|:------:|
+| **&lt;T>** |   ✔    |
+{: .fixed-first-column-120 }
+

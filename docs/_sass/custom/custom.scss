@@ -1,0 +1,30 @@
+@for $i from 0 through 4 {
+  $start: 120;
+  $base: 10;
+  $columnWidth: $start + $base * $i;
+  table.fixed-first-column-#{$columnWidth} {
+    thead th:first-child {
+      min-width: $columnWidth + 0px;
+      max-width: $columnWidth + 0px;
+      width: $columnWidth + 0px;
+      position: absolute;
+    }
+
+    tbody td:first-child {
+      min-width: $columnWidth + 0px;
+      max-width: $columnWidth + 0px;
+      width: $columnWidth + 0px;
+      position: absolute;
+    }
+
+    tbody td:nth-child(2) {
+      margin-left: $columnWidth + 0px;
+      display: block;
+    }
+
+    thead th:nth-child(2) {
+      margin-left: $columnWidth + 0px;
+      display: block;
+    }
+  }
+}
