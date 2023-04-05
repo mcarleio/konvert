@@ -28,7 +28,7 @@ jobs:
       - name: Test
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: test check #-PrunAllTests
+          arguments: test check -PrunAllTests
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
       - name: Extract release version
