@@ -17,6 +17,17 @@ koverReport {
             packages("io.mcarle.konvert")
         }
     }
+    html {
+        onCheck = true
+    }
+    xml {
+        onCheck = true
+    }
+}
+
+kover {
+    useKoverTool()
+    disabledForProject = System.getenv("CI") == null
 }
 
 /**
@@ -33,6 +44,6 @@ val copySymbolProcessorProvider = tasks.register<Copy>("copySymbolProcessorProvi
     into(layout.buildDirectory.dir("classes/kotlin/main/"))
 }
 
-tasks.named<Jar>("jar") {
+tasks.named<Copy>("processResources") {
     dependsOn(copySymbolProcessorProvider)
 }

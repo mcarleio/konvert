@@ -32,6 +32,11 @@ ksp {
     arg("autoserviceKsp.verify", "true")
 }
 
+kover {
+    useKoverTool()
+    disabledForProject = System.getenv("CI") == null
+}
+
 tasks.test {
     useJUnitPlatform {
         if (project.hasProperty("runAllTests")) {
