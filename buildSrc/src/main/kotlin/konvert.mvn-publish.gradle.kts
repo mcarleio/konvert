@@ -8,21 +8,23 @@ group = "io.mcarle"
 version = System.getenv("RELEASE_VERSION") ?: "0.1.0-SNAPSHOT"
 
 publishing {
-    repositories {
-        maven {
-            name = "OSSRH"
-            url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = System.getenv("OSSRH_USERNAME")
-                password = System.getenv("OSSRH_PASSWORD")
+    if (System.getenv("CI") != null) {
+        repositories {
+            maven {
+                name = "OSSRH"
+                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+                credentials {
+                    username = System.getenv("OSSRH_USERNAME")
+                    password = System.getenv("OSSRH_PASSWORD")
+                }
             }
-        }
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/mcarleio/konvert")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/mcarleio/konvert")
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
             }
         }
     }
@@ -72,7 +74,9 @@ java {
     withSourcesJar()
 }
 
-signing {
-    useInMemoryPgpKeys(System.getenv("SIGN_KEYID"), System.getenv("SIGN_KEY"), System.getenv("SIGN_KEY_PASS"))
-    sign(publishing.publications["maven"])
+if (System.getenv("CI") != null) {
+    signing {
+        useInMemoryPgpKeys(System.getenv("SIGN_KEYID"), System.getenv("SIGN_KEY"), System.getenv("SIGN_KEY_PASS"))
+        sign(publishing.publications["maven"])
+    }
 }
