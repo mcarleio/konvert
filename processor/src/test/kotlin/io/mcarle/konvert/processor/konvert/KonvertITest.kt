@@ -180,4 +180,92 @@ interface OtherMapper {
         assertContains(mapperCode, "Konverter.get<OtherMapper>().toTarget(")
     }
 
+    @Test
+    fun useSelfImplementedKonverter() {
+        val (compilation) = super.compileWith(
+            listOf(),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(val property: String)
+class SourceOptionalClass(val property: String?)
+class TargetClass(val property: Int)
+class TargetOptionalClass(val property: Int?)
+
+@Konverter
+interface Mapper {
+    @Konvert
+    fun toTarget(source: SourceClass): TargetClass
+    @Konvert
+    fun toTargetOptional(source: SourceClass): TargetOptionalClass
+    @Konvert
+    fun toTarget(source: SourceOptionalClass): TargetClass
+    @Konvert
+    fun toTargetOptional(source: SourceOptionalClass): TargetOptionalClass
+}
+
+@Konverter
+interface OtherMapper {
+    fun toInt(source: String): Int = source.toInt()
+    fun optionalToInt(source: String?): Int = source?.toInt() ?: 0
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "Konverter.get<OtherMapper>().toInt(")
+        assertContains(mapperCode, "source.property?.let {")
+    }
+
+    @Test
+    fun useSelfImplementedKonverterWithGenerics() {
+        val (compilation) = super.compileWith(
+            listOf(),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(val property: List<String>)
+class SourceOptionalClass(val property: List<String?>)
+class TargetClass(val property: List<Int>)
+class TargetOptionalClass(val property: List<Int?>)
+
+@Konverter
+interface Mapper {
+    @Konvert
+    fun toTarget(source: SourceClass): TargetClass
+    @Konvert
+    fun toTargetOptional(source: SourceClass): TargetOptionalClass
+    @Konvert
+    fun toTarget(source: SourceOptionalClass): TargetClass
+    @Konvert
+    fun toTargetOptional(source: SourceOptionalClass): TargetOptionalClass
+}
+
+@Konverter
+interface OtherMapper {
+    fun toListOfInts(source: List<String>): List<Int> = source.map { it.toInt() }
+    fun optionalToListOfInts(source: List<String?>): List<Int> = source.map { it?.toInt() ?: 0 }
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "Konverter.get<OtherMapper>().toListOfInts(")
+        assertContains(mapperCode, "Konverter.get<OtherMapper>().optionalToListOfInts(")
+    }
+
 }

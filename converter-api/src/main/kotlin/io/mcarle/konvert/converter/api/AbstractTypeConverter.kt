@@ -22,7 +22,7 @@ abstract class AbstractTypeConverter : TypeConverter {
         return matchesWithBothTypesNotNull(source.makeNotNullable(), target.makeNotNullable())
     }
 
-    fun needsNotNullAssertionOperator(
+    open fun needsNotNullAssertionOperator(
         source: KSType,
         target: KSType,
     ): Boolean {
