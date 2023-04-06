@@ -1,10 +1,12 @@
 # Konvert
 
+[![Maven Central][maven-image]][maven-url]
+[![License][license-image]](LICENSE)
+[![Code Coverage][codecov-image]][codecov-url]
+
 This is a kotlin compiler plugin (using [KSP](https://github.com/google/ksp)) to generate mapping code from one class to another.
 
 > This README provides a basic overview, for more details have a look at the [documentation](https://mcarleio.github.io/konvert).
-
-> See [here](https://central.sonatype.com/artifact/io.mcarle/konvert/1.0.0/versions) for the current version.
 
 ## Usage
 
@@ -237,3 +239,10 @@ The [changelog](CHANGELOG.md) contains all notable changes.
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
+
+
+[maven-image]: https://img.shields.io/maven-central/v/io.mcarle/konvert.svg
+[maven-url]: https://central.sonatype.com/artifact/io.mcarle/konvert/
+[license-image]: https://img.shields.io/github/license/mcarleio/konvert.svg
+[codecov-image]: https://img.shields.io/codecov/c/github/mcarleio/konvert.svg
+[codecov-url]: https://codecov.io/gh/mcarleio/konvert
