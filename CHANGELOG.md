@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug fixes
+
+* the nullability checks for `KonvertTypeConverter` now consider both, declared and current type for source and target
+
 ## [1.1.0]
 
-#### Breaking Changes
+### Breaking Changes
 
 * enabled by default following converters:
    * `ULongToNumberConverter`
@@ -25,7 +29,7 @@ All notable changes to this project will be documented in this file.
   * `AbstractTypeConverter`
   * `ConverterOptions`
 
-#### New features
+### New features
 
 * implemented new converters:
    * `LongEpochSecondsToDateConverter`
@@ -54,7 +58,7 @@ All notable changes to this project will be documented in this file.
    * `LocalDateTimeToLocalTimeConverter`
    * `OffsetTimeToLocalTimeConverter`
 
-#### Bug fixes
+### Bug fixes
 
 * Types with generics on a function in interfaces annotated with `Konverter` work
 * The generated `TypeConverter` for `KonvertTo`, `KonvertFrom` and `Konvert` can handle nullable source with not nullable target
