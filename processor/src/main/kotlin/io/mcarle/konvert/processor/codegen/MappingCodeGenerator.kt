@@ -84,7 +84,7 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
         if (noTargetOrAllIgnored(sourceProperties, targetProperties)) return ""
         val varName = className.replaceFirstChar { it.lowercase(Locale.getDefault()) }
         return """
-.also { $varName ->${"⇥\n" + propertySettingCode(targetProperties, sourceProperties, varName)}
+.also·{·$varName·->${"⇥\n" + propertySettingCode(targetProperties, sourceProperties, varName)}
 ⇤}
         """.trimIndent()
     }
