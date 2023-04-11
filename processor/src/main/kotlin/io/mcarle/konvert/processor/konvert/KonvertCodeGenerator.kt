@@ -28,11 +28,11 @@ object KonvertCodeGenerator {
             converter.mapKSClassDeclaration.simpleName.asString(),
         )
 
-        if (converter.sourceTypeReference.toString() != converter.sourceType.toString()) {
+        if (converter.sourceTypeReference.toString() != converter.sourceType.makeNotNullable().toString()) {
             // add import alias
             codeBuilder.addImport(converter.sourceType, converter.sourceTypeReference.toString())
         }
-        val targetClassImportName = if (converter.targetTypeReference.toString() != converter.targetType.toString()) {
+        val targetClassImportName = if (converter.targetTypeReference.toString() != converter.targetType.makeNotNullable().toString()) {
             // add import alias
             val alias = converter.targetTypeReference.toString()
             codeBuilder.addImport(converter.targetType, alias)
