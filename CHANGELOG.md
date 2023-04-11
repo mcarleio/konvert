@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug fixes
+* use FQN when converting between enums in different packages
+* only create an import alias if not nullable type is not equal to the type reference
+
+## [1.2.0]
+
 ### New features
 * If an import alias was used for `@Konvert`, the generated object will also use that alias
 
@@ -74,7 +80,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v1.1.1...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v1.2.0...HEAD
+
+[1.2.0]: https://github.com/mcarleio/konvert/compare/v1.1.1...v1.2.0
 
 [1.1.1]: https://github.com/mcarleio/konvert/compare/v1.1.0...v1.1.1
 
