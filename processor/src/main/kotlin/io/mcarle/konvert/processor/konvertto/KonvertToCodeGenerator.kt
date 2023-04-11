@@ -20,15 +20,22 @@ object KonvertToCodeGenerator {
             converter.sourceClassDeclaration.simpleName.asString(),
         )
 
+        val targetClassImportName = if (converter.sourceClassDeclaration.simpleName.asString() != converter.targetClassDeclaration.simpleName.asString()) {
+            converter.targetClassDeclaration.simpleName.asString()
+        } else {
+            null
+        }
+
         fileSpecBuilder.addFunction(
             funSpec = FunSpec.builder(converter.mapFunctionName)
-                .returns(converter.targetClassDeclaration.asType(emptyList()).toTypeName())
-                .receiver(converter.sourceClassDeclaration.asType(emptyList()).toTypeName())
+                .returns(converter.targetClassDeclaration.asStarProjectedType().toTypeName())
+                .receiver(converter.sourceClassDeclaration.asStarProjectedType().toTypeName())
                 .addCode(
                     mapper.generateCode(
                         converter.annotationData.mappings.validated(converter.sourceClassDeclaration, logger),
                         converter.annotationData.constructor,
                         null,
+                        targetClassImportName,
                         converter.sourceClassDeclaration,
                         converter.targetClassDeclaration,
                         converter.sourceClassDeclaration

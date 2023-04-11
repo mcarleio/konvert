@@ -20,6 +20,7 @@ class CodeGenerator(
         mappings: List<Mapping>,
         constructorTypes: List<KSClassDeclaration>,
         paramName: String?,
+        targetClassImportName: String?,
         source: KSClassDeclaration,
         target: KSClassDeclaration,
         mappingCodeParentDeclaration: KSDeclaration
@@ -38,6 +39,8 @@ class CodeGenerator(
         return MappingCodeGenerator().generateMappingCode(
             sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
             constructor,
+            paramName,
+            targetClassImportName,
             targetPropertiesWithoutParameters
         )
     }

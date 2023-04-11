@@ -15,11 +15,14 @@ class MappingCodeGenerator {
     fun generateMappingCode(
         sourceProperties: List<PropertyMappingInfo>,
         constructor: KSFunctionDeclaration,
+        functionParamName: String?,
+        targetClassImportName: String?,
         targetProperties: List<KSPropertyDeclaration>
     ): String {
+        val typeName = targetClassImportName ?: constructor.parentDeclaration?.qualifiedName!!.asString()
         val className = constructor.parentDeclaration!!.simpleName.asString()
-        val constructorCode = constructorCode(className, constructor, sourceProperties)
-        return "return·" + constructorCode + propertyCode(className, sourceProperties, targetProperties)
+        val constructorCode = constructorCode(typeName, constructor, sourceProperties)
+        return "return·" + constructorCode + propertyCode(className, functionParamName, sourceProperties, targetProperties)
     }
 
     private fun constructorCode(
@@ -78,11 +81,17 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
 
     private fun propertyCode(
         className: String,
+        functionParamName: String?,
         sourceProperties: List<PropertyMappingInfo>,
         targetProperties: List<KSPropertyDeclaration>
     ): String {
         if (noTargetOrAllIgnored(sourceProperties, targetProperties)) return ""
-        val varName = className.replaceFirstChar { it.lowercase(Locale.getDefault()) }
+
+        var varName = className.replaceFirstChar { it.lowercase(Locale.getDefault()) }
+        if (varName == functionParamName) {
+            varName += "0"
+        }
+
         return """
 .also·{·$varName·->${"⇥\n" + propertySettingCode(targetProperties, sourceProperties, varName)}
 ⇤}

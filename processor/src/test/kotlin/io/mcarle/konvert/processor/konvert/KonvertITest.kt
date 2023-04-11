@@ -268,4 +268,182 @@ interface OtherMapper {
         assertContains(mapperCode, "Konverter.get<OtherMapper>().optionalToListOfInts(")
     }
 
+    @Test
+    fun handleDifferentPackages() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "a/SourceClass.kt",
+                contents =
+                """
+package a
+
+class SourceClass(val property: String)
+                """.trimIndent()
+            ),
+            SourceFile.kotlin(
+                name = "b/TargetClass.kt",
+                contents =
+                """
+package b
+
+class TargetClass {
+    var property: String = ""
+}
+                """.trimIndent()
+            ),
+            SourceFile.kotlin(
+                name = "b/SomeConverter.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import a.SourceClass
+import b.TargetClass
+
+@Konverter
+interface SomeConverter {
+    @Konvert
+    fun toTargetClass(source: SourceClass): TargetClass
+}
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            import a.SourceClass
+            import b.TargetClass
+
+            public object SomeConverterImpl : SomeConverter {
+              public override fun toTargetClass(source: SourceClass): TargetClass =
+                  TargetClass().also { targetClass ->
+                targetClass.property = source.property
+              }
+            }
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
+
+    @Test
+    fun handleSameClassNameInDifferentPackagesWithFQN() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "a/SomeClass.kt",
+                contents =
+                """
+package a
+
+class SomeClass(val property: String)
+                """.trimIndent()
+            ),
+            SourceFile.kotlin(
+                name = "b/SomeClass.kt",
+                contents =
+                """
+package b
+
+class SomeClass {
+    var property: String = ""
+}
+                """.trimIndent()
+            ),
+            SourceFile.kotlin(
+                name = "SomeConverter.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import a.SomeClass
+
+@Konverter
+interface SomeConverter {
+    @Konvert
+    fun toSomeClass(source: SomeClass): b.SomeClass
+}
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            import a.SomeClass
+
+            public object SomeConverterImpl : SomeConverter {
+              public override fun toSomeClass(source: SomeClass): b.SomeClass =
+                  b.SomeClass().also { someClass ->
+                someClass.property = source.property
+              }
+            }
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
+    @Test
+    fun handleSameClassNameInDifferentPackagesWithImportAlias() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "a/SomeClass.kt",
+                contents =
+                """
+package a
+
+class SomeClass(val property: String)
+                """.trimIndent()
+            ),
+            SourceFile.kotlin(
+                name = "b/SomeClass.kt",
+                contents =
+                """
+package b
+
+class SomeClass {
+    var property: String = ""
+}
+                """.trimIndent()
+            ),
+            SourceFile.kotlin(
+                name = "SomeConverter.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import a.SomeClass
+import b.SomeClass as B
+
+@Konverter
+interface SomeConverter {
+    @Konvert
+    fun toB(source: SomeClass): B
+}
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            import a.SomeClass
+            import b.SomeClass as B
+
+            public object SomeConverterImpl : SomeConverter {
+              public override fun toB(source: SomeClass): B = B().also { someClass ->
+                someClass.property = source.property
+              }
+            }
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
 }

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New features
+* If an import alias was used for `@Konvert`, the generated object will also use that alias
+
+### Bug fixes
+* fix the special case when source and target class both have the same class name
+* use non-breaking space to prevent rare cases where a line break could break code
+
 ## [1.1.1]
 
 ### Bug fixes
@@ -28,8 +35,8 @@ All notable changes to this project will be documented in this file.
    * `OffsetDateTimeToLongConverter` -> `OffsetDateTimeToLongEpochMillisConverter`
    * `LongToInstantConverter` -> `LongEpochMillisToInstantConverter`
 * moved from `converter` to `converter-api` module:
-  * `AbstractTypeConverter`
-  * `ConverterOptions`
+   * `AbstractTypeConverter`
+   * `ConverterOptions`
 
 ### New features
 
@@ -68,6 +75,9 @@ All notable changes to this project will be documented in this file.
 ## [1.0.0] - 2023-03-27
 
 [unreleased]: https://github.com/mcarleio/konvert/compare/v1.1.1...HEAD
+
 [1.1.1]: https://github.com/mcarleio/konvert/compare/v1.1.0...v1.1.1
+
 [1.1.0]: https://github.com/mcarleio/konvert/compare/v1.0.0...v1.1.0
+
 [1.0.0]: https://github.com/mcarleio/konvert/releases/tag/v1.0.0

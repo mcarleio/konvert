@@ -6,6 +6,7 @@ import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Mapping
@@ -19,14 +20,16 @@ import io.mcarle.konvert.processor.from
 
 class KonvertTypeConverter constructor(
     val annotation: AnnotationData?,
-    val sourceClassDeclaration: KSClassDeclaration,
-    val sourceType: KSType,
-    val targetClassDeclaration: KSClassDeclaration,
-    val targetType: KSType,
+    val sourceTypeReference: KSTypeReference,
+    val targetTypeReference: KSTypeReference,
     val mapKSClassDeclaration: KSClassDeclaration,
     val mapKSFunctionDeclaration: KSFunctionDeclaration,
 ) : AbstractTypeConverter(), AnnotatedConverter {
 
+    val sourceType: KSType = sourceTypeReference.resolve()
+    val sourceClassDeclaration: KSClassDeclaration = sourceType.classDeclaration()!!
+    val targetType: KSType = targetTypeReference.resolve()
+    val targetClassDeclaration: KSClassDeclaration = targetType.classDeclaration()!!
     val mapFunctionName: String = mapKSFunctionDeclaration.simpleName.asString()
     val paramName: String = mapKSFunctionDeclaration.parameters.first().name!!.asString()
 

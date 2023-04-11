@@ -30,9 +30,10 @@ object KonvertFromCodeGenerator {
                         converter.annotationData.mappings.validated(converter.sourceClassDeclaration, logger),
                         converter.annotationData.constructor,
                         converter.paramName,
+                        converter.targetClassDeclaration.simpleName.asString(),
                         converter.sourceClassDeclaration,
                         converter.targetClassDeclaration,
-                        converter.targetCompanionDeclaration // TODO: check if this is actual right
+                        converter.targetCompanionDeclaration
                     )
                 )
                 .build(),

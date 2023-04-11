@@ -1,9 +1,11 @@
 package io.mcarle.konvert.processor.codegen
 
 import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.ksp.toClassName
 
 class CodeBuilder private constructor(
     private val builder: FileSpec.Builder,
@@ -17,6 +19,10 @@ class CodeBuilder private constructor(
             builder.addFunction(funSpec)
         }
         if (originating != null) this.originating += originating
+    }
+
+    fun addImport(type: KSType, alias: String) {
+        builder.addAliasedImport(type.toClassName(), alias)
     }
 
     fun build(): FileSpec {
