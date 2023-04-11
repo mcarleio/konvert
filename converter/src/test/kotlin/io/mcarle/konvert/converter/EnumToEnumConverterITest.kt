@@ -4,6 +4,7 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.api.TypeConverter
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -34,10 +35,16 @@ class EnumToEnumConverterITest : ConverterITest() {
         super.converterTest(EnumToEnumConverter(), targetTypeName, sourceTypeName)
     }
 
-    override fun generateAdditionalCode(): SourceFile = SourceFile.kotlin(
-        name = "MyEnums.kt",
-        contents =
-        """
+    @Test
+    fun enumsInDifferentPackages() {
+        super.converterTest(EnumToEnumConverter(), "a.OtherEnum", "b.OtherEnum")
+    }
+
+    override fun generateAdditionalCode(): List<SourceFile> = listOf(
+        SourceFile.kotlin(
+            name = "MyEnums.kt",
+            contents =
+            """
 enum class FirstEnum {
     XXX,
     YYY,
@@ -52,6 +59,30 @@ enum class SecondEnum {
 typealias MyFirstEnum = FirstEnum
 typealias MySecondEnum = SecondEnum
         """.trimIndent()
+        ), SourceFile.kotlin(
+            name = "a/OtherEnum.kt",
+            contents = """
+package a
+
+enum class OtherEnum {
+    AAA,
+    BBB,
+    CCC
+}
+        """.trimIndent()
+        ), SourceFile.kotlin(
+            name = "b/OtherEnum.kt",
+            contents = """
+package b
+
+enum class OtherEnum {
+    AAA,
+    BBB,
+    CCC,
+    DDD
+}
+        """.trimIndent()
+        )
     )
 
     override fun verifyMapper(

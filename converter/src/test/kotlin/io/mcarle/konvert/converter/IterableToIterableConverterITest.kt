@@ -74,14 +74,16 @@ class IterableToIterableConverterITest : ConverterITest() {
         )
     }
 
-    override fun generateAdditionalCode(): SourceFile = SourceFile.kotlin(
-        name = "MyTypealiases.kt",
-        contents =
-        """
+    override fun generateAdditionalCode(): List<SourceFile> = listOf(
+        SourceFile.kotlin(
+            name = "MyTypealiases.kt",
+            contents =
+            """
 typealias MyString = String
 typealias ReallyMyInt = Int
 typealias MyInt = ReallyMyInt
-        """.trimIndent()
+            """.trimIndent()
+        )
     )
 
 

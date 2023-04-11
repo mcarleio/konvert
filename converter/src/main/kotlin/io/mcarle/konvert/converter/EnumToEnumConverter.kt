@@ -46,7 +46,7 @@ class EnumToEnumConverter : AbstractTypeConverter() {
         return """
 when·($fieldName)·{${ "\n⇥" +
         sourceEnumValues.joinToString("\n") {
-            "${source.declaration.simpleName.asString()}.${it.simpleName.asString()}·->·${target.declaration.simpleName.asString()}.${it.simpleName.asString()}"
+            "${source.declaration.qualifiedName?.asString()}.${it.simpleName.asString()}·->·${target.declaration.qualifiedName?.asString()}.${it.simpleName.asString()}"
         }.let {
             if (source.isNullable()) {
                 "$it\nnull·->·null"

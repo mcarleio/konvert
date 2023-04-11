@@ -47,16 +47,18 @@ class EnumToXConverterITest : ConverterITest() {
         )
     }
 
-    override fun generateAdditionalCode(): SourceFile = SourceFile.kotlin(
-        name = "MyEnum.kt",
-        contents =
-        """
+    override fun generateAdditionalCode(): List<SourceFile> = listOf(
+        SourceFile.kotlin(
+            name = "MyEnum.kt",
+            contents =
+            """
 enum class MyEnum {
     XXX,
     YYY,
     ZZZ
 }
-        """.trimIndent()
+            """.trimIndent()
+        )
     )
 
     override fun verifyMapper(

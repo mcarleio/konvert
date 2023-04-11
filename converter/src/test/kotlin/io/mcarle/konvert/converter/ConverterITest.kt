@@ -40,11 +40,7 @@ abstract class ConverterITest {
 
         TypeConverterRegistry.reinitConverterList(*enabled(converter, *additionalConverter()))
 
-        val compilation = if (additionalCode != null) {
-            compile(sourceCode, targetCode, mapperCode, additionalCode)
-        } else {
-            compile(sourceCode, targetCode, mapperCode)
-        }
+        val compilation = compile(sourceCode, targetCode, mapperCode, *additionalCode.toTypedArray())
 
         if (compilation != null) {
             val generatedMapperCode = compilation.first.generatedSourceFor("${mapperClassName}Konverter.kt")
@@ -80,7 +76,7 @@ abstract class ConverterITest {
         }.toTypedArray()
     }
 
-    open fun generateAdditionalCode(): SourceFile? = null
+    open fun generateAdditionalCode(): List<SourceFile> = emptyList()
     open fun additionalConverter(): Array<TypeConverter> = emptyArray()
     open fun loadAdditionalCode(compilation: KotlinCompilation): String? {
         return null
