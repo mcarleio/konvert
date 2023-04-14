@@ -10,35 +10,35 @@ import io.mcarle.konvert.processor.validated
 
 object KonvertFromCodeGenerator {
 
-    fun generate(converter: KonvertFromTypeConverter, resolver: Resolver, logger: KSPLogger) {
+    fun generate(data: KonvertFromData, resolver: Resolver, logger: KSPLogger) {
         val mapper = CodeGenerator(
             logger = logger
         )
 
         val codeBuilder = CodeBuilder.getOrCreate(
-            converter.targetClassDeclaration.packageName.asString(),
-            converter.targetClassDeclaration.simpleName.asString(),
+            data.targetClassDeclaration.packageName.asString(),
+            data.targetClassDeclaration.simpleName.asString(),
         )
 
         codeBuilder.addFunction(
-            funSpec = FunSpec.builder(converter.mapFunctionName)
-                .returns(converter.targetClassDeclaration.asStarProjectedType().toTypeName())
-                .addParameter(converter.paramName, converter.sourceClassDeclaration.asStarProjectedType().toTypeName())
-                .receiver(converter.targetCompanionDeclaration.asStarProjectedType().toTypeName())
+            funSpec = FunSpec.builder(data.mapFunctionName)
+                .returns(data.targetClassDeclaration.asStarProjectedType().toTypeName())
+                .addParameter(data.paramName, data.sourceClassDeclaration.asStarProjectedType().toTypeName())
+                .receiver(data.targetCompanionDeclaration.asStarProjectedType().toTypeName())
                 .addCode(
                     mapper.generateCode(
-                        converter.annotationData.mappings.validated(converter.sourceClassDeclaration, logger),
-                        converter.annotationData.constructor,
-                        converter.paramName,
-                        converter.targetClassDeclaration.simpleName.asString(),
-                        converter.sourceClassDeclaration,
-                        converter.targetClassDeclaration,
-                        converter.targetCompanionDeclaration
+                        data.annotationData.mappings.validated(data.sourceClassDeclaration, logger),
+                        data.annotationData.constructor,
+                        data.paramName,
+                        data.targetClassDeclaration.simpleName.asString(),
+                        data.sourceClassDeclaration,
+                        data.targetClassDeclaration,
+                        data.targetCompanionDeclaration
                     )
                 )
                 .build(),
             toType = false,
-            originating = converter.targetClassDeclaration.containingFile
+            originating = data.targetClassDeclaration.containingFile
         )
     }
 

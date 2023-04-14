@@ -1,11 +1,13 @@
 package io.mcarle.konvert.processor.konvert
 
+import com.squareup.kotlinpoet.ksp.toClassName
 import com.tschuchort.compiletesting.SourceFile
-import io.mcarle.konvert.api.Mapping
+import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.DEFAULT_KONVERTER_PRIORITY
 import io.mcarle.konvert.converter.api.DEFAULT_KONVERT_PRIORITY
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
+import io.mcarle.konvert.converter.api.config.KonvertOptions
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
@@ -52,11 +54,10 @@ interface Mapper {
         assertNotNull(converter, "No KonverterTypeConverter registered")
         assertEquals("toTarget", converter.mapFunctionName)
         assertEquals("source", converter.paramName)
-        assertEquals("SourceClass", converter.sourceClassDeclaration.simpleName.asString())
-        assertEquals("TargetClass", converter.targetClassDeclaration.simpleName.asString())
+        assertEquals("SourceClass", converter.sourceType.toClassName().simpleName)
+        assertEquals("TargetClass", converter.targetType.toClassName().simpleName)
         assertEquals("Mapper", converter.mapKSClassDeclaration.simpleName.asString())
         assertEquals(true, converter.enabledByDefault)
-        assertEquals(listOf(Mapping(source = "sourceProperty", target = "targetProperty")), converter.annotation?.mappings)
         assertEquals(DEFAULT_KONVERT_PRIORITY, converter.priority)
     }
 
@@ -91,11 +92,10 @@ interface Mapper {
         assertNotNull(converter, "No KonverterTypeConverter registered")
         assertEquals("toTarget", converter.mapFunctionName)
         assertEquals("source", converter.paramName)
-        assertEquals("SourceClass", converter.sourceClassDeclaration.simpleName.asString())
-        assertEquals("TargetClass", converter.targetClassDeclaration.simpleName.asString())
+        assertEquals("SourceClass", converter.sourceType.toClassName().simpleName)
+        assertEquals("TargetClass", converter.targetType.toClassName().simpleName)
         assertEquals("Mapper", converter.mapKSClassDeclaration.simpleName.asString())
         assertEquals(true, converter.enabledByDefault)
-        assertEquals(listOf(), converter.annotation?.mappings)
         assertEquals(DEFAULT_KONVERT_PRIORITY, converter.priority)
     }
 
@@ -131,11 +131,10 @@ interface Mapper {
         assertNotNull(converter, "No KonverterTypeConverter registered")
         assertEquals("toTarget", converter.mapFunctionName)
         assertEquals("source", converter.paramName)
-        assertEquals("SourceClass", converter.sourceClassDeclaration.simpleName.asString())
-        assertEquals("TargetClass", converter.targetClassDeclaration.simpleName.asString())
+        assertEquals("SourceClass", converter.sourceType.toClassName().simpleName)
+        assertEquals("TargetClass", converter.targetType.toClassName().simpleName)
         assertEquals("Mapper", converter.mapKSClassDeclaration.simpleName.asString())
         assertEquals(true, converter.enabledByDefault)
-        assertEquals(null, converter.annotation)
         assertEquals(DEFAULT_KONVERTER_PRIORITY, converter.priority)
     }
 
@@ -269,6 +268,64 @@ interface OtherMapper {
     }
 
     @Test
+    fun configGenerateClassInsteadOfObject() {
+        val (compilation, result) = super.compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            otherConverters = emptyList(),
+            expectSuccess = true,
+            options = mapOf(KonvertOptions.KONVERTER_GENERATE_CLASS.key to "false"),
+            SourceFile.kotlin(
+                name = "SourceClass.kt",
+                contents =
+                """
+class SourceClass(val property: String)
+                """.trimIndent()
+            ),
+            SourceFile.kotlin(
+                name = "TargetClass.kt",
+                contents =
+                """
+class TargetClass {
+    var property: String = ""
+}
+                """.trimIndent()
+            ),
+            SourceFile.kotlin(
+                name = "SomeConverter.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.api.Konfig
+
+@Konverter(options=[Konfig(key = "${KonvertOptions.KONVERTER_GENERATE_CLASS.key}", value = "true")])
+interface SomeConverter {
+    @Konvert
+    fun toTargetClass(source: SourceClass): TargetClass
+}
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public class SomeConverterImpl : SomeConverter {
+              public override fun toTargetClass(source: SourceClass): TargetClass =
+                  TargetClass().also { targetClass ->
+                targetClass.property = source.property
+              }
+            }
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+        Konverter.addClassLoader(result.classLoader)
+        val instance = Konverter.get(result.classLoader.loadClass("SomeConverter").kotlin)
+        assertNotNull(instance)
+    }
+
+    @Test
     fun handleDifferentPackages() {
         val (compilation) = super.compileWith(
             listOf(SameTypeConverter()),
@@ -293,7 +350,7 @@ class TargetClass {
                 """.trimIndent()
             ),
             SourceFile.kotlin(
-                name = "b/SomeConverter.kt",
+                name = "SomeConverter.kt",
                 contents =
                 """
 import io.mcarle.konvert.api.Konverter

@@ -6,6 +6,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
+import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.NoParamDefinedException
 import io.mcarle.konvert.api.NotAllowedParameterCombinationException
@@ -48,6 +49,11 @@ fun Mapping.Companion.from(annotation: KSAnnotation) = Mapping(
         }
         .filterIsInstance<KClass<out TypeConverter>>()
         .toTypedArray(),
+)
+
+fun Konfig.Companion.from(annotation: KSAnnotation) = Konfig(
+    key = annotation.arguments.first { it.name?.asString() == Konfig::key.name }.value as String,
+    value = annotation.arguments.first { it.name?.asString() == Konfig::value.name }.value as String
 )
 
 fun KSValueParameter.typeClassDeclaration(): KSClassDeclaration? = this.type.resolve().classDeclaration()

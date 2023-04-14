@@ -1,5 +1,6 @@
 package io.mcarle.konvert.converter.api
 
+import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSType
 
 /**
@@ -21,9 +22,9 @@ interface TypeConverter {
     val priority: Priority get() = DEFAULT_PRIORITY
 
     /**
-     * Used to initialise all TypeConverters in the beginning of the KSP with the resolver and the provided configurations.
+     * Used to initialise all TypeConverters in the beginning of the KSP with the resolver.
      */
-    fun init(config: io.mcarle.konvert.converter.api.ConverterConfig)
+    fun init(resolver: Resolver)
 
     /**
      * Used to check, if this type converter is able to do the conversion from `source` to `target`

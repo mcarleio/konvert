@@ -1,5 +1,6 @@
 package io.mcarle.konvert.processor.konvertto
 
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -7,9 +8,9 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.api.KonvertTo
 
-object KonvertToTypeConverterCollector {
+object KonvertToDataCollector {
 
-    fun collect(resolver: Resolver): List<KonvertToTypeConverter> {
+    fun collect(resolver: Resolver, logger: KSPLogger): List<KonvertToData> {
         return resolver.getSymbolsWithAnnotation(KonvertTo::class.qualifiedName!!)
             .flatMap { ksAnnotated ->
                 val ksClassDeclaration = ksAnnotated as? KSClassDeclaration
@@ -25,10 +26,10 @@ object KonvertToTypeConverterCollector {
                     .map {
                         // cannot use getAnnotationsByType, as the KonvertTo.value class may be part of this compilation and
                         // therefore results in ClassNotFoundExceptions when accessing it
-                        KonvertToTypeConverter.AnnotationData.from(it)
+                        KonvertToData.AnnotationData.from(it)
                     }
                     .map {
-                        KonvertToTypeConverter(
+                        KonvertToData(
                             annotationData = it,
                             sourceClassDeclaration = ksClassDeclaration,
                             targetClassDeclaration = it.value

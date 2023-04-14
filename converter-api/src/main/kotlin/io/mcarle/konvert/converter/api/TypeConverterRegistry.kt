@@ -1,5 +1,6 @@
 package io.mcarle.konvert.converter.api
 
+import com.google.devtools.ksp.processing.Resolver
 import java.util.ServiceLoader
 import kotlin.reflect.KClass
 
@@ -34,8 +35,8 @@ object TypeConverterRegistry : Iterable<TypeConverter> {
         } += converterList
     }
 
-    fun initConverters(converterConfig: io.mcarle.konvert.converter.api.ConverterConfig) {
-        typeConverterList.values.flatten().forEach { it.init(converterConfig) }
+    fun initConverters(resolver: Resolver) {
+        typeConverterList.values.flatten().forEach { it.init(resolver) }
     }
 
     fun <T> withAdditionallyEnabledConverters(

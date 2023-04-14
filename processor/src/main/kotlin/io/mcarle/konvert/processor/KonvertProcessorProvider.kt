@@ -9,10 +9,6 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 class KonvertProcessorProvider : SymbolProcessorProvider {
 
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return io.mcarle.konvert.processor.KonvertProcessor(
-            codeGenerator = environment.codeGenerator,
-            options = io.mcarle.konvert.converter.api.Options(environment.options),
-            logger = environment.logger
-        )
+        return KonvertProcessor(environment)
     }
 }

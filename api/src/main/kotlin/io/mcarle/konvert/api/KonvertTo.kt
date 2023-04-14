@@ -43,5 +43,7 @@ annotation class KonvertTo(
     /**
      * The generated converter will get the defined priority.
      */
-    val priority: Priority = DEFAULT_KONVERT_TO_PRIORITY
+    val priority: Priority = DEFAULT_KONVERT_TO_PRIORITY,
+
+    val options: Array<Konfig> = []
 )

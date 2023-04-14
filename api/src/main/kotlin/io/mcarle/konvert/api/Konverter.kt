@@ -26,7 +26,10 @@ import kotlin.reflect.KClass
  */
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS)
-annotation class Konverter {
+annotation class Konverter(
+    val options: Array<Konfig> = []
+) {
+
     /**
      * This object can be used to load the generated class of an interface, which is annotated with `@Konverter`.
      */
@@ -36,19 +39,31 @@ annotation class Konverter {
             ClassLoader.getSystemClassLoader()
         )
 
+        fun addClassLoader(classLoader: ClassLoader) {
+            this.classLoader += classLoader
+        }
+
         inline fun <reified T : Any> get(): T = get(T::class)
 
         @Suppress("UNCHECKED_CAST")
         fun <T : Any> get(clazz: KClass<T>): T {
             if (!mappers.containsKey(clazz)) {
-                mappers[clazz] = classLoader.firstNotNullOf {
+                val implClass = classLoader.firstNotNullOf {
                     try {
                         it.loadClass("${clazz.qualifiedName}Impl")
                     } catch (e: Exception) {
                         null
                     }
-                }.getDeclaredField("INSTANCE").get(null)
-//            }.kotlin.objectInstance!! // needs kotlin-reflect during runtime
+                }
+
+                var implInstance = implClass.declaredFields.firstOrNull {
+                    it.name == "INSTANCE"
+                }?.get(null)
+
+                if (implInstance == null) {
+                    implInstance = implClass.constructors.firstOrNull { it.parameterCount == 0 }?.newInstance()
+                }
+                mappers[clazz] = implInstance!!
             }
             return mappers[clazz] as T
         }

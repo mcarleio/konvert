@@ -10,40 +10,41 @@ import io.mcarle.konvert.processor.validated
 
 object KonvertToCodeGenerator {
 
-    fun generate(converter: KonvertToTypeConverter, resolver: Resolver, logger: KSPLogger) {
+    fun generate(data: KonvertToData, resolver: Resolver, logger: KSPLogger) {
         val mapper = CodeGenerator(
             logger = logger
         )
 
         val fileSpecBuilder = CodeBuilder.getOrCreate(
-            converter.sourceClassDeclaration.packageName.asString(),
-            converter.sourceClassDeclaration.simpleName.asString(),
+            data.sourceClassDeclaration.packageName.asString(),
+            data.sourceClassDeclaration.simpleName.asString(),
         )
 
-        val targetClassImportName = if (converter.sourceClassDeclaration.simpleName.asString() != converter.targetClassDeclaration.simpleName.asString()) {
-            converter.targetClassDeclaration.simpleName.asString()
-        } else {
-            null
-        }
+        val targetClassImportName =
+            if (data.sourceClassDeclaration.simpleName.asString() != data.targetClassDeclaration.simpleName.asString()) {
+                data.targetClassDeclaration.simpleName.asString()
+            } else {
+                null
+            }
 
         fileSpecBuilder.addFunction(
-            funSpec = FunSpec.builder(converter.mapFunctionName)
-                .returns(converter.targetClassDeclaration.asStarProjectedType().toTypeName())
-                .receiver(converter.sourceClassDeclaration.asStarProjectedType().toTypeName())
+            funSpec = FunSpec.builder(data.mapFunctionName)
+                .returns(data.targetClassDeclaration.asStarProjectedType().toTypeName())
+                .receiver(data.sourceClassDeclaration.asStarProjectedType().toTypeName())
                 .addCode(
                     mapper.generateCode(
-                        converter.annotationData.mappings.validated(converter.sourceClassDeclaration, logger),
-                        converter.annotationData.constructor,
+                        data.annotationData.mappings.validated(data.sourceClassDeclaration, logger),
+                        data.annotationData.constructor,
                         null,
                         targetClassImportName,
-                        converter.sourceClassDeclaration,
-                        converter.targetClassDeclaration,
-                        converter.sourceClassDeclaration
+                        data.sourceClassDeclaration,
+                        data.targetClassDeclaration,
+                        data.sourceClassDeclaration
                     )
                 )
                 .build(),
             toType = false,
-            originating = converter.sourceClassDeclaration.containingFile
+            originating = data.sourceClassDeclaration.containingFile
         )
 
     }

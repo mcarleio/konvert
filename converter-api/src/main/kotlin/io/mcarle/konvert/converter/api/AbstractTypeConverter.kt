@@ -1,16 +1,15 @@
 package io.mcarle.konvert.converter.api
 
+import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSType
 import io.mcarle.konvert.converter.api.config.enforceNotNull
+import io.mcarle.konvert.converter.api.config.Configuration
 
 abstract class AbstractTypeConverter : TypeConverter {
-    protected lateinit var config: ConverterConfig
-    protected val resolver by lazy {
-        config.resolver
-    }
+    protected lateinit var resolver: Resolver
 
-    override fun init(config: ConverterConfig) {
-        this.config = config
+    override fun init(resolver: Resolver) {
+        this.resolver = resolver
     }
 
     fun handleNullable(
@@ -18,7 +17,7 @@ abstract class AbstractTypeConverter : TypeConverter {
         target: KSType,
         matchesWithBothTypesNotNull: (KSType, KSType) -> Boolean
     ): Boolean {
-        if (needsNotNullAssertionOperator(source, target) && !config.options.enforceNotNull) return false
+        if (needsNotNullAssertionOperator(source, target) && !Configuration.enforceNotNull) return false
         return matchesWithBothTypesNotNull(source.makeNotNullable(), target.makeNotNullable())
     }
 

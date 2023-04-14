@@ -2,6 +2,7 @@ package io.mcarle.konvert.processor
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
+import com.tschuchort.compiletesting.kspArgs
 import com.tschuchort.compiletesting.kspWithCompilation
 import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.mcarle.konvert.converter.api.TypeConverter
@@ -25,7 +26,7 @@ abstract class KonverterITest {
         otherConverters: List<TypeConverter>,
         vararg code: SourceFile
     ): Pair<KotlinCompilation, KotlinCompilation.Result> {
-        return compileWith(enabledConverters, otherConverters, true, *code)
+        return compileWith(enabledConverters, otherConverters, true, emptyMap(), *code)
     }
 
     fun compileWith(
@@ -34,9 +35,19 @@ abstract class KonverterITest {
         expectSuccess: Boolean,
         vararg code: SourceFile
     ): Pair<KotlinCompilation, KotlinCompilation.Result> {
+        return compileWith(enabledConverters, otherConverters, expectSuccess, emptyMap(), *code)
+    }
+
+    fun compileWith(
+        enabledConverters: List<TypeConverter>,
+        otherConverters: List<TypeConverter>,
+        expectSuccess: Boolean,
+        options: Map<String, String>,
+        vararg code: SourceFile
+    ): Pair<KotlinCompilation, KotlinCompilation.Result> {
         TypeConverterRegistry.reinitConverterList(*enabled(*enabledConverters.toTypedArray()), *otherConverters.toTypedArray())
 
-        return compile(expectSuccess, *code)
+        return compile(expectSuccess, options, *code)
     }
 
     private fun enabled(vararg converter: TypeConverter): Array<out TypeConverter> {
@@ -47,8 +58,12 @@ abstract class KonverterITest {
         }.toTypedArray()
     }
 
-    private fun compile(expectSuccess: Boolean, vararg sourceFiles: SourceFile): Pair<KotlinCompilation, KotlinCompilation.Result> {
-        val compilation = prepareCompilation(sourceFiles.toList())
+    private fun compile(
+        expectSuccess: Boolean,
+        options: Map<String, String>,
+        vararg sourceFiles: SourceFile
+    ): Pair<KotlinCompilation, KotlinCompilation.Result> {
+        val compilation = prepareCompilation(options, sourceFiles.toList())
 
         val result = compilation.compile()
         if (expectSuccess) {
@@ -58,7 +73,7 @@ abstract class KonverterITest {
         return compilation to result
     }
 
-    private fun prepareCompilation(sourceFiles: List<SourceFile>) = KotlinCompilation()
+    private fun prepareCompilation(options: Map<String, String>, sourceFiles: List<SourceFile>) = KotlinCompilation()
         .apply {
             workingDir = temporaryFolder
             inheritClassPath = true
@@ -66,6 +81,7 @@ abstract class KonverterITest {
             sources = sourceFiles
             verbose = false
             jvmTarget = JvmTarget.JVM_17.description
+            kspArgs += options
             kspWithCompilation = true
         }
 

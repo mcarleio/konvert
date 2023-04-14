@@ -4,41 +4,45 @@ import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.squareup.kotlinpoet.ksp.writeTo
+import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
+import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.processor.codegen.CodeBuilder
-import io.mcarle.konvert.processor.exceptions.UnexpectedTypeConverter
-import io.mcarle.konvert.processor.konvert.KonvertCodeGenerator
-import io.mcarle.konvert.processor.konvert.KonvertTypeConverter
-import io.mcarle.konvert.processor.konvert.KonvertTypeConverterCollector
+import io.mcarle.konvert.processor.konvert.KonverterCodeGenerator
+import io.mcarle.konvert.processor.konvert.KonverterData
+import io.mcarle.konvert.processor.konvert.KonverterDataCollector
 import io.mcarle.konvert.processor.konvertfrom.KonvertFromCodeGenerator
-import io.mcarle.konvert.processor.konvertfrom.KonvertFromTypeConverter
-import io.mcarle.konvert.processor.konvertfrom.KonvertFromTypeConverterCollector
+import io.mcarle.konvert.processor.konvertfrom.KonvertFromData
+import io.mcarle.konvert.processor.konvertfrom.KonvertFromDataCollector
 import io.mcarle.konvert.processor.konvertto.KonvertToCodeGenerator
-import io.mcarle.konvert.processor.konvertto.KonvertToTypeConverter
-import io.mcarle.konvert.processor.konvertto.KonvertToTypeConverterCollector
+import io.mcarle.konvert.processor.konvertto.KonvertToData
+import io.mcarle.konvert.processor.konvertto.KonvertToDataCollector
 
 class KonvertProcessor(
-    private val codeGenerator: CodeGenerator,
-    private val options: io.mcarle.konvert.converter.api.Options,
-    private val logger: KSPLogger,
+    private val environment: SymbolProcessorEnvironment,
 ) : SymbolProcessor {
 
+    private val codeGenerator: CodeGenerator = environment.codeGenerator
+    private val logger: KSPLogger = environment.logger
 
     @Synchronized
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val typeConverters = collectTypeConverters(resolver)
-        registerTypeConverters(typeConverters)
+        return withIsolatedConfiguration(environment) {
+            val data = collectDataForAnnotatedConverters(resolver)
+            registerTypeConverters(data.flatMap { it.toTypeConverters() })
 
-        initCodeBuilder()
-        initTypeConverters(resolver)
+            initCodeBuilder()
+            initTypeConverters(resolver)
 
-        generateMappingCode(resolver, typeConverters)
+            generateMappingCode(resolver, data)
 
-        writeFiles()
+            writeFiles()
 
-        return emptyList()
+            emptyList()
+        }
     }
 
     private fun writeFiles() {
@@ -51,18 +55,19 @@ class KonvertProcessor(
         }
     }
 
-    private fun generateMappingCode(resolver: Resolver, typeConverters: List<io.mcarle.konvert.processor.AnnotatedConverter>) {
-        typeConverters.forEach {
-            when (it) {
-                is KonvertToTypeConverter -> KonvertToCodeGenerator.generate(it, resolver, logger)
-                is KonvertFromTypeConverter -> KonvertFromCodeGenerator.generate(it, resolver, logger)
-                is KonvertTypeConverter -> KonvertCodeGenerator.generate(it, resolver, logger)
-                else -> throw UnexpectedTypeConverter(it)
+    private fun generateMappingCode(resolver: Resolver, converterData: List<AnnotatedConverterData>) {
+        converterData.forEach {
+            withIsolatedConfiguration {
+                when (it) {
+                    is KonvertToData -> KonvertToCodeGenerator.generate(it, resolver, logger)
+                    is KonvertFromData -> KonvertFromCodeGenerator.generate(it, resolver, logger)
+                    is KonverterData -> KonverterCodeGenerator.generate(it, resolver, logger)
+                }
             }
         }
     }
 
-    private fun registerTypeConverters(typeConverters: List<io.mcarle.konvert.processor.AnnotatedConverter>) {
+    private fun registerTypeConverters(typeConverters: List<TypeConverter>) {
         typeConverters
             .groupBy { it.priority }
             .forEach { (priority, list) ->
@@ -71,16 +76,16 @@ class KonvertProcessor(
     }
 
     private fun initTypeConverters(resolver: Resolver) {
-        TypeConverterRegistry.initConverters(io.mcarle.konvert.converter.api.ConverterConfig(resolver, options))
+        TypeConverterRegistry.initConverters(resolver)
     }
 
     private fun initCodeBuilder() {
         CodeBuilder.clear()
     }
 
-    private fun collectTypeConverters(resolver: Resolver): List<io.mcarle.konvert.processor.AnnotatedConverter> {
-        return KonvertToTypeConverterCollector.collect(resolver) +
-            KonvertFromTypeConverterCollector.collect(resolver) +
-            KonvertTypeConverterCollector.collect(resolver, logger)
+    private fun collectDataForAnnotatedConverters(resolver: Resolver): List<AnnotatedConverterData> {
+        return KonvertToDataCollector.collect(resolver, logger) +
+            KonvertFromDataCollector.collect(resolver, logger) +
+            KonverterDataCollector.collect(resolver, logger)
     }
 }
