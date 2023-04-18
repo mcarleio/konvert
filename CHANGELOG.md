@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New features
+* reimplemented configuration handling
+   * new annotation `@Konfig` to define configurations
+   * isolated configurations per converter
+* new option `konvert.konverter.generate-class` to generate a `class` instead of an `object` on `@Konverter` (can be set globally or
+  per `@Konverter` via `@Konfig`)
+   * the `Konverter.get<YOUR_INTERFACE>()` implementation is extended to instantiate an instance of a class
+
+### Breaking Changes for custom TypeConverter
+* changed signature of `TypeConverter.init` to only pass the resolver
+   * removed `options` field from `AbstractTypeConverter`
+* changed option key `enforce-not-null` to `konvert.enforce-not-null`
+
+## [1.2.1]
+
 ### Bug fixes
 * use FQN when converting between enums in different packages
 * only create an import alias if not nullable type is not equal to the type reference
@@ -80,7 +95,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v1.2.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v1.2.1...HEAD
+
+[1.2.1]: https://github.com/mcarleio/konvert/compare/v1.1.1...v1.2.1
 
 [1.2.0]: https://github.com/mcarleio/konvert/compare/v1.1.1...v1.2.0
 
