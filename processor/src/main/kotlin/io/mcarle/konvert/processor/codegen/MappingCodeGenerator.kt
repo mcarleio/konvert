@@ -173,7 +173,7 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
             }
 
             val paramName = source.mappingParamName?.let {
-                if (sourceType.isNullable()) {
+                if (source.nullable) { // do not use sourceType.isNullable() as we need the info for the source/origin, not it's property
                     "$it?."
                 } else {
                     "$it."
