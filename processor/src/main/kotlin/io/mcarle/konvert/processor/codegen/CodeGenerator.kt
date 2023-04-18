@@ -8,8 +8,10 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.konvert.api.Mapping
+import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 
 class CodeGenerator(
@@ -21,16 +23,18 @@ class CodeGenerator(
         constructorTypes: List<KSClassDeclaration>,
         paramName: String?,
         targetClassImportName: String?,
-        source: KSClassDeclaration,
-        target: KSClassDeclaration,
+        source: KSType,
+        target: KSType,
         mappingCodeParentDeclaration: KSDeclaration
     ): String {
         val sourceProperties = PropertyMappingResolver(logger).determinePropertyMappings(paramName, mappings, source)
 
-        val constructor = ConstructorResolver(logger)
-            .determineConstructor(mappingCodeParentDeclaration, target, sourceProperties, constructorTypes)
+        val targetClassDeclaration = target.classDeclaration()!!
 
-        val targetElements = determineTargetElements(sourceProperties, constructor, target)
+        val constructor = ConstructorResolver(logger)
+            .determineConstructor(mappingCodeParentDeclaration, targetClassDeclaration, sourceProperties, constructorTypes)
+
+        val targetElements = determineTargetElements(sourceProperties, constructor, targetClassDeclaration)
 
         verifyPropertiesAndMandatoryParametersExist(sourceProperties, targetElements)
 

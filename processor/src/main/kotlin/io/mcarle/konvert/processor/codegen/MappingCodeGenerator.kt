@@ -164,9 +164,21 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
             }
             throw IllegalStateException("Could not convert value $source")
         } else {
-            val sourceType = source.declaration.type.resolve()
+            val sourceType = source.declaration.type.resolve().let {
+                if (source.nullable) {
+                    it.makeNullable()
+                } else {
+                    it
+                }
+            }
 
-            val paramName = source.mappingParamName?.let { "$it." } ?: ""
+            val paramName = source.mappingParamName?.let {
+                if (sourceType.isNullable()) {
+                    "$it?."
+                } else {
+                    "$it."
+                }
+            } ?: ""
 
             return TypeConverterRegistry.withAdditionallyEnabledConverters(source.enableConverters) {
                 firstOrNull { it.matches(sourceType, targetType) }

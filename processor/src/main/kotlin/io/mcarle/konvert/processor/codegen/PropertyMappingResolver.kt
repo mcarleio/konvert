@@ -3,7 +3,10 @@ package io.mcarle.konvert.processor.codegen
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import io.mcarle.konvert.api.Mapping
+import io.mcarle.konvert.converter.api.classDeclaration
+import io.mcarle.konvert.converter.api.isNullable
 
 class PropertyMappingResolver(
     private val logger: KSPLogger
@@ -11,20 +14,22 @@ class PropertyMappingResolver(
     fun determinePropertyMappings(
         mappingParamName: String?,
         mappings: List<Mapping>,
-        classDeclaration: KSClassDeclaration
+        type: KSType
     ): List<PropertyMappingInfo> {
+        val classDeclaration = type.classDeclaration()!!
         val properties = classDeclaration.getAllProperties().toList()
 
         verifyAllPropertiesExist(mappings, properties, classDeclaration)
 
-        val propertiesWithoutSource = getPropertyMappingsWithoutSource(mappings, mappingParamName)
-        val propertiesWithSource = getPropertyMappingsWithSource(mappings, properties, mappingParamName)
-        val propertiesWithoutMappings = getPropertyMappingsWithoutMappings(properties, mappingParamName)
+        val propertiesWithoutSource = getPropertyMappingsWithoutSource(type.isNullable(), mappings, mappingParamName)
+        val propertiesWithSource = getPropertyMappingsWithSource(type.isNullable(), mappings, properties, mappingParamName)
+        val propertiesWithoutMappings = getPropertyMappingsWithoutMappings(type.isNullable(), properties, mappingParamName)
 
         return propertiesWithoutSource + propertiesWithSource + propertiesWithoutMappings
     }
 
     private fun getPropertyMappingsWithoutMappings(
+        nullable: Boolean,
         properties: List<KSPropertyDeclaration>,
         mappingParamName: String?
     ) = properties
@@ -36,6 +41,7 @@ class PropertyMappingResolver(
                 constant = null,
                 expression = null,
                 ignore = false,
+                nullable = nullable,
                 enableConverters = emptyList(),
                 declaration = property,
                 isBasedOnAnnotation = false
@@ -43,6 +49,7 @@ class PropertyMappingResolver(
         }
 
     private fun getPropertyMappingsWithSource(
+        nullable: Boolean,
         mappings: List<Mapping>,
         properties: List<KSPropertyDeclaration>,
         mappingParamName: String?
@@ -58,6 +65,7 @@ class PropertyMappingResolver(
             constant = annotation.constant.takeIf { it.isNotEmpty() },
             expression = annotation.expression.takeIf { it.isNotEmpty() },
             ignore = annotation.ignore,
+            nullable = nullable,
             enableConverters = annotation.enable.toList(),
             declaration = property,
             isBasedOnAnnotation = true
@@ -65,6 +73,7 @@ class PropertyMappingResolver(
     }
 
     private fun getPropertyMappingsWithoutSource(
+        nullable: Boolean,
         mappings: List<Mapping>,
         mappingParamName: String?
     ) = mappings.filter { it.source.isEmpty() }.map { annotation ->
@@ -75,6 +84,7 @@ class PropertyMappingResolver(
             constant = annotation.constant.takeIf { it.isNotEmpty() },
             expression = annotation.expression.takeIf { it.isNotEmpty() },
             ignore = annotation.ignore,
+            nullable = nullable,
             enableConverters = annotation.enable.toList(),
             declaration = null,
             isBasedOnAnnotation = true

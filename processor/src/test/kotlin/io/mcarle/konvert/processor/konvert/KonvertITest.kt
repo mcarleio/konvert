@@ -180,6 +180,87 @@ interface OtherMapper {
     }
 
     @Test
+    fun handleNullableOfSourceParamWhenUsingOtherKonverterWithSourceNullable() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(
+    val property: SourceProperty?
+)
+class TargetClass(
+    val property: TargetProperty?
+)
+data class SourceProperty(
+    val prop: String
+)
+data class TargetProperty(
+    val prop: String
+)
+
+@Konverter
+interface Mapper {
+    @Konvert
+    fun toTarget(sourceClass: SourceClass?): TargetClass?
+    fun toTarget(source: SourceProperty?): TargetProperty? = source?.prop?.let { TargetProperty(prop = it) }
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "source = sourceClass?.property")
+    }
+
+    @Test
+    fun handleNullableOfSourceParamWhenUsingOtherKonverter() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(
+    val property: SourceProperty?
+)
+class TargetClass(
+    val property: TargetProperty?
+)
+data class SourceProperty(
+    val prop: String
+)
+data class TargetProperty(
+    val prop: String
+)
+
+@Konverter
+interface Mapper {
+    @Konvert
+    fun toTarget(sourceClass: SourceClass?): TargetClass?
+    @Konvert
+    fun toTarget(source: SourceProperty): TargetProperty
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "sourceClass?.property?.let {")
+    }
+
+    @Test
     fun useSelfImplementedKonverter() {
         val (compilation) = super.compileWith(
             listOf(),

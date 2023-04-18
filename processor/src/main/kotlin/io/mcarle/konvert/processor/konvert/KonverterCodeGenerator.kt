@@ -68,8 +68,8 @@ object KonverterCodeGenerator {
                                 konvertData.annotationData.constructor,
                                 konvertData.paramName,
                                 targetClassImportName,
-                                konvertData.sourceClassDeclaration,
-                                konvertData.targetClassDeclaration,
+                                konvertData.sourceType,
+                                konvertData.targetType,
                                 konvertData.mapKSFunctionDeclaration
                             )
                         )

@@ -37,8 +37,8 @@ object KonvertToCodeGenerator {
                         data.annotationData.constructor,
                         null,
                         targetClassImportName,
-                        data.sourceClassDeclaration,
-                        data.targetClassDeclaration,
+                        data.sourceClassDeclaration.asStarProjectedType(),
+                        data.targetClassDeclaration.asStarProjectedType(),
                         data.sourceClassDeclaration
                     )
                 )
