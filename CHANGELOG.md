@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.3.0]
+
 ### New features
 * reimplemented configuration handling
    * new annotation `@Konfig` to define configurations
@@ -16,6 +18,9 @@ All notable changes to this project will be documented in this file.
 * changed signature of `TypeConverter.init` to only pass the resolver
    * removed `options` field from `AbstractTypeConverter`
 * changed option key `enforce-not-null` to `konvert.enforce-not-null`
+
+### Bug fixes
+* handle nullable parameter in mapping functions of a `@Konverter`
 
 ## [1.2.1]
 
@@ -95,9 +100,11 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v1.2.1...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v1.3.0...HEAD
 
-[1.2.1]: https://github.com/mcarleio/konvert/compare/v1.1.1...v1.2.1
+[1.3.0]: https://github.com/mcarleio/konvert/compare/v1.2.1...v1.3.0
+
+[1.2.1]: https://github.com/mcarleio/konvert/compare/v1.2.0...v1.2.1
 
 [1.2.0]: https://github.com/mcarleio/konvert/compare/v1.1.1...v1.2.0
 
