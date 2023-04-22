@@ -3,11 +3,12 @@ package io.mcarle.konvert.example
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Mapping
-import io.mcarle.konvert.converter.IntToUIntConverter
 import io.mcarle.konvert.converter.LongToUIntConverter
 import io.mcarle.konvert.converter.StringToIntConverter
+import io.mcarle.konvert.injector.spring.KComponent
 
 @Konverter
+@KComponent
 interface Mapper {
     @Konvert(
         mappings = [

@@ -1,7 +1,7 @@
 plugins {
     id("konvert.kotlin")
     id("konvert.mvn-publish")
-
+    id("java-test-fixtures")
     id("com.google.devtools.ksp").version("${Versions.kotlin}-${Versions.ksp}")
 
     id("org.jetbrains.kotlinx.kover")
@@ -9,6 +9,7 @@ plugins {
 
 dependencies {
     api(project(":api"))
+    api(project(":processor-api"))
     api(project(":converter-api"))
 
     api(symbolProcessingApi)
@@ -22,14 +23,14 @@ dependencies {
 
     testImplementation(project(":api"))
     testImplementation(project(":converter"))
-    testImplementation(kotlinTest)
-    testImplementation(kotlinReflect)
-    testImplementation(kotlinCompilerEmbeddable)
-    testImplementation(symbolProcessing)
-    testImplementation(kotlinCompileTesting)
-    testImplementation(kotlinCompileTestingKsp)
     testImplementation("org.junit.jupiter:junit-jupiter-api:${Versions.jUnit}")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:${Versions.jUnit}")
+    testImplementation(kotlinTest)
+    testFixturesApi(kotlinCompileTesting)
+    testFixturesApi(kotlinCompileTestingKsp)
+    testFixturesApi(kotlinCompilerEmbeddable)
+    testFixturesApi(symbolProcessing)
+    testFixturesImplementation("org.junit.jupiter:junit-jupiter-api:${Versions.jUnit}")
+    testFixturesImplementation("com.google.auto.service:auto-service-annotations:1.0.1")
 }
 
 ksp {

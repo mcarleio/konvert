@@ -9,9 +9,9 @@ import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlin.config.JvmTarget
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
-import kotlin.test.assertEquals
 
 abstract class KonverterITest {
     @TempDir
@@ -67,7 +67,7 @@ abstract class KonverterITest {
 
         val result = compilation.compile()
         if (expectSuccess) {
-            assertEquals(expected = KotlinCompilation.ExitCode.OK, actual = result.exitCode)
+            assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode)
         }
 
         return compilation to result

@@ -2,19 +2,26 @@ package io.mcarle.konvert.processor.konvert
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
-import io.mcarle.konvert.converter.api.config.konverterGenerateClass
 import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.konverterGenerateClass
 import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
+import io.mcarle.konvert.processor.api.KonverterInjector
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.validated
+import java.util.ServiceLoader
 
 object KonverterCodeGenerator {
+
+    private val injectors by lazy {
+        ServiceLoader.load(KonverterInjector::class.java, this::class.java.classLoader).toList()
+    }
 
     fun generate(data: KonverterData, resolver: Resolver, logger: KSPLogger) {
         Configuration.CURRENT += data.annotationData.options.map { it.key to it.value }
@@ -28,6 +35,7 @@ object KonverterCodeGenerator {
         }
 
         val codeBuilder = retrieveCodeBuilder(
+            data.mapKSClassDeclaration,
             data.mapKSClassDeclaration.packageName.asString(),
             data.mapKSClassDeclaration.asStarProjectedType(),
             data.mapKSClassDeclaration.simpleName.asString()
@@ -82,6 +90,7 @@ object KonverterCodeGenerator {
     }
 
     private fun retrieveCodeBuilder(
+        mapperInterfaceKSClassDeclaration: KSClassDeclaration,
         packageName: String,
         interfaceType: KSType,
         interfaceName: String
@@ -93,6 +102,12 @@ object KonverterCodeGenerator {
                 TypeSpec.objectBuilder("${interfaceName}Impl")
             }
                 .addSuperinterface(interfaceType.toTypeName())
+                .also { typeBuilder ->
+                    injectors.forEach {
+                        it.processType(typeBuilder, mapperInterfaceKSClassDeclaration)
+                    }
+                }
+
         }
     }
 
