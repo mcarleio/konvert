@@ -9,6 +9,8 @@ dependencies {
     implementation(project(":processor"))
     kover(project(":converter"))
     kover(project(":processor"))
+    kover(project(":injectors:cdi-injector"))
+    kover(project(":injectors:spring-injector"))
 }
 
 koverReport {
