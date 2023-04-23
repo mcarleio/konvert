@@ -46,3 +46,7 @@ tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions.jvmTarget = "17"
     kotlinOptions.javaParameters = true
 }
+
+ksp {
+    arg("konvert.konverter.generate-class", "true")
+}

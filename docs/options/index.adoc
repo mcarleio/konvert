@@ -1,0 +1,115 @@
+:page-layout: default
+:page-title: Options
+:page-nav_order: 3
+:page-show-toc: true
+
+= Options
+:toc: preamble
+
+[.fs-6.fw-300]
+Konvert provides a few options, which you can define either globally for the complete run, or per mapping.
+
+== How to set options
+
+=== Globally with Gradle
+
+If you use gradle, you can define options using the `ksp` block:
+
+[source,kotlin]
+----
+ksp {
+    arg("konvert.konverter.generate-class", "true")
+}
+----
+
+=== Globally with Maven
+
+If you use maven together with the `com.dyescape:kotlin-maven-symbol-processing` dependency (as shown here TODO), you can add options to your `pom.xml` in the `<configuration>` block of `kotlin-maven-plugin`:
+
+[source,xml]
+----
+<pluginOptions>
+    <option>ksp:apoption=konvert.konverter.generate-class=true</option>
+</pluginOptions>
+----
+
+=== Local for one annotation
+
+The annotations `@Konverter`, `@Konvert`, `@KonvertTo` and `@KonvertFrom` all offer the possibility to set options.
+The processing of these annotations will run with a copy of the inherited options (e.g. globally set ones) combined with their defined options.
+In case you have options in `@Konverter` and `@Konvert`, then the later one will inherit the other options and override/complement with its own.
+
+[source,kotlin]
+----
+@Konverter(options=[
+    Konfig(key="konvert.enforce-not-null", value="true")
+])
+----
+
+== Available Options
+
+=== General Options
+
+|===
+|Option |Possible values |Default |Description
+
+a|`konvert.enforce-not-null`
+a|`true`/`false`
+a|`false`
+a|When set to `true`, all `TypeConverter` which respect this setting:
+
+* will match, when the source type is nullable but the target type is not
+* will add `!!` to the generated code, to enforce the result to be not null
+
+h|Example
+3+a|
+[source,kotlin]
+----
+@KonvertTo(Person::class, options=[
+    Konfig(key="konvert.enforce-not-null", value="true")
+])
+class PersonDto(val name: String?)
+class Person(val name: String)
+----
+Will generate:
+[source,kotlin]
+----
+fun PersonDto.toPerson() = Person(name = name!!)
+----
+
+|===
+
+=== `@Konverter` Options
+
+|===
+|Option |Possible values |Default |Description
+
+a|`konvert.konverter.generate-class`
+a|`true`/`false`
+a|`false`
+a|When set to `true`, Konvert will generate a `class` instead of an `object`.
+
+
+h|Example
+3+a|
+[source,kotlin]
+----
+@Konverter(options=[
+    Konfig(key="konvert.konverter.generate-class", value="true")
+])
+interface PersonMapper {
+    fun toDto(person: Person): PersonDto
+}
+
+class PersonDto(val name: String)
+class Person(val name: String)
+----
+Will generate:
+[source,kotlin]
+----
+class PersonMapperImpl: PersonMapper {
+    override fun toDto(person: Person): PersonDto = PersonDto(name = person.name)
+}
+----
+
+|===

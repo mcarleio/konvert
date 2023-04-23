@@ -71,6 +71,9 @@
                     <compilerPlugins>
                         <plugin>ksp</plugin>
                     </compilerPlugins>
+                    <pluginOptions>
+                        <option>ksp:apoption=konvert.konverter.generate-class=true</option>
+                    </pluginOptions>
                 </configuration>
                 <dependencies>
                     <dependency>
