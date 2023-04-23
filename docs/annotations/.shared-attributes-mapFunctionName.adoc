@@ -1,0 +1,4 @@
+=== `mapFunctionName`
+
+This parameter can be used to change the default name of the extension function (which is `{default-mapFunctionName}`, e.g. `{example-mapFunctionName}`) to whatever you specify.
+Some typical use-cases for changing the default: the name gets too long or is already taken.

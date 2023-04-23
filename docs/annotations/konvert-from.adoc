@@ -1,0 +1,51 @@
+:page-layout: default
+:page-title: @KonvertFrom
+:page-parent: Annotations
+:page-nav_order: 2
+
+= @KonvertFrom
+
+The annotation `@KonvertFrom` can only be applied to classes having a companion objects, or to the companion object itself.
+It will generate an extension function to the companion object to create an instance of the class from the defined source class.
+
+|===
+|Annotation on companion |Annotation on class
+
+a|
+[source,kotlin]
+----
+class Person(val name: String, val age: Int) {
+   @KonvertFrom(PersonDto::class)
+   companion object
+}
+class PersonDto(val name: String, val age: Int)
+----
+a|
+[source,kotlin]
+----
+@KonvertFrom(PersonDto::class)
+class Person(val name: String, val age: Int) {
+   companion object
+}
+class PersonDto(val name: String, val age: Int)
+----
+2+a| Both generate
+[source,kotlin]
+----
+fun Person.Companion.fromPersonDto(personDto: PersonDto) = Person(name = personDto.name, age = personDto.age)
+----
+|===
+
+== Parameters
+
+=== `value`
+The source class of the mapping
+
+:default-priority: 4000
+include::.shared-attributes.adoc[]
+
+:default-mapFunctionName: from${value.simpleName}
+:example-mapFunctionName: fromPerson
+include::.shared-attributes-mapFunctionName.adoc[]
+
+include::.shared-attributes-options.adoc[]

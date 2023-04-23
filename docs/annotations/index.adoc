@@ -1,0 +1,10 @@
+:page-layout: default
+:page-title: Annotations
+:page-has_children: true
+:page-nav_order: 2
+
+= Annotations
+
+[.fs-6.fw-300]
+Konvert comes with mainly three different ways to be used:
+

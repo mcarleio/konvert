@@ -1,0 +1,13 @@
+=== `constructor`
+
+If your target class has multiple constructors, Konvert tries to automatically determine one constructor (TODO).
+If you want to enforce a specific constructor, you can use this parameter to define the constructor parameter types here.
+
+=== `priority`
+
+So that Konvert can choose a `TypeConverter` if multiple match, you can define a custom priority to align with your setup (TODO).
+The default priority for this annotation is `{default-priority}`.
+
+=== `mappings`
+
+Define a mapping for each property, which can not be automatically converted (TODO)

@@ -1,0 +1,11 @@
+:page-layout: home
+:page-title: Home
+:page-nav_order: 1
+
+= Welcome to Konvert!
+
+[.fs-6.fw-300]
+Konvert is a lightweight Kotlin compiler plugin which is using https://github.com/google/ksp[KSP (Kotlin Symbol Processing) API].
+The purpose of Konvert is to generate conversion/mapping code for annotated types.
+
+Konvert was inspired by https://mapstruct.org/[MapStruct].

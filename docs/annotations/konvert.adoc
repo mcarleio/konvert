@@ -1,0 +1,43 @@
+:page-title: @Konvert
+:page-parent: @Konverter
+:page-grand_parent: Annotations
+
+= @Konvert
+
+The annotation `@Konvert` is only being processed on abstract functions in interfaces annotated with link:konverter[`@Konverter`].
+
+[source,kotlin]
+----
+@Konverter
+interface PersonMapper {
+    @Konvert(mappings=[
+        Mapping(source="firstName", target="givenName"),
+        Mapping(source="lastName", target="familyName"),
+    ])
+    fun toDTO(person: Person): PersonDto
+}
+
+class Person(val firstName: String, val lastName: String)
+class PersonDto(val givenName: String, val familyName: String)
+----
+
+This will generate
+
+[source,kotlin]
+----
+object PersonMapperImpl: PersonMapper {
+    override fun toDTO(person: Person): PersonDto = PersonDto(
+        givenName = person.firstName,
+        familyName = person.lastName
+    )
+}
+----
+
+
+== Parameters
+
+:default-priority: 5000
+include::.shared-attributes.adoc[]
+
+include::.shared-attributes-options.adoc[]
+

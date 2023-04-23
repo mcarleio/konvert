@@ -1,0 +1,36 @@
+:page-layout: default
+:page-title: @KonvertTo
+:page-parent: Annotations
+:page-nav_order: 1
+
+= @KonvertTo
+
+The annotation `@KonvertTo` can be applied to classes and will generate an extension function to that class to convert it to the defined target class.
+
+[source,kotlin]
+----
+@KonvertTo(PersonDto::class)
+class Person(val name: String, val age: Int)
+class PersonDto(val name: String, val age: Int)
+----
+
+This will generate
+
+[source,kotlin]
+----
+fun Person.toPersonDto() = PersonDto(name = name, age = age)
+----
+
+== Parameters
+
+=== `value`
+The target class of the mapping
+
+:default-priority: 3000
+include::.shared-attributes.adoc[]
+
+:default-mapFunctionName: to${value.simpleName}
+:example-mapFunctionName: toPerson
+include::.shared-attributes-mapFunctionName.adoc[]
+
+include::.shared-attributes-options.adoc[]

@@ -10,11 +10,15 @@ aux_links:
 
 color_scheme: wider
 
-plugins:
-  - jekyll-target-blank
-
 exclude:
   - src/
   - build.gradle.kts
   - build/
   - typeconverter/gen
+
+asciidoctor:
+  base_dir: :docdir
+  safe: unsafe
+  attributes:
+    - source-highlighter=rouge
+    - showtitle=@

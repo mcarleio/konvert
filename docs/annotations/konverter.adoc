@@ -1,0 +1,43 @@
+:page-parent: Annotations
+:page-has_children: true
+:page-title: @Konverter
+:page-nav_order: 3
+:page-has_toc: false
+
+= @Konverter
+
+The annotation `@Konverter` can only be applied to interfaces and will generate an implementation object or class.
+Each abstract function which satisfies having exactly one parameter and a return type, will be implemented by generating the mapping code.
+You can define custom mappings and options per function using the link:konvert[`@Konvert` annotation].
+
+[source,kotlin]
+----
+@Konverter
+interface PersonMapper {
+    fun toDTO(person: Person): PersonDto
+    fun fromDTO(dto: PersonDto): Person
+}
+
+class Person(val name: String, val age: Int)
+class PersonDto(val name: String, val age: Int)
+----
+
+This will generate
+
+[source,kotlin]
+----
+object PersonMapperImpl: PersonMapper {
+    override fun toDTO(person: Person): PersonDto {
+        return PersonDto(name = person.name, age = person.age)
+    }
+    override fun fromDTO(dto: PersonDto): Person {
+        return Person(name = dto.name, age = dto.age)
+    }
+}
+----
+
+== Parameters
+
+include::.shared-attributes-options.adoc[]
+
+

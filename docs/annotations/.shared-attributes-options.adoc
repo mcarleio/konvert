@@ -1,0 +1,3 @@
+=== `options`
+
+You can define custom options for this annotation processing. See here (TODO) for a list of available options.
