@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Modules
-nav_order: 2
+nav_order: 4
 ---
 
 Konvert is split into these modules:

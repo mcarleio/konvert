@@ -10,6 +10,11 @@ aux_links:
 
 color_scheme: wider
 
+callouts:
+  info:
+    title: Info
+    color: blue
+
 exclude:
   - src/
   - build.gradle.kts

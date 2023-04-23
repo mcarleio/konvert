@@ -1,16 +1,28 @@
 ---
 layout: default
 title: Provided TypeConverters
-nav_order: 3
+nav_order: 4
 ---
 
-`Konvert` comes with a set of default `TypeConverter`s.
+{% comment %} @formatter:off {% endcomment %}
+# Provided TypeConverters
+{: .no_toc }
 
-The following tables share this legend:
+`Konvert` already provides a lot of default `TypeConverter`s:
+{: .fs-6.fw-300 }
 
-* `✔` = `TypeConverter` exists and is enabled by default
-* `☑` = `TypeConverter` exists but is not enabled by default
-* empty = no `TypeConverter` existing
+- TOC
+{:toc}
+{% comment %} @formatter:on {% endcomment %}
+
+{: .info }
+> The following tables share this legend:
+>
+> * `✔` = a `TypeConverter` exists and is enabled by default
+> * `☑` = a `TypeConverter` exists but is not enabled by default
+> * empty = no `TypeConverter` existing
+
+---
 
 ## Basic Types
 
@@ -61,4 +73,3 @@ Special and simple case: source and target are exactly the same type.
 |:----------:|:------:|
 | **&lt;T>** |   ✔    |
 {: .fixed-first-column-120 }
-

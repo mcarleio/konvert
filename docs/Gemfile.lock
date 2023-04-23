@@ -89,7 +89,7 @@ DEPENDENCIES
   jekyll (~> 4.3)
   jekyll-asciidoc
   jekyll-target-blank (~> 2.0)
-  just-the-docs (= 0.4.2)
+  just-the-docs
 
 BUNDLED WITH
    2.3.25
