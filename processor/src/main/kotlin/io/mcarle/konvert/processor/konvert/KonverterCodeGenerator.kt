@@ -11,7 +11,7 @@ import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.konverterGenerateClass
 import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
-import io.mcarle.konvert.processor.api.KonverterInjector
+import io.mcarle.konvert.plugin.api.KonverterInjector
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.validated

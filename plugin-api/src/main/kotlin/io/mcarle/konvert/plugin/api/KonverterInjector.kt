@@ -1,4 +1,4 @@
-package io.mcarle.konvert.processor.api
+package io.mcarle.konvert.plugin.api
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.TypeSpec

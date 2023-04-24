@@ -1,7 +1,7 @@
 rootProject.name = "konvert"
 include("api")
 include("processor")
-include("processor-api")
+include("plugin-api")
 include("converter")
 include("converter-api")
 include("injectors:spring-injector")

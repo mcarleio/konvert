@@ -7,10 +7,10 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.TypeSpec
-import io.mcarle.konvert.processor.api.KonverterInjector
+import io.mcarle.konvert.plugin.api.KonverterInjector
+import io.mcarle.konvert.plugin.api.extendProxy
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
-import java.lang.reflect.Proxy
 
 @AutoService(KonverterInjector::class)
 class SpringInjector : KonverterInjector {
@@ -35,18 +35,4 @@ class SpringInjector : KonverterInjector {
         return AnnotationSpec.get(scope.extendProxy(), false)
     }
 
-    private inline fun <reified T : Any> T.extendProxy(): T {
-        return if (Proxy.isProxyClass(this::class.java)) {
-            val ih = Proxy.getInvocationHandler(this)
-            Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java)) { proxy, method, args ->
-                if (method.name == "annotationType") {
-                    T::class.java
-                } else {
-                    ih.invoke(proxy, method, args)
-                }
-            } as T
-        } else {
-            this
-        }
-    }
 }

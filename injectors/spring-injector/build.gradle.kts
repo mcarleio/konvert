@@ -7,7 +7,7 @@ plugins {
 
 
 dependencies {
-    api(project(":processor-api"))
+    api(project(":plugin-api"))
     api(project(":injectors:spring-annotations"))
 
     // auto service

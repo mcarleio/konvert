@@ -9,7 +9,7 @@ plugins {
 
 dependencies {
     api(project(":api"))
-    api(project(":processor-api"))
+    api(project(":plugin-api"))
     api(project(":converter-api"))
 
     api(symbolProcessingApi)
