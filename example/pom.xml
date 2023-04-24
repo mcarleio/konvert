@@ -24,6 +24,11 @@
             <artifactId>konvert-api</artifactId>
             <version>${konvert.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.mcarle</groupId>
+            <artifactId>konvert-spring-annotations</artifactId>
+            <version>${konvert.version}</version>
+        </dependency>
 
         <!-- only needed if you need to enable specific converter through Mapping(enable=...) -->
         <dependency>
@@ -84,6 +89,11 @@
                     <dependency>
                         <groupId>io.mcarle</groupId>
                         <artifactId>konvert</artifactId>
+                        <version>${konvert.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>io.mcarle</groupId>
+                        <artifactId>konvert-spring-injector</artifactId>
                         <version>${konvert.version}</version>
                     </dependency>
                 </dependencies>
