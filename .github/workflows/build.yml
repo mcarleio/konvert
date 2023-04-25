@@ -29,6 +29,7 @@ jobs:
         with:
           build-root-directory: example
           arguments: build
+          gradle-executable: ../gradlew
       - name: Test example project with maven
         run: cd example && mvn --batch-mode --update-snapshots package
       - name: Test
