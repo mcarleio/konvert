@@ -2,14 +2,14 @@ package io.mcarle.konvert.example
 
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.KonvertTo
-import io.mcarle.konvert.converter.StringToIntConverter
+import io.mcarle.konvert.api.converter.STRING_TO_INT_CONVERTER
 
 @KonvertTo(
     AddressDto::class,
     mappings = [
         Mapping(source = "street", target = "streetName"),
         Mapping(source = "zip", target = "zipCode"),
-        Mapping(source = "streetNumber", target = "streetNumber", enable = [StringToIntConverter::class]),
+        Mapping(source = "streetNumber", target = "streetNumber", enable = [STRING_TO_INT_CONVERTER]),
     ],
     priority = 1
 )

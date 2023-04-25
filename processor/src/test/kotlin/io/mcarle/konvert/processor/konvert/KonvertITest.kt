@@ -4,8 +4,8 @@ import com.squareup.kotlinpoet.ksp.toClassName
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.converter.SameTypeConverter
-import io.mcarle.konvert.converter.api.DEFAULT_KONVERTER_PRIORITY
-import io.mcarle.konvert.converter.api.DEFAULT_KONVERT_PRIORITY
+import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
+import io.mcarle.konvert.api.DEFAULT_KONVERT_PRIORITY
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.KonvertOptions
 import io.mcarle.konvert.processor.KonverterITest

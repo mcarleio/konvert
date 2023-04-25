@@ -4,7 +4,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
-import io.mcarle.konvert.converter.api.Priority
+import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.isNullable
 
 class KonvertTypeConverter constructor(
