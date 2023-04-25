@@ -195,10 +195,10 @@ class TargetClass(
                 """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
-import io.mcarle.konvert.converter.StringToIntConverter
+import io.mcarle.konvert.api.converter.STRING_TO_INT_CONVERTER
 
 @KonvertTo(TargetClass::class, mappings=[
-    Mapping(source="sourceProperty", target="targetProperty", enable=[StringToIntConverter::class])
+    Mapping(source="sourceProperty", target="targetProperty", enable=[STRING_TO_INT_CONVERTER])
 ])
 class SourceClass(
     val sourceProperty: String
