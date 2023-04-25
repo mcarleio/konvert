@@ -1,14 +1,16 @@
 package io.mcarle.konvert.converter.api.config
 
 /**
- * Special handling for the case, that the source type is nullable and target type is not nullable:
- * When enabled, the converters will use the not-null assertion operator to enforce the mapped value to be non-null.
- * Otherwise, the converters should not match.
+ * @see io.mcarle.konvert.api.config.ENFORCE_NOT_NULL
  */
 val Configuration.Companion.enforceNotNull: Boolean
-    get() = KonvertOptions.ENFORCE_NOT_NULL.get(CURRENT, String::toBoolean)
+    get() = KonvertOptions.ENFORCE_NOT_NULL_OPTION.get(CURRENT, String::toBoolean)
+
+/**
+ * @see io.mcarle.konvert.api.config.KONVERTER_GENERATE_CLASS
+ */
 val Configuration.Companion.konverterGenerateClass: Boolean
-    get() = KonvertOptions.KONVERTER_GENERATE_CLASS.get(CURRENT, String::toBoolean)
+    get() = KonvertOptions.KONVERTER_GENERATE_CLASS_OPTION.get(CURRENT, String::toBoolean)
 
 /**
  * Reads the value for [Option.key] from the provided `options` or fallbacks to the [Option.defaultValue].
