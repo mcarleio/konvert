@@ -28,4 +28,15 @@ jobs:
           arguments: test check -PrunAllTests
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
+      - name: Publish locally
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: publishToMavenLocal
+      - name: Test example project with gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          build-root-directory: example
+          arguments: build
+      - name: Test example project with maven
+        run: cd example && mvn --batch-mode --update-snapshots package
 
