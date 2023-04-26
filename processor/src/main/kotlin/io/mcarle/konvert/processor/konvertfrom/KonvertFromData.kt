@@ -5,7 +5,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Mapping
-import io.mcarle.konvert.converter.api.Priority
+import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.processor.AnnotatedConverterData

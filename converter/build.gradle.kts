@@ -2,7 +2,6 @@ plugins {
     id("konvert.kotlin")
     id("konvert.mvn-publish")
     id("com.google.devtools.ksp").version("${Versions.kotlin}-${Versions.ksp}")
-    id("org.jetbrains.kotlinx.kover")
 }
 
 dependencies {
@@ -30,11 +29,6 @@ dependencies {
 
 ksp {
     arg("autoserviceKsp.verify", "true")
-}
-
-kover {
-    useKoverTool()
-    disabledForProject = System.getenv("CI") == null
 }
 
 tasks.test {

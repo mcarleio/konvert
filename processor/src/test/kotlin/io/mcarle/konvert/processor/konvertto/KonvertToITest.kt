@@ -2,7 +2,7 @@ package io.mcarle.konvert.processor.konvertto
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.SameTypeConverter
-import io.mcarle.konvert.converter.api.DEFAULT_KONVERT_TO_PRIORITY
+import io.mcarle.konvert.api.DEFAULT_KONVERT_TO_PRIORITY
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor

@@ -2,10 +2,11 @@ package io.mcarle.konvert.converter.api
 
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSType
-import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.enforceNotNull
 
-abstract class AbstractTypeConverter : TypeConverter {
+abstract class AbstractTypeConverter(name: String? = null) : TypeConverter {
+    override val name: String = name ?: this::class.java.simpleName
     protected lateinit var resolver: Resolver
 
     override fun init(resolver: Resolver) {

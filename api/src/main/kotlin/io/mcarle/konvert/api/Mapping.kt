@@ -1,8 +1,5 @@
 package io.mcarle.konvert.api
 
-import io.mcarle.konvert.converter.api.TypeConverter
-import kotlin.reflect.KClass
-
 /**
  * Describe how the value for [target] field should be determined. Rules are applied in following order:
  * * if [ignore] is set the target value is not mandatory, skip the field
@@ -87,17 +84,21 @@ annotation class Mapping(
      * With this setting, you can enable them for this specific mapping.
      * ```kotlin
      * @KonvertTo(PersonDto::class, mappings=[
-     *      Mapping(target="age", enable=[StringToIntConverter::class])
+     *      Mapping(target="age", enable=[STRING_TO_INT_CONVERTER])
      * ])
      * class Person(val age: String)
      * class PersonDto(val age: Int)
      * ```
+     *
+     * See in package [io.mcarle.konvert.api.converter] for a list of provided type converter names
      */
-    val enable: Array<KClass<out TypeConverter>> = []
+    val enable: Array<TypeConverterName> = []
 
 ) {
     companion object
 }
+
+typealias TypeConverterName = String
 
 /**
  * Throws exceptions when no params (beside [Mapping.target]) are defined or an illegal parameter combination is defined.

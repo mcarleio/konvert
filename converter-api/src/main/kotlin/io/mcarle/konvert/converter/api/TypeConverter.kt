@@ -2,6 +2,8 @@ package io.mcarle.konvert.converter.api
 
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.konvert.api.DEFAULT_PRIORITY
+import io.mcarle.konvert.api.Priority
 
 /**
  * All classes, which should be used by Konverter during KSP to identify a conversion from one to another type, have to implement this interface.
@@ -14,6 +16,11 @@ interface TypeConverter {
      * Therefore, [io.mcarle.konvert.converter.StringToIntConverter] is not enabled by default.
      */
     val enabledByDefault: Boolean
+
+    /**
+     * A unique name for the TypeConverter to be able to reference a specific one
+     */
+    val name: String
 
     /**
      * Used to sort all the available converters, as the first matching converter will be used.

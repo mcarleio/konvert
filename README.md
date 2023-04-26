@@ -217,8 +217,9 @@ To serve the Jekyll site locally, simply run the following command inside `docs`
 
 GitHub Actions are used to:
 
-* [build the project](.github/workflows/build.yml) and publish it (only for tags) to a Maven repository
-* [generate and deploy](.github/workflows/pages.yml) the documentation to GitHub Pages.
+* [build and test](.github/workflows/build.yml)
+* [release and publish](.github/workflows/release.yml) to a Maven repository
+* [generate documentation](.github/workflows/pages.yml) and deploy it to GitHub Pages.
 
 ## Changelog
 

@@ -1,7 +1,5 @@
 package io.mcarle.konvert.api
 
-import io.mcarle.konvert.converter.api.DEFAULT_KONVERT_FROM_PRIORITY
-import io.mcarle.konvert.converter.api.Priority
 import kotlin.reflect.KClass
 
 /**

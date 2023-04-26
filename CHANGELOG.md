@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New features
+* add new modules:
+  * The module `plugin-api` can be used to extend the `processor` at certain points
+  * The modules `injectors/spring-injector` and `injectors/cdi-injector` which use the `plugin-api` to
+    add annotations like `@Component` or `@RequestScoped` to the generated types from `@Konverter`
+    * The modules `injectors/spring-annotations` and `injectors/cdi-annotations` so that the user can define the exact annotations
+
 ## [1.3.0]
 
 ### New features

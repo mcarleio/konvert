@@ -1,15 +1,13 @@
 package io.mcarle.konvert.converter.api
 
 import com.google.devtools.ksp.processing.Resolver
+import io.mcarle.konvert.api.TypeConverterName
 import java.util.ServiceLoader
-import kotlin.reflect.KClass
 
 object TypeConverterRegistry : Iterable<TypeConverter> {
 
     private val typeConverterList = sortedMapOf<Int, MutableList<TypeConverter>>()
-    private var additionallyEnabledConvertersThreadLocal = ThreadLocal.withInitial {
-        listOf<KClass<out TypeConverter>>()
-    }
+    private val additionallyEnabledConverters = mutableListOf<TypeConverterName>()
 
     val availableConverters by lazy {
         ServiceLoader.load(TypeConverter::class.java, this::class.java.classLoader).toList()
@@ -40,21 +38,21 @@ object TypeConverterRegistry : Iterable<TypeConverter> {
     }
 
     fun <T> withAdditionallyEnabledConverters(
-        converters: List<KClass<out TypeConverter>>,
+        converters: List<TypeConverterName>,
         codeBlock: TypeConverterRegistry.() -> T
     ): T {
         try {
-            additionallyEnabledConvertersThreadLocal.set(converters)
+            additionallyEnabledConverters.clear()
+            additionallyEnabledConverters.addAll(converters)
             return codeBlock(this)
         } finally {
-            additionallyEnabledConvertersThreadLocal.remove()
+            additionallyEnabledConverters.clear()
         }
     }
 
     override fun iterator(): Iterator<TypeConverter> {
-        val additionallyEnabledConverters = additionallyEnabledConvertersThreadLocal.get()
         return typeConverterList.values.flatten().filter {
-            (it.enabledByDefault || it::class in additionallyEnabledConverters)
+            (it.enabledByDefault || it.name in additionallyEnabledConverters)
         }.iterator()
     }
 

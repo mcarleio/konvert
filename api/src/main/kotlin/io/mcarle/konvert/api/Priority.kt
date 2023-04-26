@@ -1,4 +1,4 @@
-package io.mcarle.konvert.converter.api
+package io.mcarle.konvert.api
 
 typealias Priority = Int
 

@@ -4,10 +4,10 @@ import com.squareup.kotlinpoet.ksp.toClassName
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.converter.SameTypeConverter
-import io.mcarle.konvert.converter.api.DEFAULT_KONVERTER_PRIORITY
-import io.mcarle.konvert.converter.api.DEFAULT_KONVERT_PRIORITY
+import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
+import io.mcarle.konvert.api.DEFAULT_KONVERT_PRIORITY
+import io.mcarle.konvert.api.config.KONVERTER_GENERATE_CLASS
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
-import io.mcarle.konvert.converter.api.config.KonvertOptions
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
@@ -354,7 +354,7 @@ interface OtherMapper {
             enabledConverters = listOf(SameTypeConverter()),
             otherConverters = emptyList(),
             expectSuccess = true,
-            options = mapOf(KonvertOptions.KONVERTER_GENERATE_CLASS.key to "false"),
+            options = mapOf(KONVERTER_GENERATE_CLASS to "false"),
             SourceFile.kotlin(
                 name = "SourceClass.kt",
                 contents =
@@ -379,7 +379,7 @@ import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Konfig
 
-@Konverter(options=[Konfig(key = "${KonvertOptions.KONVERTER_GENERATE_CLASS.key}", value = "true")])
+@Konverter(options=[Konfig(key = "$KONVERTER_GENERATE_CLASS", value = "true")])
 interface SomeConverter {
     @Konvert
     fun toTargetClass(source: SourceClass): TargetClass

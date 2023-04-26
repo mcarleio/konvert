@@ -10,6 +10,7 @@ import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.NoParamDefinedException
 import io.mcarle.konvert.api.NotAllowedParameterCombinationException
+import io.mcarle.konvert.api.TypeConverterName
 import io.mcarle.konvert.api.validate
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.classDeclaration
@@ -43,11 +44,7 @@ fun Mapping.Companion.from(annotation: KSAnnotation) = Mapping(
     expression = annotation.arguments.first { it.name?.asString() == Mapping::expression.name }.value as String,
     ignore = annotation.arguments.first { it.name?.asString() == Mapping::ignore.name }.value as Boolean,
     enable = (annotation.arguments.first { it.name?.asString() == Mapping::enable.name }.value as List<*>)
-        .filterIsInstance<KSType>()
-        .map {
-            Class.forName(it.declaration.qualifiedName!!.asString(), true, TypeConverter::class.java.classLoader).kotlin
-        }
-        .filterIsInstance<KClass<out TypeConverter>>()
+        .filterIsInstance<TypeConverterName>()
         .toTypedArray(),
 )
 

@@ -195,10 +195,10 @@ class TargetClass(
                 """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
-import io.mcarle.konvert.converter.StringToIntConverter
+import io.mcarle.konvert.api.converter.STRING_TO_INT_CONVERTER
 
 @KonvertTo(TargetClass::class, mappings=[
-    Mapping(source="sourceProperty", target="targetProperty", enable=[StringToIntConverter::class])
+    Mapping(source="sourceProperty", target="targetProperty", enable=[STRING_TO_INT_CONVERTER])
 ])
 class SourceClass(
     val sourceProperty: String
@@ -617,7 +617,6 @@ class TargetClass {
                 contents =
                 """
 import io.mcarle.konvert.api.KonvertTo
-import io.mcarle.konvert.api.Mapping
 
 @KonvertTo(TargetClass::class)
 class SourceClass(
@@ -652,7 +651,6 @@ class TargetClass {
                 contents =
                 """
 import io.mcarle.konvert.api.KonvertTo
-import io.mcarle.konvert.api.Mapping
 
 @KonvertTo(TargetClass::class)
 class SourceClass(
@@ -687,7 +685,6 @@ class TargetClass {
                 contents =
                 """
 import io.mcarle.konvert.api.KonvertTo
-import io.mcarle.konvert.api.Mapping
 
 @KonvertTo(TargetClass::class, constructor = [String::class, Long::class])
 class SourceClass(
@@ -703,6 +700,60 @@ class TargetClass(
         )
         assertEquals(expected = KotlinCompilation.ExitCode.COMPILATION_ERROR, actual = compilationResult.exitCode)
         assertContains(compilationResult.messages, NoMatchingConstructorException::class.qualifiedName!!)
+    }
+
+    @Test
+    fun workWithValueClasses() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            emptyList(),
+            true,
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(TargetClass::class, mappings = [
+    Mapping(source = "source", target ="target")
+])
+data class SourceClass(val source: SourceValueClass)
+data class TargetClass(val target: TargetValueClass)
+
+
+@KonvertTo(TargetValueClass::class)
+@JvmInline
+value class SourceValueClass(val value: String)
+
+@JvmInline
+value class TargetValueClass(val value: String)
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
+              target = source.toTargetValueClass()
+            )
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+
+        val extensionFunctionValueClassCode = compilation.generatedSourceFor("SourceValueClassKonverter.kt")
+        println(extensionFunctionValueClassCode)
+
+        assertSourceEquals(
+            """
+            public fun SourceValueClass.toTargetValueClass(): TargetValueClass = TargetValueClass(
+              value = value
+            )
+            """.trimIndent(),
+            extensionFunctionValueClassCode
+        )
     }
 
 }
