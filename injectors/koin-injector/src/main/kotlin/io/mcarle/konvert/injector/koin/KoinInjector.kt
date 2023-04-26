@@ -31,11 +31,14 @@ class KoinInjector : KonverterInjector {
         }
 
         val scopeParseResult = Result.runCatching {
+            // this will work for Scope(name = "some string") but it will fail on Scope(value = SomeClass::class)
             originKSClassDeclaration.getAnnotationsByType(KScope::class).firstOrNull()?.also {
                 builder.addAnnotation(AnnotationSpec.get(it.value.extendProxy(), false))
             }
         }
         if (scopeParseResult.isFailure) {
+            // this is a fallback method that will work on Scope(value = SomeClass::class)
+            // since it fails when value is set to default we have to keep both approaches here
             originKSClassDeclaration.annotations
                 .filter { (it.annotationType.toTypeName() as? ClassName)?.canonicalName == KScope::class.qualifiedName }
                 .firstOrNull()
