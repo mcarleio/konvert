@@ -1,16 +1,21 @@
 plugins {
     id("konvert.kotlin")
     id("konvert.mvn-publish")
-    id("org.jetbrains.kotlinx.kover") version "0.7.0-Alpha"
 }
 
 dependencies {
     implementation(project(":converter"))
     implementation(project(":processor"))
+
+    kover(project(":api"))
     kover(project(":converter"))
-    kover(project(":processor"))
+    kover(project(":converter-api"))
+    kover(project(":injectors:cdi-annotations"))
     kover(project(":injectors:cdi-injector"))
+    kover(project(":injectors:spring-annotations"))
     kover(project(":injectors:spring-injector"))
+    kover(project(":plugin-api"))
+    kover(project(":processor"))
 }
 
 koverReport {

@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") // version defined in buildSrc/build.gradle.kts -> dependencies
+    id("org.jetbrains.kotlinx.kover")
 }
 
 dependencies {
@@ -15,6 +16,11 @@ repositories {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+kover {
+    useKoverTool()
+    disabledForProject = System.getenv("CI") == null
 }
 
 tasks.withType<KotlinCompile>().configureEach {

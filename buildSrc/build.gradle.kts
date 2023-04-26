@@ -3,6 +3,7 @@ plugins {
 }
 dependencies {
     implementation("org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:${property("kotlin.version")}")
+    implementation("org.jetbrains.kotlinx.kover:org.jetbrains.kotlinx.kover.gradle.plugin:${property("kover.version")}")
 }
 
 repositories {
