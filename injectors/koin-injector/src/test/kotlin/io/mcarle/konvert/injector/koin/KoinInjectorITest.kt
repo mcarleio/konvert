@@ -183,6 +183,7 @@ class TargetClass(val property: String)
         assertContains(mapperCode, "org.koin.core.`annotation`.Factory")
         assertContains(mapperCode, "@Factory")
         assertContains(mapperCode, "org.koin.core.`annotation`.Scope")
-        assertContains(mapperCode, "@Scope(value = TestClass::class")
+        assertContains(mapperCode, "@Scope")
+        assertContains(mapperCode, "`value` = TestScope::class")
     }
 }
