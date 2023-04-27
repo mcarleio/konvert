@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
   * The modules `injectors/spring-injector` and `injectors/cdi-injector` which use the `plugin-api` to
     add annotations like `@Component` or `@RequestScoped` to the generated types from `@Konverter`
     * The modules `injectors/spring-annotations` and `injectors/cdi-annotations` so that the user can define the exact annotations
+* add new option `konvert.generated-filename-suffix` to define the trailing part of the generated filename
+
+### Bug fixes
+* defined `options` in `@KonvertTo` and `@KonvertFrom` are now used
 
 ## [1.3.0]
 

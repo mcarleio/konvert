@@ -22,6 +22,7 @@ dependencies {
     testImplementation(project(":api"))
     testImplementation(project(":converter"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:${Versions.jUnit}")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:${Versions.jUnit}")
     testImplementation(kotlinTest)
     testFixturesApi(kotlinCompileTesting)
     testFixturesApi(kotlinCompileTestingKsp)
