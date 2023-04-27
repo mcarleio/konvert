@@ -3,7 +3,9 @@ package io.mcarle.konvert.processor.konvertfrom
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.KonvertFrom
+import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
@@ -39,7 +41,8 @@ class KonvertFromData(
         val mappings: List<Mapping>,
         val constructor: List<KSClassDeclaration>,
         val mapFunctionName: String,
-        val priority: Priority
+        val priority: Priority,
+        val options: List<Konfig>
     ) {
 
         companion object {
@@ -51,6 +54,9 @@ class KonvertFromData(
                 constructor = (annotation.arguments.first { it.name?.asString() == KonvertFrom::constructor.name }.value as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() },
                 mapFunctionName = annotation.arguments.first { it.name?.asString() == KonvertFrom::mapFunctionName.name }.value as String,
                 priority = annotation.arguments.first { it.name?.asString() == KonvertFrom::priority.name }.value as Priority,
+                options = (annotation.arguments.first { it.name?.asString() == KonvertFrom::options.name }.value as List<*>)
+                    .filterIsInstance<KSAnnotation>()
+                    .map { Konfig.from(it) },
             )
         }
     }

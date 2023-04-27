@@ -4,6 +4,7 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
+import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.validated
@@ -11,6 +12,8 @@ import io.mcarle.konvert.processor.validated
 object KonvertToCodeGenerator {
 
     fun generate(data: KonvertToData, resolver: Resolver, logger: KSPLogger) {
+        Configuration.CURRENT += data.annotationData.options.map { it.key to it.value }
+
         val mapper = CodeGenerator(
             logger = logger
         )

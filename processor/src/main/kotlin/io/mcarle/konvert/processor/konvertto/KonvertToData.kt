@@ -4,7 +4,9 @@ import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.ksp.toClassName
+import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
@@ -36,7 +38,8 @@ class KonvertToData(
         val mappings: List<Mapping>,
         val constructor: List<KSClassDeclaration>,
         val mapFunctionName: String,
-        val priority: Priority
+        val priority: Priority,
+        val options: List<Konfig>
     ) {
 
         companion object {
@@ -48,6 +51,9 @@ class KonvertToData(
                 constructor = (annotation.arguments.first { it.name?.asString() == KonvertTo::constructor.name }.value as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() },
                 mapFunctionName = annotation.arguments.first { it.name?.asString() == KonvertTo::mapFunctionName.name }.value as String,
                 priority = annotation.arguments.first { it.name?.asString() == KonvertTo::priority.name }.value as Priority,
+                options = (annotation.arguments.first { it.name?.asString() == KonvertTo::options.name }.value as List<*>)
+                    .filterIsInstance<KSAnnotation>()
+                    .map { Konfig.from(it) },
             )
         }
 
