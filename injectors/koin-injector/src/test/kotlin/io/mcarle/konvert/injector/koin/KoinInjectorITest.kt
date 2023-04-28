@@ -41,6 +41,40 @@ class TargetClass(val property: String)
     }
 
     @Test
+    fun singleWithBinding() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.injector.koin.KSingle
+import org.koin.core.annotation.Single
+
+@Konverter
+@KSingle(Single(binds=[TestScope::class]))
+interface Mapper {
+    @Konvert
+    fun toTarget(source: SourceClass): TargetClass
+}
+
+object TestScope
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "org.koin.core.`annotation`.Single")
+        assertContains(mapperCode, "@Single")
+    }
+
+    @Test
     fun factory() {
         val (compilation) = super.compileWith(
             listOf(SameTypeConverter()),
@@ -58,6 +92,40 @@ interface Mapper {
     @Konvert
     fun toTarget(source: SourceClass): TargetClass
 }
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "org.koin.core.`annotation`.Factory")
+        assertContains(mapperCode, "@Factory")
+    }
+
+    @Test
+    fun factoryWithBinding() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.injector.koin.KFactory
+import org.koin.core.annotation.Factory
+
+@Konverter
+@KFactory(Factory(binds=[TestScope::class]))
+interface Mapper {
+    @Konvert
+    fun toTarget(source: SourceClass): TargetClass
+}
+
+object TestScope
 
 class SourceClass(val property: String)
 class TargetClass(val property: String)
@@ -170,7 +238,7 @@ interface Mapper {
     fun toTarget(source: SourceClass): TargetClass
 }
 
-class TestScope(val prop: Int)
+object TestScope
 
 class SourceClass(val property: String)
 class TargetClass(val property: String)
@@ -185,5 +253,48 @@ class TargetClass(val property: String)
         assertContains(mapperCode, "org.koin.core.`annotation`.Scope")
         assertContains(mapperCode, "@Scope")
         assertContains(mapperCode, "`value` = TestScope::class")
+    }
+
+    @Test
+    fun scopedWithBinding() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.injector.koin.KFactory
+import io.mcarle.konvert.injector.koin.KScope
+import io.mcarle.konvert.injector.koin.KScoped
+import org.koin.core.annotation.Scope
+import org.koin.core.annotation.Scoped
+
+@Konverter
+@KFactory
+@KScope(Scope(name = "scope_name"))
+@KScoped(Scoped(binds=[TestScope::class]))
+interface Mapper {
+    @Konvert
+    fun toTarget(source: SourceClass): TargetClass
+}
+
+object TestScope
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "org.koin.core.`annotation`.Factory")
+        assertContains(mapperCode, "@Factory")
+        assertContains(mapperCode, "org.koin.core.`annotation`.Scope")
+        assertContains(mapperCode, "@Scope(name = \"scope_name\")")
+        assertContains(mapperCode, "org.koin.core.`annotation`.Scoped")
+        assertContains(mapperCode, "@Scoped")
     }
 }
