@@ -14,6 +14,8 @@ dependencies {
     kover(project(":injectors:cdi-injector"))
     kover(project(":injectors:spring-annotations"))
     kover(project(":injectors:spring-injector"))
+    kover(project(":injectors:koin-annotations"))
+    kover(project(":injectors:koin-injector"))
     kover(project(":plugin-api"))
     kover(project(":processor"))
 }
