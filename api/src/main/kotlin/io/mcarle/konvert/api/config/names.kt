@@ -15,3 +15,34 @@ const val ENFORCE_NOT_NULL = "konvert.enforce-not-null"
  * Default: false
  */
 const val KONVERTER_GENERATE_CLASS = "konvert.konverter.generate-class"
+
+/**
+ * This setting will change the suffix for the generated filename from Konvert.
+ *
+ * Given the following examples:
+ *
+ * -
+ *    ```kotlin
+ *    @Konverter
+ *    interface SomeMapper
+ *    ```
+ *    will generate a file named `SomeMapper${GENERATED_FILE_SUFFIX}.kt`
+ *
+ * -
+ *    ```kotlin
+ *    @KonvertTo(SomeTargetClass::class)
+ *    class SomeSourceClass
+ *    ```
+ *    will generate a file named `SomeSourceClass${GENERATED_FILE_SUFFIX}.kt`
+ *
+ * -
+ *    ```kotlin
+ *    @KonvertFrom(SomeSourceClass::class)
+ *    class SomeTargetClass { companion object }
+ *    ```
+ *    will generate a file named: `SomeTargetClass${GENERATED_FILE_SUFFIX}.kt`
+ *
+ *
+ * Default: `Konverter`
+ */
+const val GENERATED_FILENAME_SUFFIX = "konvert.generated-filename-suffix"

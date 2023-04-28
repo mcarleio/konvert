@@ -6,6 +6,8 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
+import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.generatedFilenameSuffix
 
 class CodeBuilder private constructor(
     private val builder: FileSpec.Builder,
@@ -45,7 +47,7 @@ class CodeBuilder private constructor(
         fun getOrCreate(packageName: String, fileName: String, typeBuilderProvider: () -> TypeSpec.Builder? = { null }): CodeBuilder {
             val qualifiedName = QualifiedName(packageName, fileName)
             return cache[qualifiedName] ?: CodeBuilder(
-                builder = FileSpec.builder(qualifiedName.packageName, qualifiedName.fileName + "Konverter"),
+                builder = FileSpec.builder(qualifiedName.packageName, qualifiedName.fileName + Configuration.generatedFilenameSuffix),
                 typeBuilder = typeBuilderProvider.invoke(),
                 originating = mutableSetOf(),
             ).also {

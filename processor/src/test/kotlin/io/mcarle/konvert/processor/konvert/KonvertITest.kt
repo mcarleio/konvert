@@ -2,17 +2,20 @@ package io.mcarle.konvert.processor.konvert
 
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.tschuchort.compiletesting.SourceFile
-import io.mcarle.konvert.api.Konverter
-import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
 import io.mcarle.konvert.api.DEFAULT_KONVERT_PRIORITY
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.config.GENERATED_FILENAME_SUFFIX
 import io.mcarle.konvert.api.config.KONVERTER_GENERATE_CLASS
+import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -695,6 +698,60 @@ interface SomeConverter {
               public override fun toB(source: SomeClass): B? = B().also { someClass ->
                 someClass.property = source.property
               }
+            }
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        value = [
+            "GlobalSuffix,LocalSuffix,LocalSuffix",
+            "GlobalSuffix,,GlobalSuffix",
+            ",LocalSuffix,LocalSuffix",
+            ",,Konverter",
+        ]
+    )
+    fun configurationTest(globalSuffix: String?, localSuffix: String?, expectedSuffix: String) {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            emptyList(),
+            true,
+            if (globalSuffix != null) {
+                mapOf(GENERATED_FILENAME_SUFFIX to globalSuffix)
+            } else {
+                mapOf()
+            },
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents = // @formatter:off
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konfig
+
+${if (localSuffix != null) {
+    """@Konverter(options=[Konfig(key="$GENERATED_FILENAME_SUFFIX", value="$localSuffix")])"""
+} else {
+    """@Konverter"""
+}}
+interface MyMapper {
+    fun toTarget(source: SourceClass): TargetClass
+}
+data class SourceClass(val property: String)
+data class TargetClass(val property: String)
+                """.trimIndent() // @formatter:on
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("MyMapper${expectedSuffix}.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public object MyMapperImpl : MyMapper {
+              public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+                property = source.property
+              )
             }
             """.trimIndent(),
             extensionFunctionCode

@@ -1,13 +1,16 @@
 package io.mcarle.konvert.processor.konvertfrom
 
 import com.tschuchort.compiletesting.SourceFile
-import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.api.DEFAULT_KONVERT_FROM_PRIORITY
+import io.mcarle.konvert.api.config.GENERATED_FILENAME_SUFFIX
+import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -257,6 +260,56 @@ class SomeClass {
                 SomeClass().also { someClass0 ->
               someClass0.property = someClass.property
             }
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        value = [
+            "GlobalSuffix,LocalSuffix,LocalSuffix",
+            "GlobalSuffix,,GlobalSuffix",
+            ",LocalSuffix,LocalSuffix",
+            ",,Konverter",
+        ]
+    )
+    fun configurationTest(globalSuffix: String?, localSuffix: String?, expectedSuffix: String) {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            emptyList(),
+            true,
+            if (globalSuffix != null) {
+                mapOf(GENERATED_FILENAME_SUFFIX to globalSuffix)
+            } else {
+                mapOf()
+            },
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents = // @formatter:off
+                """
+import io.mcarle.konvert.api.KonvertFrom
+import io.mcarle.konvert.api.Konfig
+
+${if (localSuffix != null) {
+    """@KonvertFrom(SourceClass::class, options=[Konfig(key="$GENERATED_FILENAME_SUFFIX", value="$localSuffix")])"""
+} else {
+    """@KonvertFrom(SourceClass::class)"""
+}}
+data class TargetClass(val property: String) { companion object }
+data class SourceClass(val property: String)
+                """.trimIndent() // @formatter:on
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("TargetClass${expectedSuffix}.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass =
+                TargetClass(
+              property = sourceClass.property
+            )
             """.trimIndent(),
             extensionFunctionCode
         )
