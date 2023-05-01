@@ -7,17 +7,12 @@ dependencies {
     implementation(project(":converter"))
     implementation(project(":processor"))
 
-    kover(project(":api"))
-    kover(project(":converter"))
-    kover(project(":converter-api"))
-    kover(project(":injectors:cdi-annotations"))
-    kover(project(":injectors:cdi-injector"))
-    kover(project(":injectors:spring-annotations"))
-    kover(project(":injectors:spring-injector"))
-    kover(project(":injectors:koin-annotations"))
-    kover(project(":injectors:koin-injector"))
-    kover(project(":plugin-api"))
-    kover(project(":processor"))
+    // add kover output from all non-empty modules
+    subprojects.forEach {
+        if (it.path != ":injectors") {
+            kover(project(it.path))
+        }
+    }
 }
 
 koverReport {
