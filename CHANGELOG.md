@@ -4,12 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.0]
+
 ### New features
 * add new modules:
   * The module `plugin-api` can be used to extend the `processor` at certain points
   * The modules `injectors/spring-injector` and `injectors/cdi-injector` which use the `plugin-api` to
     add annotations like `@Component` or `@RequestScoped` to the generated types from `@Konverter`
     * The modules `injectors/spring-annotations` and `injectors/cdi-annotations` so that the user can define the exact annotations
+  * The modules `injectors/koin-injector` and `injectors/koin-annotations` (thanks to [@jakoss](https://github.com/jakoss) [#4](https://github.com/mcarleio/konvert/pull/4))
 * add new option `konvert.generated-filename-suffix` to define the trailing part of the generated filename
 
 ### Bug fixes
@@ -111,7 +114,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v1.3.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v1.4.0...HEAD
+
+[1.4.0]: https://github.com/mcarleio/konvert/compare/v1.3.0...v1.4.0
 
 [1.3.0]: https://github.com/mcarleio/konvert/compare/v1.2.1...v1.3.0
 
