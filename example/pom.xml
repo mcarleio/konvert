@@ -30,15 +30,6 @@
             <version>${konvert.version}</version>
         </dependency>
 
-        <!-- only needed if you need to enable specific converter through Mapping(enable=...) -->
-        <dependency>
-            <groupId>io.mcarle</groupId>
-            <artifactId>konvert-converter</artifactId>
-            <version>${konvert.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>

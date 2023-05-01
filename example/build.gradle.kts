@@ -17,8 +17,6 @@ dependencies {
     // KSP to generate mapping code
     ksp("io.mcarle:konvert:$konvertVersion")
     ksp("io.mcarle:konvert-spring-injector:$konvertVersion")
-    // only needed if you need to enable specific converter through Mapping(enable=...)
-    compileOnly("io.mcarle:konvert-converter:$konvertVersion")
 }
 
 repositories {
