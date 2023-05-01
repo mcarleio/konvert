@@ -27,3 +27,5 @@ asciidoctor:
   attributes:
     - source-highlighter=rouge
     - showtitle=@
+    - github=https://github.com/mcarleio/konvert
+    - konvertVersion=1.4.0

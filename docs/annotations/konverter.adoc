@@ -8,7 +8,7 @@
 
 The annotation `@Konverter` can only be applied to interfaces and will generate an implementation object or class.
 Each abstract function which satisfies having exactly one parameter and a return type, will be implemented by generating the mapping code.
-You can define custom mappings and options per function using the link:konvert[`@Konvert` annotation].
+You can define custom mappings and options per function using the xref:konvert.adoc[`@Konvert` annotation].
 
 [source,kotlin]
 ----

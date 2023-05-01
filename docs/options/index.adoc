@@ -50,10 +50,11 @@ In case you have options in `@Konverter` and `@Konvert`, then the later one will
 
 === General Options
 
+[cols="4,1,1,7"]
 |===
 |Option |Possible values |Default |Description
 
-a|`konvert.enforce-not-null`
+a|`*konvert.enforce-not-null*`
 a|`true`/`false`
 a|`false`
 a|When set to `true`, all `TypeConverter` which respect this setting:
@@ -61,8 +62,11 @@ a|When set to `true`, all `TypeConverter` which respect this setting:
 * will match, when the source type is nullable but the target type is not
 * will add `!!` to the generated code, to enforce the result to be not null
 
-h|Example
-3+a|
+4+a|
+[.pl-6]
+.Example
+[%collapsible]
+====
 [source,kotlin]
 ----
 @KonvertTo(Person::class, options=[
@@ -76,22 +80,49 @@ Will generate:
 ----
 fun PersonDto.toPerson() = Person(name = name!!)
 ----
+====
+
+a|`*konvert.generated-filename-suffix*`
+a|any string
+a|`Konverter`
+a|This setting will change the suffix/trailing part of the generated filenames.
+
+
+4+a|
+[.pl-6]
+.Example
+[%collapsible]
+====
+[source,kotlin]
+----
+@KonvertTo(PersonDto::class, options=[
+    Konfig(key="konvert.generated-filename-suffix", value="_XX")
+])
+class Person(val name: String)
+class PersonDto(val name: String)
+----
+Will generate a file `Person_XX.kt` instead of `PersonKonverter.kt`
+====
 
 |===
 
 === `@Konverter` Options
 
+[cols="4,1,1,7"]
 |===
 |Option |Possible values |Default |Description
 
-a|`konvert.konverter.generate-class`
+a|`*konvert.konverter.generate-class*`
 a|`true`/`false`
 a|`false`
 a|When set to `true`, Konvert will generate a `class` instead of an `object`.
 
 
-h|Example
-3+a|
+4+a|
+[.pl-6]
+.Example
+[%collapsible]
+====
 [source,kotlin]
 ----
 @Konverter(options=[
@@ -111,5 +142,6 @@ class PersonMapperImpl: PersonMapper {
     override fun toDto(person: Person): PersonDto = PersonDto(name = person.name)
 }
 ----
+====
 
 |===

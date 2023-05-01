@@ -1,0 +1,48 @@
+:page-title: Modules
+:page-nav_order: 5
+
+= Modules
+
+[.fs-6.fw-300]
+Konvert is split into multiple modules.
+
+== The most important modules for the usage are:
+
+* `konvert-api`
++
+This module contains mainly annotations which you can use to annotate your classes or mapper interfaces to generate mapping code by `Konvert`.
+
+* `konvert`
++
+This is the module which bundles `konvert-processor` and `konvert-converter` together, so that you can simply use this module as your KSP processor.
+
+== Core modules (bundled together in the `konvert` module):
+
+* `konvert-converter`
++
+Contains all the default ``TypeConverter``s of `Konvert`.
+See link:typeconverter[here to view them all].
+
+* `konvert-processor`
++
+This is the module which contains the actual KSP implementation, which will process the annotations, collect annotated converters and generate code for each mapping.
+
+== To extend the functionality of Konvert the following modules are provided
+
+* `konvert-converter-api`
++
+This module can be used to build your own ``TypeConverter``s to be used by Konvert during compilation.
+As Konvert is using SPI, you can build your own library and just include it into KSP classpath!
+(TODO: reference example)
+
+* `konvert-plugin-api` [[plugin-api]]
++
+This module can be used to build your own plugins for `Konvert` to amend the behaviour of the processor (e.g. to add annotations to the generated source code).
++
+--
+The following plugins are already available:
+
+* Generate *CDI* annotations (e.g. `@RequestScoped`) by using `konvert-cdi-annotations` and `konvert-cdi-injector`
+* Generate *Koin* annotations (e.g. `@Single`) by using `konvert-koin-annotations` and `konvert-koin-injector`
+* Generate *Spring* annotations (e.g. `@Component`) by using `konvert-spring-annotations` and `konvert-spring-injector`
+--

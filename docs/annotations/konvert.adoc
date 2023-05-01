@@ -4,7 +4,7 @@
 
 = @Konvert
 
-The annotation `@Konvert` is only being processed on abstract functions in interfaces annotated with link:konverter[`@Konverter`].
+The annotation `@Konvert` is only being processed on abstract functions in interfaces annotated with xref:konverter.adoc[`@Konverter`].
 
 [source,kotlin]
 ----

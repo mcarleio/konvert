@@ -1,0 +1,51 @@
+:page-title: Plugins
+:page-nav_order: 6
+
+= Plugins
+
+[.fs-6.fw-300]
+The processor of convert can be extended by implementing a module using the `plugin-api`.
+`Konvert` already comes with <<modules.adoc#plugin-api,some plugins>>.
+
+== Usage of plugin modules
+
+Have a look at the link:{github}/tree/main/example[example project] or follow these simple steps:
+
+1. Add dependency to `konvert-spring-annotations`
++
+[source,gradle,subs="attributes+"]
+----
+dependencies {
+    implementation("io.mcarle:konvert-spring-annotations:{konvertVersion}")
+}
+----
+2. Add `@KComponent` annotation to your `@Konverter` annotated interface
++
+[source,kotlin]
+----
+@Konverter
+@KComponent
+interface MyMapper {
+    fun mapSomething(source: SourceClass): TargetClass
+}
+----
+3. Add `konvert-spring-injector` as a KSP dependency
++
+[source,gradle,subs="attributes+"]
+----
+dependencies {
+    ksp("io.mcarle:konvert-spring-injector:{konvertVersion}")
+}
+----
+
+This will then generate something like the following during compilation:
+
+[source,kotlin]
+----
+@Component
+class MyMapperImpl: MyMapper {
+    override fun mapSomething(source: SourceClass): TargetClass {
+        // ...
+    }
+}
+----

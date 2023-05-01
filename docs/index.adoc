@@ -1,7 +1,6 @@
 :page-layout: home
 :page-title: Home
 :page-nav_order: 1
-:nav_footer_custom: AA
 
 = Welcome to Konvert!
 
