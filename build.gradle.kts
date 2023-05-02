@@ -9,7 +9,7 @@ dependencies {
 
     // add kover output from all non-empty modules
     subprojects.forEach {
-        if (it.path != ":injectors") {
+        if (it.path !in arrayOf(":injectors", ":docs")) {
             kover(project(it.path))
         }
     }
