@@ -7,6 +7,8 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.reflections.Reflections
+import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 
@@ -198,8 +200,66 @@ class BaseTypeConverterITest : ConverterITest() {
             BooleanToUByteConverter(),
             BooleanToCharConverter(),
             BooleanToFloatConverter(),
+            StringToBigIntegerConverter(),
+            IntToBigIntegerConverter(),
+            UIntToBigIntegerConverter(),
+            LongToBigIntegerConverter(),
+            ULongToBigIntegerConverter(),
+            ShortToBigIntegerConverter(),
+            UShortToBigIntegerConverter(),
+            FloatToBigIntegerConverter(),
+            DoubleToBigIntegerConverter(),
+            ByteToBigIntegerConverter(),
+            UByteToBigIntegerConverter(),
+            NumberToBigIntegerConverter(),
+            CharToBigIntegerConverter(),
+            BooleanToBigIntegerConverter(),
+            BigIntegerToStringConverter(),
+            BigIntegerToIntConverter(),
+            BigIntegerToUIntConverter(),
+            BigIntegerToLongConverter(),
+            BigIntegerToULongConverter(),
+            BigIntegerToShortConverter(),
+            BigIntegerToUShortConverter(),
+            BigIntegerToByteConverter(),
+            BigIntegerToUByteConverter(),
+            BigIntegerToCharConverter(),
+            BigIntegerToBooleanConverter(),
+            BigIntegerToFloatConverter(),
+            BigIntegerToDoubleConverter(),
+            BigIntegerToNumberConverter(),
+            BigIntegerToBigDecimalConverter(),
+            BigDecimalToBigIntegerConverter(),
+            StringToBigDecimalConverter(),
+            IntToBigDecimalConverter(),
+            UIntToBigDecimalConverter(),
+            LongToBigDecimalConverter(),
+            ULongToBigDecimalConverter(),
+            ShortToBigDecimalConverter(),
+            UShortToBigDecimalConverter(),
+            FloatToBigDecimalConverter(),
+            DoubleToBigDecimalConverter(),
+            ByteToBigDecimalConverter(),
+            UByteToBigDecimalConverter(),
+            NumberToBigDecimalConverter(),
+            CharToBigDecimalConverter(),
+            BooleanToBigDecimalConverter(),
+            BigDecimalToStringConverter(),
+            BigDecimalToIntConverter(),
+            BigDecimalToUIntConverter(),
+            BigDecimalToLongConverter(),
+            BigDecimalToULongConverter(),
+            BigDecimalToShortConverter(),
+            BigDecimalToUShortConverter(),
+            BigDecimalToByteConverter(),
+            BigDecimalToUByteConverter(),
+            BigDecimalToCharConverter(),
+            BigDecimalToBooleanConverter(),
+            BigDecimalToFloatConverter(),
+            BigDecimalToDoubleConverter(),
+            BigDecimalToNumberConverter(),
         ).toConverterTestArgumentsWithType {
-            it.sourceClass.simpleName to it.targetClass.simpleName
+            it.sourceClass.qualifiedName to it.targetClass.qualifiedName
         }
 
         private val baseTypeConverterClasses: Set<Class<out BaseTypeConverter>> =
@@ -223,8 +283,8 @@ class BaseTypeConverterITest : ConverterITest() {
     fun simple() {
         super.converterTest(
             IntToStringConverter(),
-            "Int",
-            "String"
+            "kotlin.Int",
+            "kotlin.String"
         )
     }
 
@@ -239,20 +299,22 @@ class BaseTypeConverterITest : ConverterITest() {
     ) {
         val sourceInstance = sourceKClass.constructors.first().call(
             when {
-                sourceTypeName.startsWith("String") -> "1"
-                sourceTypeName.startsWith("Int") -> -888
-                sourceTypeName.startsWith("UInt") -> 777u
-                sourceTypeName.startsWith("Long") -> -9999L
-                sourceTypeName.startsWith("ULong") -> 6666.toULong()
-                sourceTypeName.startsWith("Short") -> (-512).toShort()
-                sourceTypeName.startsWith("UShort") -> 512.toUShort()
-                sourceTypeName.startsWith("Number") -> 1423847
-                sourceTypeName.startsWith("Byte") -> (-1).toByte()
-                sourceTypeName.startsWith("UByte") -> 128.toUByte()
-                sourceTypeName.startsWith("Char") -> 'A'
-                sourceTypeName.startsWith("Boolean") -> true
-                sourceTypeName.startsWith("Float") -> 3.141f
-                sourceTypeName.startsWith("Double") -> 1337.1337
+                sourceTypeName.startsWith("java.math.BigInteger") -> BigInteger.ONE
+                sourceTypeName.startsWith("java.math.BigDecimal") -> BigDecimal.ONE
+                sourceTypeName.startsWith("kotlin.String") -> "1"
+                sourceTypeName.startsWith("kotlin.Int") -> -888
+                sourceTypeName.startsWith("kotlin.UInt") -> 777u
+                sourceTypeName.startsWith("kotlin.Long") -> -9999L
+                sourceTypeName.startsWith("kotlin.ULong") -> 6666.toULong()
+                sourceTypeName.startsWith("kotlin.Short") -> (-512).toShort()
+                sourceTypeName.startsWith("kotlin.UShort") -> 512.toUShort()
+                sourceTypeName.startsWith("kotlin.Number") -> 1423847
+                sourceTypeName.startsWith("kotlin.Byte") -> (-1).toByte()
+                sourceTypeName.startsWith("kotlin.UByte") -> 128.toUByte()
+                sourceTypeName.startsWith("kotlin.Char") -> 'A'
+                sourceTypeName.startsWith("kotlin.Boolean") -> true
+                sourceTypeName.startsWith("kotlin.Float") -> 3.141f
+                sourceTypeName.startsWith("kotlin.Double") -> 1337.1337
                 else -> null
             }
         )
@@ -262,20 +324,22 @@ class BaseTypeConverterITest : ConverterITest() {
         assertDoesNotThrow {
             val targetValue = targetKClass.members.first { it.name == "test" }.call(targetInstance)
             when {
-                targetTypeName.startsWith("String") -> targetValue as String
-                targetTypeName.startsWith("Int") -> targetValue as Int
-                targetTypeName.startsWith("UInt") -> targetValue as UInt
-                targetTypeName.startsWith("Long") -> targetValue as Long
-                targetTypeName.startsWith("ULong") -> targetValue as ULong
-                targetTypeName.startsWith("Short") -> targetValue as Short
-                targetTypeName.startsWith("UShort") -> targetValue as UShort
-                targetTypeName.startsWith("Number") -> targetValue as Number
-                targetTypeName.startsWith("Byte") -> targetValue as Byte
-                targetTypeName.startsWith("UByte") -> targetValue as UByte
-                targetTypeName.startsWith("Char") -> targetValue as Char
-                targetTypeName.startsWith("Boolean") -> targetValue as Boolean
-                targetTypeName.startsWith("Float") -> targetValue as Float
-                targetTypeName.startsWith("Double") -> targetValue as Double
+                targetTypeName.startsWith("kotlin.String") -> targetValue as String
+                targetTypeName.startsWith("kotlin.Int") -> targetValue as Int
+                targetTypeName.startsWith("kotlin.UInt") -> targetValue as UInt
+                targetTypeName.startsWith("kotlin.Long") -> targetValue as Long
+                targetTypeName.startsWith("kotlin.ULong") -> targetValue as ULong
+                targetTypeName.startsWith("kotlin.Short") -> targetValue as Short
+                targetTypeName.startsWith("kotlin.UShort") -> targetValue as UShort
+                targetTypeName.startsWith("kotlin.Number") -> targetValue as Number
+                targetTypeName.startsWith("kotlin.Byte") -> targetValue as Byte
+                targetTypeName.startsWith("kotlin.UByte") -> targetValue as UByte
+                targetTypeName.startsWith("kotlin.Char") -> targetValue as Char
+                targetTypeName.startsWith("kotlin.Boolean") -> targetValue as Boolean
+                targetTypeName.startsWith("kotlin.Float") -> targetValue as Float
+                targetTypeName.startsWith("kotlin.Double") -> targetValue as Double
+                targetTypeName.startsWith("java.math.BigInteger") -> targetValue as BigInteger
+                targetTypeName.startsWith("java.math.BigDecimal") -> targetValue as BigDecimal
                 else -> null
             }
         }

@@ -6,6 +6,8 @@ import com.google.devtools.ksp.symbol.KSType
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.isNullable
+import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.reflect.KClass
 
 abstract class EnumToXConverter(
@@ -112,5 +114,17 @@ class EnumToCharConverter : EnumToXConverter(Char::class) {
 @AutoService(TypeConverter::class)
 class EnumToFloatConverter : EnumToXConverter(Float::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.ordinal$nc.toFloat()"
+    override val enabledByDefault: Boolean = false
+}
+
+@AutoService(TypeConverter::class)
+class EnumToBigIntegerConverter : EnumToXConverter(BigInteger::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.ordinal$nc.toBigInteger()"
+    override val enabledByDefault: Boolean = true
+}
+
+@AutoService(TypeConverter::class)
+class EnumToBigDecimalConverter : EnumToXConverter(BigDecimal::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.ordinal$nc.toBigDecimal()"
     override val enabledByDefault: Boolean = false
 }

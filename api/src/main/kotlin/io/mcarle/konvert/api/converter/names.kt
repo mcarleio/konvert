@@ -311,6 +311,16 @@ const val ENUM_TO_DOUBLE_CONVERTER = "EnumToDoubleConverter"
 const val ENUM_TO_ENUM_CONVERTER = "EnumToEnumConverter"
 
 /**
+ * Name of [io.mcarle.konvert.converter.EnumToBigIntegerConverter]
+ */
+const val ENUM_TO_BIG_INTEGER_CONVERTER = "EnumToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.EnumToBigDecimalConverter]
+ */
+const val ENUM_TO_BIG_DECIMAL_CONVERTER = "EnumToBigDecimalConverter"
+
+/**
  * Name of [io.mcarle.konvert.converter.EnumToFloatConverter]
  */
 const val ENUM_TO_FLOAT_CONVERTER = "EnumToFloatConverter"
@@ -379,6 +389,16 @@ const val FLOAT_TO_CHAR_CONVERTER = "FloatToCharConverter"
  * Name of [io.mcarle.konvert.converter.FloatToDoubleConverter]
  */
 const val FLOAT_TO_DOUBLE_CONVERTER = "FloatToDoubleConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToEnumConverter]
+ */
+const val BIG_INTEGER_TO_ENUM_CONVERTER = "BigIntegerToEnumConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToEnumConverter]
+ */
+const val BIG_DECIMAL_TO_ENUM_CONVERTER = "BigDecimalToEnumConverter"
 
 /**
  * Name of [io.mcarle.konvert.converter.FloatToEnumConverter]
@@ -519,6 +539,308 @@ const val INT_TO_ULONG_CONVERTER = "IntToULongConverter"
  * Name of [io.mcarle.konvert.converter.IntToUShortConverter]
  */
 const val INT_TO_USHORT_CONVERTER = "IntToUShortConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.StringToBigIntegerConverter]
+ */
+const val STRING_TO_BIG_INTEGER_CONVERTER = "StringToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.IntToBigIntegerConverter]
+ */
+const val INT_TO_BIG_INTEGER_CONVERTER = "IntToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.UIntToBigIntegerConverter]
+ */
+const val UINT_TO_BIG_INTEGER_CONVERTER = "UIntToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.LongToBigIntegerConverter]
+ */
+const val LONG_TO_BIG_INTEGER_CONVERTER = "LongToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.ULongToBigIntegerConverter]
+ */
+const val ULONG_TO_BIG_INTEGER_CONVERTER = "ULongToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.ShortToBigIntegerConverter]
+ */
+const val SHORT_TO_BIG_INTEGER_CONVERTER = "ShortToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.UShortToBigIntegerConverter]
+ */
+const val USHORT_TO_BIG_INTEGER_CONVERTER = "UShortToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.FloatToBigIntegerConverter]
+ */
+const val FLOAT_TO_BIG_INTEGER_CONVERTER = "FloatToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.DoubleToBigIntegerConverter]
+ */
+const val DOUBLE_TO_BIG_INTEGER_CONVERTER = "DoubleToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.ByteToBigIntegerConverter]
+ */
+const val BYTE_TO_BIG_INTEGER_CONVERTER = "ByteToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.UByteToBigIntegerConverter]
+ */
+const val UBYTE_TO_BIG_INTEGER_CONVERTER = "UByteToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.NumberToBigIntegerConverter]
+ */
+const val NUMBER_TO_BIG_INTEGER_CONVERTER = "NumberToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.CharToBigIntegerConverter]
+ */
+const val CHAR_TO_BIG_INTEGER_CONVERTER = "CharToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BooleanToBigIntegerConverter]
+ */
+const val BOOLEAN_TO_BIG_INTEGER_CONVERTER = "BooleanToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToStringConverter]
+ */
+const val BIG_INTEGER_TO_STRING_CONVERTER = "BigIntegerToStringConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToIntConverter]
+ */
+const val BIG_INTEGER_TO_INT_CONVERTER = "BigIntegerToIntConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToUIntConverter]
+ */
+const val BIG_INTEGER_TO_UINT_CONVERTER = "BigIntegerToUIntConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToLongConverter]
+ */
+const val BIG_INTEGER_TO_LONG_CONVERTER = "BigIntegerToLongConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToULongConverter]
+ */
+const val BIG_INTEGER_TO_ULONG_CONVERTER = "BigIntegerToULongConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToShortConverter]
+ */
+const val BIG_INTEGER_TO_SHORT_CONVERTER = "BigIntegerToShortConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToUShortConverter]
+ */
+const val BIG_INTEGER_TO_USHORT_CONVERTER = "BigIntegerToUShortConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToByteConverter]
+ */
+const val BIG_INTEGER_TO_BYTE_CONVERTER = "BigIntegerToByteConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToUByteConverter]
+ */
+const val BIG_INTEGER_TO_UBYTE_CONVERTER = "BigIntegerToUByteConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToCharConverter]
+ */
+const val BIG_INTEGER_TO_CHAR_CONVERTER = "BigIntegerToCharConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToBooleanConverter]
+ */
+const val BIG_INTEGER_TO_BOOLEAN_CONVERTER = "BigIntegerToBooleanConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToFloatConverter]
+ */
+const val BIG_INTEGER_TO_FLOAT_CONVERTER = "BigIntegerToFloatConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToDoubleConverter]
+ */
+const val BIG_INTEGER_TO_DOUBLE_CONVERTER = "BigIntegerToDoubleConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToNumberConverter]
+ */
+const val BIG_INTEGER_TO_NUMBER_CONVERTER = "BigIntegerToNumberConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigIntegerToBigDecimalConverter]
+ */
+const val BIG_INTEGER_TO_BIG_DECIMAL_CONVERTER = "BigIntegerToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToBigIntegerConverter]
+ */
+const val BIG_DECIMAL_TO_BIG_INTEGER_CONVERTER = "BigDecimalToBigIntegerConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.StringToBigDecimalConverter]
+ */
+const val STRING_TO_BIG_DECIMAL_CONVERTER = "StringToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.IntToBigDecimalConverter]
+ */
+const val INT_TO_BIG_DECIMAL_CONVERTER = "IntToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.UIntToBigDecimalConverter]
+ */
+const val UINT_TO_BIG_DECIMAL_CONVERTER = "UIntToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.LongToBigDecimalConverter]
+ */
+const val LONG_TO_BIG_DECIMAL_CONVERTER = "LongToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.ULongToBigDecimalConverter]
+ */
+const val ULONG_TO_BIG_DECIMAL_CONVERTER = "ULongToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.ShortToBigDecimalConverter]
+ */
+const val SHORT_TO_BIG_DECIMAL_CONVERTER = "ShortToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.UShortToBigDecimalConverter]
+ */
+const val USHORT_TO_BIG_DECIMAL_CONVERTER = "UShortToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.FloatToBigDecimalConverter]
+ */
+const val FLOAT_TO_BIG_DECIMAL_CONVERTER = "FloatToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.DoubleToBigDecimalConverter]
+ */
+const val DOUBLE_TO_BIG_DECIMAL_CONVERTER = "DoubleToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.ByteToBigDecimalConverter]
+ */
+const val BYTE_TO_BIG_DECIMAL_CONVERTER = "ByteToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.UByteToBigDecimalConverter]
+ */
+const val UBYTE_TO_BIG_DECIMAL_CONVERTER = "UByteToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.NumberToBigDecimalConverter]
+ */
+const val NUMBER_TO_BIG_DECIMAL_CONVERTER = "NumberToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.CharToBigDecimalConverter]
+ */
+const val CHAR_TO_BIG_DECIMAL_CONVERTER = "CharToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BooleanToBigDecimalConverter]
+ */
+const val BOOLEAN_TO_BIG_DECIMAL_CONVERTER = "BooleanToBigDecimalConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToStringConverter]
+ */
+const val BIG_DECIMAL_TO_STRING_CONVERTER = "BigDecimalToStringConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToIntConverter]
+ */
+const val BIG_DECIMAL_TO_INT_CONVERTER = "BigDecimalToIntConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToUIntConverter]
+ */
+const val BIG_DECIMAL_TO_UINT_CONVERTER = "BigDecimalToUIntConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToLongConverter]
+ */
+const val BIG_DECIMAL_TO_LONG_CONVERTER = "BigDecimalToLongConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToULongConverter]
+ */
+const val BIG_DECIMAL_TO_ULONG_CONVERTER = "BigDecimalToULongConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToShortConverter]
+ */
+const val BIG_DECIMAL_TO_SHORT_CONVERTER = "BigDecimalToShortConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToUShortConverter]
+ */
+const val BIG_DECIMAL_TO_USHORT_CONVERTER = "BigDecimalToUShortConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToByteConverter]
+ */
+const val BIG_DECIMAL_TO_BYTE_CONVERTER = "BigDecimalToByteConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToUByteConverter]
+ */
+const val BIG_DECIMAL_TO_UBYTE_CONVERTER = "BigDecimalToUByteConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToCharConverter]
+ */
+const val BIG_DECIMAL_TO_CHAR_CONVERTER = "BigDecimalToCharConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToBooleanConverter]
+ */
+const val BIG_DECIMAL_TO_BOOLEAN_CONVERTER = "BigDecimalToBooleanConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToFloatConverter]
+ */
+const val BIG_DECIMAL_TO_FLOAT_CONVERTER = "BigDecimalToFloatConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToDoubleConverter]
+ */
+const val BIG_DECIMAL_TO_DOUBLE_CONVERTER = "BigDecimalToDoubleConverter"
+
+/**
+ * Name of [io.mcarle.konvert.converter.BigDecimalToNumberConverter]
+ */
+const val BIG_DECIMAL_TO_NUMBER_CONVERTER = "BigDecimalToNumberConverter"
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Name of [io.mcarle.konvert.converter.IterableToIterableConverter]
