@@ -29,6 +29,8 @@ class EnumToXConverterITest : ConverterITest() {
             EnumToUByteConverter(),
             EnumToCharConverter(),
             EnumToFloatConverter(),
+            EnumToBigIntegerConverter(),
+            EnumToBigDecimalConverter(),
         ).toConverterTestArgumentsWithType {
             "MyEnum" to it.targetClass.qualifiedName
         }
@@ -84,6 +86,8 @@ enum class MyEnum {
 
         Assertions.assertEquals(
             when {
+                targetTypeName.startsWith("java.math.BigInteger") -> enumValue.ordinal.toBigInteger()
+                targetTypeName.startsWith("java.math.BigDecimal") -> enumValue.ordinal.toBigDecimal()
                 targetTypeName.startsWith("kotlin.String") -> enumValue.name
                 targetTypeName.startsWith("kotlin.Int") -> enumValue.ordinal
                 targetTypeName.startsWith("kotlin.UInt") -> enumValue.ordinal.toUInt()

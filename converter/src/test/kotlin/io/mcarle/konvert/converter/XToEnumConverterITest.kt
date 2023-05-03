@@ -29,6 +29,8 @@ class XToEnumConverterITest : ConverterITest() {
             ByteToEnumConverter(),
             UByteToEnumConverter(),
             FloatToEnumConverter(),
+            BigIntegerToEnumConverter(),
+            BigDecimalToEnumConverter(),
         ).toConverterTestArgumentsWithType {
             it.sourceClass.qualifiedName to "MyEnum"
         }
@@ -79,6 +81,8 @@ enum class MyEnum {
                     else -> "ZZZ"
                 }
 
+                sourceTypeName.startsWith("java.math.BigInteger") -> value.toBigInteger()
+                sourceTypeName.startsWith("java.math.BigDecimal") -> value.toBigDecimal()
                 sourceTypeName.startsWith("kotlin.Int") -> value
                 sourceTypeName.startsWith("kotlin.UInt") -> value.toUInt()
                 sourceTypeName.startsWith("kotlin.Long") -> value.toLong()

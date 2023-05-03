@@ -6,6 +6,8 @@ import com.google.devtools.ksp.symbol.KSType
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.isNullable
+import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.reflect.KClass
 
 abstract class XToEnumConverter(
@@ -121,5 +123,19 @@ class UByteToEnumConverter : XToEnumConverter(UByte::class) {
 class FloatToEnumConverter : XToEnumConverter(Float::class) {
     override fun convert(fieldName: String, nc: String, enumFQ: String): String {
         return "$fieldName$nc.let·{ $enumFQ.values()[it.toInt()] }"
+    }
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToEnumConverter : XToEnumConverter(BigInteger::class) {
+    override fun convert(fieldName: String, nc: String, enumFQ: String): String {
+        return "$fieldName$nc.let·{ $enumFQ.values()[it.intValueExact()] }"
+    }
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToEnumConverter : XToEnumConverter(BigDecimal::class) {
+    override fun convert(fieldName: String, nc: String, enumFQ: String): String {
+        return "$fieldName$nc.let·{ $enumFQ.values()[it.intValueExact()] }"
     }
 }

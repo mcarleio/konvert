@@ -6,6 +6,8 @@ import com.google.devtools.ksp.symbol.KSType
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.isNullable
+import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.reflect.KClass
 
 abstract class BaseTypeConverter(
@@ -112,6 +114,15 @@ class StringToDoubleConverter : BaseTypeConverter(String::class, Double::class) 
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
 }
 
+@AutoService(TypeConverter::class)
+class StringToBigIntegerConverter : BaseTypeConverter(String::class, BigInteger::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let·{ java.math.BigInteger(it) }"
+}
+
+@AutoService(TypeConverter::class)
+class StringToBigDecimalConverter : BaseTypeConverter(String::class, BigDecimal::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.let·{ java.math.BigDecimal(it) }"
+}
 
 // =============
 // ==== INT ====
@@ -183,6 +194,15 @@ class IntToDoubleConverter : BaseTypeConverter(Int::class, Double::class, true) 
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
 }
 
+@AutoService(TypeConverter::class)
+class IntToBigIntegerConverter : BaseTypeConverter(Int::class, BigInteger::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toBigInteger()"
+}
+
+@AutoService(TypeConverter::class)
+class IntToBigDecimalConverter : BaseTypeConverter(Int::class, BigDecimal::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toBigDecimal()"
+}
 
 // =============
 // ==== UINT ====
@@ -252,6 +272,16 @@ class UIntToFloatConverter : BaseTypeConverter(UInt::class, Float::class, true) 
 @AutoService(TypeConverter::class)
 class UIntToDoubleConverter : BaseTypeConverter(UInt::class, Double::class, true) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
+}
+
+@AutoService(TypeConverter::class)
+class UIntToBigIntegerConverter : BaseTypeConverter(UInt::class, BigInteger::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigInteger()"
+}
+
+@AutoService(TypeConverter::class)
+class UIntToBigDecimalConverter : BaseTypeConverter(UInt::class, BigDecimal::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigDecimal()"
 }
 
 
@@ -325,6 +355,16 @@ class LongToDoubleConverter : BaseTypeConverter(Long::class, Double::class, true
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
 }
 
+@AutoService(TypeConverter::class)
+class LongToBigIntegerConverter : BaseTypeConverter(Long::class, BigInteger::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toBigInteger()"
+}
+
+@AutoService(TypeConverter::class)
+class LongToBigDecimalConverter : BaseTypeConverter(Long::class, BigDecimal::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toBigDecimal()"
+}
+
 
 // ===============
 // ==== ULONG ====
@@ -394,6 +434,16 @@ class ULongToFloatConverter : BaseTypeConverter(ULong::class, Float::class) {
 @AutoService(TypeConverter::class)
 class ULongToDoubleConverter : BaseTypeConverter(ULong::class, Double::class, true) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
+}
+
+@AutoService(TypeConverter::class)
+class ULongToBigIntegerConverter : BaseTypeConverter(ULong::class, BigInteger::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigInteger()"
+}
+
+@AutoService(TypeConverter::class)
+class ULongToBigDecimalConverter : BaseTypeConverter(ULong::class, BigDecimal::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigDecimal()"
 }
 
 // ===============
@@ -466,6 +516,15 @@ class ShortToDoubleConverter : BaseTypeConverter(Short::class, Double::class, tr
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
 }
 
+@AutoService(TypeConverter::class)
+class ShortToBigIntegerConverter : BaseTypeConverter(Short::class, BigInteger::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigInteger()"
+}
+
+@AutoService(TypeConverter::class)
+class ShortToBigDecimalConverter : BaseTypeConverter(Short::class, BigDecimal::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigDecimal()"
+}
 
 // ================
 // ==== USHORT ====
@@ -537,6 +596,15 @@ class UShortToDoubleConverter : BaseTypeConverter(UShort::class, Double::class, 
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
 }
 
+@AutoService(TypeConverter::class)
+class UShortToBigIntegerConverter : BaseTypeConverter(UShort::class, BigInteger::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigInteger()"
+}
+
+@AutoService(TypeConverter::class)
+class UShortToBigDecimalConverter : BaseTypeConverter(UShort::class, BigDecimal::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigDecimal()"
+}
 
 // ===============
 // ==== FLOAT ====
@@ -606,6 +674,16 @@ class FloatToBooleanConverter : BaseTypeConverter(Float::class, Boolean::class) 
 @AutoService(TypeConverter::class)
 class FloatToDoubleConverter : BaseTypeConverter(Float::class, Double::class, true) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
+}
+
+@AutoService(TypeConverter::class)
+class FloatToBigIntegerConverter : BaseTypeConverter(Float::class, BigInteger::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigInteger()"
+}
+
+@AutoService(TypeConverter::class)
+class FloatToBigDecimalConverter : BaseTypeConverter(Float::class, BigDecimal::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toBigDecimal()"
 }
 
 // ================
@@ -678,6 +756,16 @@ class DoubleToFloatConverter : BaseTypeConverter(Double::class, Float::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toFloat()"
 }
 
+@AutoService(TypeConverter::class)
+class DoubleToBigIntegerConverter : BaseTypeConverter(Double::class, BigInteger::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigInteger()"
+}
+
+@AutoService(TypeConverter::class)
+class DoubleToBigDecimalConverter : BaseTypeConverter(Double::class, BigDecimal::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toBigDecimal()"
+}
+
 // ==============
 // ==== BYTE ====
 // ==============
@@ -746,6 +834,16 @@ class ByteToBooleanConverter : BaseTypeConverter(Byte::class, Boolean::class) {
 @AutoService(TypeConverter::class)
 class ByteToFloatConverter : BaseTypeConverter(Byte::class, Float::class, true) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toFloat()"
+}
+
+@AutoService(TypeConverter::class)
+class ByteToBigIntegerConverter : BaseTypeConverter(Byte::class, BigInteger::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigInteger()"
+}
+
+@AutoService(TypeConverter::class)
+class ByteToBigDecimalConverter : BaseTypeConverter(Byte::class, BigDecimal::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigDecimal()"
 }
 
 
@@ -819,6 +917,16 @@ class UByteToDoubleConverter : BaseTypeConverter(UByte::class, Double::class, tr
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
 }
 
+@AutoService(TypeConverter::class)
+class UByteToBigIntegerConverter : BaseTypeConverter(UByte::class, BigInteger::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigInteger()"
+}
+
+@AutoService(TypeConverter::class)
+class UByteToBigDecimalConverter : BaseTypeConverter(UByte::class, BigDecimal::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigDecimal()"
+}
+
 // ================
 // ==== NUMBER ====
 // ================
@@ -887,6 +995,16 @@ class NumberToFloatConverter : BaseTypeConverter(Number::class, Float::class) {
 @AutoService(TypeConverter::class)
 class NumberToDoubleConverter : BaseTypeConverter(Number::class, Double::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
+}
+
+@AutoService(TypeConverter::class)
+class NumberToBigIntegerConverter : BaseTypeConverter(Number::class, BigInteger::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigInteger()"
+}
+
+@AutoService(TypeConverter::class)
+class NumberToBigDecimalConverter : BaseTypeConverter(Number::class, BigDecimal::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()$nc.toBigDecimal()"
 }
 
 
@@ -958,6 +1076,16 @@ class CharToBooleanConverter : BaseTypeConverter(Char::class, Boolean::class) {
 @AutoService(TypeConverter::class)
 class CharToFloatConverter : BaseTypeConverter(Char::class, Float::class) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.code$nc.toFloat()"
+}
+
+@AutoService(TypeConverter::class)
+class CharToBigIntegerConverter : BaseTypeConverter(Char::class, BigInteger::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.code$nc.toLong()$nc.toBigInteger()"
+}
+
+@AutoService(TypeConverter::class)
+class CharToBigDecimalConverter : BaseTypeConverter(Char::class, BigDecimal::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.code$nc.toLong()$nc.toBigDecimal()"
 }
 
 // =================
@@ -1039,4 +1167,180 @@ class BooleanToCharConverter : BaseTypeConverter(Boolean::class, Char::class) {
 class BooleanToFloatConverter : BaseTypeConverter(Boolean::class, Float::class) {
     override fun convert(fieldName: String, nc: String): String = "if·($fieldName·==·true)·1.0f·else·0.0f"
     override fun appendNotNullAssertionOperator(code: String): String = code
+}
+
+@AutoService(TypeConverter::class)
+class BooleanToBigIntegerConverter : BaseTypeConverter(Boolean::class, BigInteger::class) {
+    override fun convert(fieldName: String, nc: String): String =
+        "if·($fieldName·==·true)·java.math.BigInteger.ONE·else·java.math.BigInteger.ZERO"
+
+    override fun appendNotNullAssertionOperator(code: String): String = code
+}
+
+@AutoService(TypeConverter::class)
+class BooleanToBigDecimalConverter : BaseTypeConverter(Boolean::class, BigDecimal::class) {
+    override fun convert(fieldName: String, nc: String): String =
+        "if·($fieldName·==·true)·java.math.BigDecimal.ONE·else·java.math.BigDecimal.ZERO"
+
+    override fun appendNotNullAssertionOperator(code: String): String = code
+}
+
+// ================
+// == BIGINTEGER ==
+// ================
+
+@AutoService(TypeConverter::class)
+class BigIntegerToStringConverter : BaseTypeConverter(BigInteger::class, String::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toString()"
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToIntConverter : BaseTypeConverter(BigInteger::class, Int::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.intValueExact()"
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToUIntConverter : BaseTypeConverter(BigInteger::class, UInt::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.intValueExact()$nc.toUInt()"
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToLongConverter : BaseTypeConverter(BigInteger::class, Long::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.longValueExact()"
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToULongConverter : BaseTypeConverter(BigInteger::class, ULong::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.longValueExact()$nc.toULong()"
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToShortConverter : BaseTypeConverter(BigInteger::class, Short::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.shortValueExact()"
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToUShortConverter : BaseTypeConverter(BigInteger::class, UShort::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.shortValueExact()$nc.toUShort()"
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToByteConverter : BaseTypeConverter(BigInteger::class, Byte::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.byteValueExact()"
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToUByteConverter : BaseTypeConverter(BigInteger::class, UByte::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.byteValueExact()$nc.toUByte()"
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToCharConverter : BaseTypeConverter(BigInteger::class, Char::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.intValueExact()$nc.toChar()"
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToBooleanConverter : BaseTypeConverter(BigInteger::class, Boolean::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·java.math.BigInteger.ONE"
+    override fun appendNotNullAssertionOperator(code: String): String = code
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToFloatConverter : BaseTypeConverter(BigInteger::class, Float::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toFloat()"
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToDoubleConverter : BaseTypeConverter(BigInteger::class, Double::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToNumberConverter : BaseTypeConverter(BigInteger::class, Number::class) {
+    override fun convert(fieldName: String, nc: String): String = fieldName
+}
+
+@AutoService(TypeConverter::class)
+class BigIntegerToBigDecimalConverter : BaseTypeConverter(BigInteger::class, BigDecimal::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toBigDecimal()"
+}
+
+// ================
+// == BIGDECIMAL ==
+// ================
+
+@AutoService(TypeConverter::class)
+class BigDecimalToStringConverter : BaseTypeConverter(BigDecimal::class, String::class, true) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toString()"
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToIntConverter : BaseTypeConverter(BigDecimal::class, Int::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.intValueExact()"
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToUIntConverter : BaseTypeConverter(BigDecimal::class, UInt::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.intValueExact()$nc.toUInt()"
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToLongConverter : BaseTypeConverter(BigDecimal::class, Long::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.longValueExact()"
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToULongConverter : BaseTypeConverter(BigDecimal::class, ULong::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.longValueExact()$nc.toULong()"
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToShortConverter : BaseTypeConverter(BigDecimal::class, Short::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.shortValueExact()"
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToUShortConverter : BaseTypeConverter(BigDecimal::class, UShort::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.shortValueExact()$nc.toUShort()"
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToByteConverter : BaseTypeConverter(BigDecimal::class, Byte::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.byteValueExact()"
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToUByteConverter : BaseTypeConverter(BigDecimal::class, UByte::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.byteValueExact()$nc.toUByte()"
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToCharConverter : BaseTypeConverter(BigDecimal::class, Char::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.intValueExact()$nc.toChar()"
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToBooleanConverter : BaseTypeConverter(BigDecimal::class, Boolean::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName·==·java.math.BigDecimal.ONE"
+    override fun appendNotNullAssertionOperator(code: String): String = code
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToFloatConverter : BaseTypeConverter(BigDecimal::class, Float::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toFloat()"
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToDoubleConverter : BaseTypeConverter(BigDecimal::class, Double::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toDouble()"
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToNumberConverter : BaseTypeConverter(BigDecimal::class, Number::class) {
+    override fun convert(fieldName: String, nc: String): String = fieldName
+}
+
+@AutoService(TypeConverter::class)
+class BigDecimalToBigIntegerConverter : BaseTypeConverter(BigDecimal::class, BigInteger::class) {
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toBigInteger()"
 }
