@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
     api(project(":plugin-api"))
-    api(project(":injectors:koin-annotations"))
+    api(project(":injectors:anvil-annotations"))
 
     // auto service
     implementation("com.google.auto.service:auto-service-annotations:1.0.1")
