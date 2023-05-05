@@ -43,15 +43,28 @@ class TargetClass(val property: String)
             )
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        println(mapperCode)
 
-        assertContains(mapperCode, "import javax.inject.Inject")
-        assertContains(mapperCode, "@Inject")
-        assertContains(mapperCode, "public constructor()")
+        assertSourceEquals("""
+import com.squareup.anvil.annotations.ContributesBinding
+import javax.inject.Inject
+import kotlin.Unit
 
-        assertContains(mapperCode, "com.squareup.anvil.annotations.ContributesBinding")
-        assertContains(mapperCode, "@ContributesBinding")
-        assertContains(mapperCode, "scope = AppScope::class")
+@ContributesBinding(
+  scope = AppScope::class,
+  boundType = Unit::class,
+  replaces = arrayOf(),
+  priority = ContributesBinding.Priority.NORMAL,
+  ignoreQualifier = false,
+)
+public class MapperImpl : Mapper {
+  @Inject
+  public constructor()
+
+  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+    property = source.property
+  )
+}
+        """.trimIndent(), mapperCode)
     }
 
     @Test
@@ -88,18 +101,29 @@ class TargetClass(val property: String)
             )
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        println(mapperCode)
+        assertSourceEquals("""
+import com.squareup.anvil.annotations.ContributesBinding
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.Unit
 
-        assertContains(mapperCode, "import javax.inject.Inject")
-        assertContains(mapperCode, "@Inject")
-        assertContains(mapperCode, "public constructor()")
+@ContributesBinding(
+  scope = AppScope::class,
+  boundType = Unit::class,
+  replaces = arrayOf(),
+  priority = ContributesBinding.Priority.NORMAL,
+  ignoreQualifier = false,
+)
+@Singleton
+public class MapperImpl : Mapper {
+  @Inject
+  public constructor()
 
-        assertContains(mapperCode, "com.squareup.anvil.annotations.ContributesBinding")
-        assertContains(mapperCode, "@ContributesBinding")
-        assertContains(mapperCode, "scope = AppScope::class")
-
-        assertContains(mapperCode, "javax.inject.Singleton")
-        assertContains(mapperCode, "@Singleton")
+  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+    property = source.property
+  )
+}
+        """.trimIndent(), mapperCode)
     }
 
     @Test
@@ -177,18 +201,29 @@ class TargetClass(val property: String)
             )
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        println(mapperCode)
 
-        assertContains(mapperCode, "import javax.inject.Inject")
-        assertContains(mapperCode, "@Inject")
-        assertContains(mapperCode, "public constructor()")
+        assertSourceEquals("""
+import com.squareup.anvil.annotations.ContributesMultibinding
+import javax.inject.Inject
+import javax.inject.Named
+import kotlin.Unit
 
-        assertContains(mapperCode, "com.squareup.anvil.annotations.ContributesMultibinding")
-        assertContains(mapperCode, "@ContributesMultibinding")
-        assertContains(mapperCode, "scope = AppScope::class")
+@ContributesMultibinding(
+  scope = AppScope::class,
+  boundType = Unit::class,
+  replaces = arrayOf(),
+  ignoreQualifier = false,
+)
+@Named(`value` = "test")
+public class MapperImpl : Mapper {
+  @Inject
+  public constructor()
 
-        assertContains(mapperCode, "import javax.inject.Named")
-        assertContains(mapperCode, "@Named(`value` = \"test\")")
+  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+    property = source.property
+  )
+}
+        """.trimIndent(), mapperCode)
     }
 
     @Test
@@ -227,17 +262,28 @@ class TargetClass(val property: String)
             )
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        println(mapperCode)
 
-        assertContains(mapperCode, "import javax.inject.Inject")
-        assertContains(mapperCode, "@Inject")
-        assertContains(mapperCode, "public constructor()")
+        assertSourceEquals("""
+import com.squareup.anvil.annotations.ContributesMultibinding
+import javax.inject.Inject
+import kotlin.Unit
 
-        assertContains(mapperCode, "com.squareup.anvil.annotations.ContributesMultibinding")
-        assertContains(mapperCode, "@ContributesMultibinding")
-        assertContains(mapperCode, "scope = AppScope::class")
+@ContributesMultibinding(
+  scope = AppScope::class,
+  boundType = Unit::class,
+  replaces = arrayOf(),
+  ignoreQualifier = false,
+)
+@CustomQualifier
+public class MapperImpl : Mapper {
+  @Inject
+  public constructor()
 
-        assertContains(mapperCode, "@CustomQualifier")
+  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+    property = source.property
+  )
+}
+        """.trimIndent(), mapperCode)
     }
 
     @Test
@@ -273,18 +319,29 @@ class TargetClass(val property: String)
             )
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        println(mapperCode)
 
-        assertContains(mapperCode, "import javax.inject.Inject")
-        assertContains(mapperCode, "@Inject")
-        assertContains(mapperCode, "public constructor()")
+        assertSourceEquals("""
+import com.squareup.anvil.annotations.ContributesMultibinding
+import dagger.multibindings.StringKey
+import javax.inject.Inject
+import kotlin.Unit
 
-        assertContains(mapperCode, "com.squareup.anvil.annotations.ContributesMultibinding")
-        assertContains(mapperCode, "@ContributesMultibinding")
-        assertContains(mapperCode, "scope = AppScope::class")
+@ContributesMultibinding(
+  scope = AppScope::class,
+  boundType = Unit::class,
+  replaces = arrayOf(),
+  ignoreQualifier = false,
+)
+@StringKey(`value` = "test")
+public class MapperImpl : Mapper {
+  @Inject
+  public constructor()
 
-        assertContains(mapperCode, "dagger.multibindings.StringKey")
-        assertContains(mapperCode, "@StringKey(`value` = \"test\")")
+  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+    property = source.property
+  )
+}
+        """.trimIndent(), mapperCode)
     }
 
     @Test
@@ -321,15 +378,23 @@ class TargetClass(val property: String)
             )
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        println(mapperCode)
 
-        assertContains(mapperCode, "import javax.inject.Inject")
-        assertContains(mapperCode, "@Inject")
-        assertContains(mapperCode, "public constructor()")
+        assertSourceEquals("""
+package test.module
 
-        assertContains(mapperCode, "com.squareup.anvil.annotations.ContributesBinding")
-        assertContains(mapperCode, "@ContributesBinding")
-        assertContains(mapperCode, "scope = AppScope::class")
+import com.squareup.anvil.annotations.ContributesBinding
+import javax.inject.Inject
+
+@ContributesBinding(scope = AppScope::class)
+public class MapperImpl : Mapper {
+  @Inject
+  public constructor()
+
+  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+    property = source.property
+  )
+}
+        """.trimIndent(), mapperCode)
     }
 
     @Test
@@ -366,17 +431,25 @@ class TargetClass(val property: String)
             )
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        println(mapperCode)
 
-        assertContains(mapperCode, "import javax.inject.Inject")
-        assertContains(mapperCode, "@Inject")
-        assertContains(mapperCode, "public constructor()")
+        assertSourceEquals(
+            """
+package test.module
 
-        assertContains(mapperCode, "com.squareup.anvil.annotations.ContributesBinding")
-        assertContains(mapperCode, "@ContributesBinding")
-        assertContains(mapperCode, "scope = AppScope::class")
+import com.squareup.anvil.annotations.ContributesBinding
+import javax.inject.Inject
+import javax.inject.Singleton
 
-        assertContains(mapperCode, "javax.inject.Singleton")
-        assertContains(mapperCode, "@Singleton")
+@ContributesBinding(scope = AppScope::class)
+@Singleton
+public class MapperImpl : Mapper {
+  @Inject
+  public constructor()
+
+  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+    property = source.property
+  )
+}
+        """.trimIndent(), mapperCode)
     }
 }
