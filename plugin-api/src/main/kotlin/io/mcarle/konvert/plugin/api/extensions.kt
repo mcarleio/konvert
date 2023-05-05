@@ -60,6 +60,10 @@ inline fun <reified T : Annotation> T.extendProxy(): T {
  * function is called to access underlying annotation. This approach might fail if the annotation is using KClass parameter
  * like `Scope(value = SomeClass::class)`
  *
+ * Second approach is just taking the annotation without resolving it and converting it directly to annotation spec.
+ * This approach won't always work, for example if Scope has default value of NoClass::class and NoClass is private for
+ * that file - compilation will fail, since ksp cannot create spec with default value of private NoClass
+ *
  * @param T Wrapper annotation
  * @param R Annotation we want to apply to impl class
  * @param builder Will be used to add annotation to the impl class
