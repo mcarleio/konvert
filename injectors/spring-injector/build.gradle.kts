@@ -13,7 +13,7 @@ dependencies {
     implementation("com.google.auto.service:auto-service-annotations:1.0.1")
     ksp("dev.zacsweers.autoservice:auto-service-ksp:1.0.0")
 
-    testImplementation(project(":api"))
+    testImplementation(project(":annotations"))
     testImplementation(project(":converter"))
     testImplementation(project(":processor"))
     testImplementation(testFixtures(project(":processor")))

@@ -2,8 +2,8 @@ package io.mcarle.konvert.injector.koin
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.SameTypeConverter
-import io.mcarle.konvert.injector.koin.config.DEFAULT_INJECTION_METHOD
-import io.mcarle.konvert.injector.koin.config.DEFAULT_SCOPE
+import io.mcarle.konvert.injector.koin.config.DEFAULT_INJECTION_METHOD_OPTION
+import io.mcarle.konvert.injector.koin.config.DEFAULT_SCOPE_OPTION
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.junit.jupiter.api.Test
@@ -178,6 +178,43 @@ class TargetClass(val property: String)
     }
 
     @Test
+    fun singleWithClasses() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.injector.koin.KSingle
+import io.mcarle.konvert.injector.koin.KNamed
+import org.koin.core.annotation.Named
+import org.koin.core.annotation.Single
+
+@Konverter
+@KSingle(Single(binds = []))
+@KNamed(Named("test_name"))
+interface Mapper {
+    @Konvert
+    fun toTarget(source: SourceClass): TargetClass
+}
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "org.koin.core.`annotation`.Single")
+        assertContains(mapperCode, "@Single")
+        assertContains(mapperCode, "org.koin.core.`annotation`.Named")
+        assertContains(mapperCode, "@Named(value = \"test_name\")")
+    }
+
+    @Test
     fun factoryScoped() {
         val (compilation) = super.compileWith(
             listOf(SameTypeConverter()),
@@ -306,7 +343,7 @@ class TargetClass(val property: String)
             listOf(SameTypeConverter()),
             otherConverters = emptyList(),
             expectSuccess = true,
-            options = mapOf(DEFAULT_INJECTION_METHOD to "factory"),
+            options = mapOf(DEFAULT_INJECTION_METHOD_OPTION.key to "factory"),
             SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -341,7 +378,7 @@ class TargetClass(val property: String)
             listOf(SameTypeConverter()),
             otherConverters = emptyList(),
             expectSuccess = true,
-            options = mapOf(DEFAULT_INJECTION_METHOD to "single"),
+            options = mapOf(DEFAULT_INJECTION_METHOD_OPTION.key to "single"),
             SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -376,7 +413,7 @@ class TargetClass(val property: String)
             listOf(SameTypeConverter()),
             otherConverters = emptyList(),
             expectSuccess = true,
-            options = mapOf(DEFAULT_INJECTION_METHOD to "scope", DEFAULT_SCOPE to "test.module.TestScope"),
+            options = mapOf(DEFAULT_INJECTION_METHOD_OPTION.key to "scope", DEFAULT_SCOPE_OPTION.key to "test.module.TestScope"),
             SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -416,7 +453,7 @@ class TargetClass(val property: String)
             listOf(SameTypeConverter()),
             otherConverters = emptyList(),
             expectSuccess = true,
-            options = mapOf(DEFAULT_INJECTION_METHOD to "scope", DEFAULT_SCOPE to "ScopeName"),
+            options = mapOf(DEFAULT_INJECTION_METHOD_OPTION.key to "scope", DEFAULT_SCOPE_OPTION.key to "ScopeName"),
             SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =

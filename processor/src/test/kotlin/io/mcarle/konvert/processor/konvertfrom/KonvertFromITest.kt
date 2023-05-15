@@ -2,9 +2,9 @@ package io.mcarle.konvert.processor.konvertfrom
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERT_FROM_PRIORITY
-import io.mcarle.konvert.api.config.GENERATED_FILENAME_SUFFIX
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
+import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
@@ -280,7 +280,7 @@ class SomeClass {
             emptyList(),
             true,
             if (globalSuffix != null) {
-                mapOf(GENERATED_FILENAME_SUFFIX to globalSuffix)
+                mapOf(GENERATED_FILENAME_SUFFIX_OPTION.key to globalSuffix)
             } else {
                 mapOf()
             },
@@ -292,7 +292,7 @@ import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Konfig
 
 ${if (localSuffix != null) {
-    """@KonvertFrom(SourceClass::class, options=[Konfig(key="$GENERATED_FILENAME_SUFFIX", value="$localSuffix")])"""
+    """@KonvertFrom(SourceClass::class, options=[Konfig(key="${GENERATED_FILENAME_SUFFIX_OPTION.key}", value="$localSuffix")])"""
 } else {
     """@KonvertFrom(SourceClass::class)"""
 }}

@@ -6,7 +6,7 @@ plugins {
 }
 
 dependencies {
-    api(project(":api"))
+    api(project(":annotations"))
     api(project(":plugin-api"))
     api(project(":converter-api"))
 
@@ -19,7 +19,7 @@ dependencies {
     implementation("com.google.auto.service:auto-service-annotations:1.0.1")
     ksp("dev.zacsweers.autoservice:auto-service-ksp:1.0.0")
 
-    testImplementation(project(":api"))
+    testImplementation(project(":annotations"))
     testImplementation(project(":converter"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:${Versions.jUnit}")
     testImplementation("org.junit.jupiter:junit-jupiter-params:${Versions.jUnit}")

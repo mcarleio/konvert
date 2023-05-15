@@ -1,5 +1,6 @@
 rootProject.name = "konvert"
 include("api")
+include("annotations")
 include("processor")
 include("plugin-api")
 include("converter")

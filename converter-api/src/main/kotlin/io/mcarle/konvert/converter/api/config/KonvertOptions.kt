@@ -1,13 +1,50 @@
+@file:Suppress("ClassName")
+
 package io.mcarle.konvert.converter.api.config
 
-import io.mcarle.konvert.api.config.ENFORCE_NOT_NULL
-import io.mcarle.konvert.api.config.GENERATED_FILENAME_SUFFIX
-import io.mcarle.konvert.api.config.KONVERTER_GENERATE_CLASS
+/**
+ * Special handling for the case, that the source type is nullable and target type is not nullable:
+ * When enabled, the converters will use the not-null assertion operator to enforce the mapped value to be non-null.
+ * Otherwise, the converters should not match.
+ *
+ * Default: false
+ */
+object ENFORCE_NOT_NULL_OPTION : Option<Boolean>("konvert.enforce-not-null", false)
 
-object KonvertOptions {
-    val ENFORCE_NOT_NULL_OPTION = Option(ENFORCE_NOT_NULL, false)
-    val KONVERTER_GENERATE_CLASS_OPTION = Option(KONVERTER_GENERATE_CLASS, false)
-    val GENERATED_FILENAME_SUFFIX_OPTION = Option(GENERATED_FILENAME_SUFFIX, "Konverter")
-}
+/**
+ * When set to true, a class instead of an object is being generated during processing of @[io.mcarle.konvert.api.Konverter]
+ *
+ * Default: false
+ */
+object KONVERTER_GENERATE_CLASS_OPTION : Option<Boolean>("konvert.konverter.generate-class", false)
 
-data class Option<T>(val key: String, val defaultValue: T)
+/**
+ * This setting will change the suffix for the generated filename from Konvert.
+ *
+ * Given the following examples:
+ *
+ * -
+ *    ```kotlin
+ *    @Konverter
+ *    interface SomeMapper
+ *    ```
+ *    will generate a file named `SomeMapper${GENERATED_FILE_SUFFIX}.kt`
+ *
+ * -
+ *    ```kotlin
+ *    @KonvertTo(SomeTargetClass::class)
+ *    class SomeSourceClass
+ *    ```
+ *    will generate a file named `SomeSourceClass${GENERATED_FILE_SUFFIX}.kt`
+ *
+ * -
+ *    ```kotlin
+ *    @KonvertFrom(SomeSourceClass::class)
+ *    class SomeTargetClass { companion object }
+ *    ```
+ *    will generate a file named: `SomeTargetClass${GENERATED_FILE_SUFFIX}.kt`
+ *
+ *
+ * Default: `Konverter`
+ */
+object GENERATED_FILENAME_SUFFIX_OPTION : Option<String>("konvert.generated-filename-suffix", "Konverter")

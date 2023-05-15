@@ -23,7 +23,6 @@ class ExampleTest {
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Mapping
-import io.mcarle.konvert.api.converter.STRING_TO_INT_CONVERTER
 
 data class Name(
     val first: String,
@@ -56,7 +55,7 @@ interface FooMapper {
     fun toPersonDto(person: Person): PersonDto
 
     @Konvert(mappings= [
-        Mapping(target = "num", source = "streetNum", enable=[STRING_TO_INT_CONVERTER])
+        Mapping(target = "num", source = "streetNum", enable=["StringToIntConverter"])
     ])
     fun toAddress(person: Person): Address
 

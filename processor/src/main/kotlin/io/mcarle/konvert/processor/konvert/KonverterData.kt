@@ -3,10 +3,10 @@ package io.mcarle.konvert.processor.konvert
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import io.mcarle.konvert.api.Konvert
-import io.mcarle.konvert.api.Konfig
-import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
+import io.mcarle.konvert.api.Konfig
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.processor.AnnotatedConverterData
 import io.mcarle.konvert.processor.from

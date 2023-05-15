@@ -6,7 +6,6 @@ import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.ksp.toClassName
 import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.KonvertTo
-import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter

@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-    api(project(":api"))
+    api(project(":annotations"))
     api(project(":converter-api"))
     api(symbolProcessingApi)
 

@@ -1,7 +1,7 @@
 package io.mcarle.konvert.example
 
-import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.converter.STRING_TO_INT_CONVERTER
 
 @KonvertTo(

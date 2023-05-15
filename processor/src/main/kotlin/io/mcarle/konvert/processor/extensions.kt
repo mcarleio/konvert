@@ -4,7 +4,6 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.Mapping
@@ -12,9 +11,7 @@ import io.mcarle.konvert.api.NoParamDefinedException
 import io.mcarle.konvert.api.NotAllowedParameterCombinationException
 import io.mcarle.konvert.api.TypeConverterName
 import io.mcarle.konvert.api.validate
-import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.classDeclaration
-import kotlin.reflect.KClass
 
 fun Iterable<Mapping>.validated(reference: KSNode, logger: KSPLogger) = filter { annotation ->
     try {

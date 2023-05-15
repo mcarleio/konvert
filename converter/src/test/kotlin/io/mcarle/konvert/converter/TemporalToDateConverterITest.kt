@@ -13,7 +13,6 @@ import java.util.Date
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.test.assertIs
-import kotlin.test.assertTrue
 
 class TemporalToDateConverterITest : ConverterITest() {
 

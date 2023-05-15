@@ -3,8 +3,6 @@ plugins {
     id("konvert.mvn-publish")
 }
 
-
 dependencies {
-    api(project(":annotations"))
-    api(symbolProcessingApi)
+
 }

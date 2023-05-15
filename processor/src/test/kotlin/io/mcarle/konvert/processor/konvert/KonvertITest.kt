@@ -5,10 +5,10 @@ import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
 import io.mcarle.konvert.api.DEFAULT_KONVERT_PRIORITY
 import io.mcarle.konvert.api.Konverter
-import io.mcarle.konvert.api.config.GENERATED_FILENAME_SUFFIX
-import io.mcarle.konvert.api.config.KONVERTER_GENERATE_CLASS
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
+import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
+import io.mcarle.konvert.converter.api.config.KONVERTER_GENERATE_CLASS_OPTION
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
@@ -357,7 +357,7 @@ interface OtherMapper {
             enabledConverters = listOf(SameTypeConverter()),
             otherConverters = emptyList(),
             expectSuccess = true,
-            options = mapOf(KONVERTER_GENERATE_CLASS to "false"),
+            options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "false"),
             SourceFile.kotlin(
                 name = "SourceClass.kt",
                 contents =
@@ -382,7 +382,7 @@ import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Konfig
 
-@Konverter(options=[Konfig(key = "$KONVERTER_GENERATE_CLASS", value = "true")])
+@Konverter(options=[Konfig(key = "${KONVERTER_GENERATE_CLASS_OPTION.key}", value = "true")])
 interface SomeConverter {
     @Konvert
     fun toTargetClass(source: SourceClass): TargetClass
@@ -719,7 +719,7 @@ interface SomeConverter {
             emptyList(),
             true,
             if (globalSuffix != null) {
-                mapOf(GENERATED_FILENAME_SUFFIX to globalSuffix)
+                mapOf(GENERATED_FILENAME_SUFFIX_OPTION.key to globalSuffix)
             } else {
                 mapOf()
             },
@@ -731,7 +731,7 @@ import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konfig
 
 ${if (localSuffix != null) {
-    """@Konverter(options=[Konfig(key="$GENERATED_FILENAME_SUFFIX", value="$localSuffix")])"""
+    """@Konverter(options=[Konfig(key="${GENERATED_FILENAME_SUFFIX_OPTION.key}", value="$localSuffix")])"""
 } else {
     """@Konverter"""
 }}

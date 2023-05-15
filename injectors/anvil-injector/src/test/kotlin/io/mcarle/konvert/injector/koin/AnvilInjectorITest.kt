@@ -1,10 +1,10 @@
 package io.mcarle.konvert.injector.koin
 
 import com.tschuchort.compiletesting.SourceFile
-import io.mcarle.konvert.api.config.KONVERTER_GENERATE_CLASS
 import io.mcarle.konvert.converter.SameTypeConverter
-import io.mcarle.konvert.injector.anvil.config.DEFAULT_INJECTION_METHOD
-import io.mcarle.konvert.injector.anvil.config.DEFAULT_SCOPE
+import io.mcarle.konvert.converter.api.config.KONVERTER_GENERATE_CLASS_OPTION
+import io.mcarle.konvert.injector.anvil.config.DEFAULT_INJECTION_METHOD_OPTION
+import io.mcarle.konvert.injector.anvil.config.DEFAULT_SCOPE_OPTION
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.junit.jupiter.api.Test
@@ -18,11 +18,10 @@ class AnvilInjectorITest : KonverterITest() {
             listOf(SameTypeConverter()),
             otherConverters = emptyList(),
             expectSuccess = true,
-            options = mapOf(KONVERTER_GENERATE_CLASS to "true"),
+            options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
             SourceFile.kotlin(
                 name = "TestCode.kt",
-                contents =
-                """
+                contents = """
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.injector.anvil.KContributesBinding
@@ -44,7 +43,8 @@ class TargetClass(val property: String)
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
 
-        assertSourceEquals("""
+        assertSourceEquals(
+            expected = """
 import com.squareup.anvil.annotations.ContributesBinding
 import javax.inject.Inject
 import kotlin.Unit
@@ -64,7 +64,9 @@ public class MapperImpl : Mapper {
     property = source.property
   )
 }
-        """.trimIndent(), mapperCode)
+            """.trimIndent(),
+            generatedCode = mapperCode
+        )
     }
 
     @Test
@@ -73,7 +75,7 @@ public class MapperImpl : Mapper {
             listOf(SameTypeConverter()),
             otherConverters = emptyList(),
             expectSuccess = true,
-            options = mapOf(KONVERTER_GENERATE_CLASS to "true"),
+            options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
             SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -101,7 +103,8 @@ class TargetClass(val property: String)
             )
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        assertSourceEquals("""
+        assertSourceEquals(
+            """
 import com.squareup.anvil.annotations.ContributesBinding
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -123,7 +126,8 @@ public class MapperImpl : Mapper {
     property = source.property
   )
 }
-        """.trimIndent(), mapperCode)
+        """.trimIndent(), mapperCode
+        )
     }
 
     @Test
@@ -132,7 +136,7 @@ public class MapperImpl : Mapper {
             listOf(SameTypeConverter()),
             otherConverters = emptyList(),
             expectSuccess = true,
-            options = mapOf(KONVERTER_GENERATE_CLASS to "true"),
+            options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
             SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -174,7 +178,7 @@ class TargetClass(val property: String)
             listOf(SameTypeConverter()),
             otherConverters = emptyList(),
             expectSuccess = true,
-            options = mapOf(KONVERTER_GENERATE_CLASS to "true"),
+            options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
             SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -202,7 +206,8 @@ class TargetClass(val property: String)
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
 
-        assertSourceEquals("""
+        assertSourceEquals(
+            """
 import com.squareup.anvil.annotations.ContributesMultibinding
 import javax.inject.Inject
 import javax.inject.Named
@@ -223,7 +228,8 @@ public class MapperImpl : Mapper {
     property = source.property
   )
 }
-        """.trimIndent(), mapperCode)
+        """.trimIndent(), mapperCode
+        )
     }
 
     @Test
@@ -232,7 +238,7 @@ public class MapperImpl : Mapper {
             listOf(SameTypeConverter()),
             otherConverters = emptyList(),
             expectSuccess = true,
-            options = mapOf(KONVERTER_GENERATE_CLASS to "true"),
+            options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
             SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -263,7 +269,8 @@ class TargetClass(val property: String)
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
 
-        assertSourceEquals("""
+        assertSourceEquals(
+            """
 import com.squareup.anvil.annotations.ContributesMultibinding
 import javax.inject.Inject
 import kotlin.Unit
@@ -283,7 +290,8 @@ public class MapperImpl : Mapper {
     property = source.property
   )
 }
-        """.trimIndent(), mapperCode)
+        """.trimIndent(), mapperCode
+        )
     }
 
     @Test
@@ -292,7 +300,7 @@ public class MapperImpl : Mapper {
             listOf(SameTypeConverter()),
             otherConverters = emptyList(),
             expectSuccess = true,
-            options = mapOf(KONVERTER_GENERATE_CLASS to "true"),
+            options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
             SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -320,7 +328,8 @@ class TargetClass(val property: String)
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
 
-        assertSourceEquals("""
+        assertSourceEquals(
+            """
 import com.squareup.anvil.annotations.ContributesMultibinding
 import dagger.multibindings.StringKey
 import javax.inject.Inject
@@ -341,7 +350,8 @@ public class MapperImpl : Mapper {
     property = source.property
   )
 }
-        """.trimIndent(), mapperCode)
+        """.trimIndent(), mapperCode
+        )
     }
 
     @Test
@@ -351,9 +361,9 @@ public class MapperImpl : Mapper {
             otherConverters = emptyList(),
             expectSuccess = true,
             options = mapOf(
-                KONVERTER_GENERATE_CLASS to "true",
-                DEFAULT_INJECTION_METHOD to "factory",
-                DEFAULT_SCOPE to "test.module.AppScope"
+                KONVERTER_GENERATE_CLASS_OPTION.key to "true",
+                DEFAULT_INJECTION_METHOD_OPTION.key to "factory",
+                DEFAULT_SCOPE_OPTION.key to "test.module.AppScope"
             ),
             SourceFile.kotlin(
                 name = "TestCode.kt",
@@ -379,7 +389,8 @@ class TargetClass(val property: String)
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
 
-        assertSourceEquals("""
+        assertSourceEquals(
+            """
 package test.module
 
 import com.squareup.anvil.annotations.ContributesBinding
@@ -394,7 +405,8 @@ public class MapperImpl : Mapper {
     property = source.property
   )
 }
-        """.trimIndent(), mapperCode)
+        """.trimIndent(), mapperCode
+        )
     }
 
     @Test
@@ -404,9 +416,9 @@ public class MapperImpl : Mapper {
             otherConverters = emptyList(),
             expectSuccess = true,
             options = mapOf(
-                KONVERTER_GENERATE_CLASS to "true",
-                DEFAULT_INJECTION_METHOD to "singleton",
-                DEFAULT_SCOPE to "test.module.AppScope"
+                KONVERTER_GENERATE_CLASS_OPTION.key to "true",
+                DEFAULT_INJECTION_METHOD_OPTION.key to "singleton",
+                DEFAULT_SCOPE_OPTION.key to "test.module.AppScope"
             ),
             SourceFile.kotlin(
                 name = "TestCode.kt",
@@ -450,6 +462,7 @@ public class MapperImpl : Mapper {
     property = source.property
   )
 }
-        """.trimIndent(), mapperCode)
+        """.trimIndent(), mapperCode
+        )
     }
 }
