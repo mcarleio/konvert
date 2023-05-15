@@ -47,25 +47,35 @@ annotation class Konverter(
 
         @Suppress("UNCHECKED_CAST")
         fun <T : Any> get(clazz: KClass<T>): T {
-            if (!mappers.containsKey(clazz)) {
-                val implClass = classLoader.firstNotNullOf {
-                    try {
-                        it.loadClass("${clazz.qualifiedName}Impl")
-                    } catch (e: Exception) {
-                        null
+            return withCurrentClassLoader(clazz) {
+                if (!mappers.containsKey(clazz)) {
+                    val implFQN = "${clazz.qualifiedName}Impl"
+                    val implClass = classLoader.firstNotNullOfOrNull {
+                        try {
+                            it.loadClass(implFQN)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    } ?: throw RuntimeException("Could not load the class $implFQN from provided class loaders")
+
+                    var implInstance = implClass.declaredFields.firstOrNull {
+                        it.name == "INSTANCE"
+                    }?.get(null)
+
+                    if (implInstance == null) {
+                        implInstance = implClass.constructors.firstOrNull { it.parameterCount == 0 }?.newInstance()
+                            ?: throw RuntimeException("Could not determine INSTANCE or empty constructor for $implClass")
                     }
+                    mappers[clazz] = implInstance
                 }
-
-                var implInstance = implClass.declaredFields.firstOrNull {
-                    it.name == "INSTANCE"
-                }?.get(null)
-
-                if (implInstance == null) {
-                    implInstance = implClass.constructors.firstOrNull { it.parameterCount == 0 }?.newInstance()
-                }
-                mappers[clazz] = implInstance!!
+                return mappers[clazz] as T
             }
-            return mappers[clazz] as T
+        }
+
+        private inline fun <T: Any> withCurrentClassLoader(clazz: KClass<T>, block: (List<ClassLoader>) -> T): T {
+            return block(
+                listOfNotNull(clazz.java.classLoader, Thread.currentThread().contextClassLoader, *classLoader.toTypedArray())
+            )
         }
     }
 }
