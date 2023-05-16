@@ -437,12 +437,12 @@ class ULongToDoubleConverter : BaseTypeConverter(ULong::class, Double::class, tr
 }
 
 @AutoService(TypeConverter::class)
-class ULongToBigIntegerConverter : BaseTypeConverter(ULong::class, BigInteger::class) {
+class ULongToBigIntegerConverter : BaseTypeConverter(ULong::class, BigInteger::class, true) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigInteger()"
 }
 
 @AutoService(TypeConverter::class)
-class ULongToBigDecimalConverter : BaseTypeConverter(ULong::class, BigDecimal::class) {
+class ULongToBigDecimalConverter : BaseTypeConverter(ULong::class, BigDecimal::class, true) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toLong()$nc.toBigDecimal()"
 }
 
@@ -1261,7 +1261,7 @@ class BigIntegerToNumberConverter : BaseTypeConverter(BigInteger::class, Number:
 }
 
 @AutoService(TypeConverter::class)
-class BigIntegerToBigDecimalConverter : BaseTypeConverter(BigInteger::class, BigDecimal::class) {
+class BigIntegerToBigDecimalConverter : BaseTypeConverter(BigInteger::class, BigDecimal::class, true) {
     override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toBigDecimal()"
 }
 
