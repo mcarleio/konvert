@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.5.0]
+
+### New features
+* add new type converters for `BigInteger` and `BigDecimal`
+* add options for `koin-injector`: `konvert.koin.default-injection-method` and `konvert.koin.default-scope` (thanks to [@jakoss](https://github.com/jakoss) [#6](https://github.com/mcarleio/konvert/pull/6))
+* add new injector for `anvil` (thanks to [@jakoss](https://github.com/jakoss) [#8](https://github.com/mcarleio/konvert/pull/8))
+
+### Bug fixes
+* fixed class loading issues of generated interface implementations during runtime [#13](https://github.com/mcarleio/konvert/issues/13)
+
 ## [1.4.0]
 
 ### New features
@@ -114,7 +124,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v1.4.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v1.5.0...HEAD
+
+[1.5.0]: https://github.com/mcarleio/konvert/compare/v1.4.0...v1.5.0
 
 [1.4.0]: https://github.com/mcarleio/konvert/compare/v1.3.0...v1.4.0
 
