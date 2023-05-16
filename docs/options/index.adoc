@@ -87,7 +87,6 @@ a|any string
 a|`Konverter`
 a|This setting will change the suffix/trailing part of the generated filenames.
 
-
 4+a|
 [.pl-6]
 .Example
@@ -138,6 +137,110 @@ class Person(val name: String)
 Will generate:
 [source,kotlin]
 ----
+class PersonMapperImpl: PersonMapper {
+    override fun toDto(person: Person): PersonDto = PersonDto(name = person.name)
+}
+----
+====
+
+|===
+
+=== Injector Options
+
+==== Anvil
+
+[cols="4,1,1,7"]
+|===
+|Option |Possible values |Default |Description
+
+a|`*konvert.anvil.default-injection-method*`
+a|`DISABLED`, `FACTORY`, `SINGLETON`
+a|`DISABLED`
+a|Append some injection method by default to all generated mapper classes. Requires `konvert.anvil.default-scope` to be set as well!
+
+a|`*konvert.anvil.default-scope*`
+a|fully qualified class name
+a|`-`
+a|Has to be set to qualified name of anvil scope class, like AppScope. Only used when `konvert.anvil.default-injection-method` not disabled.
+
+4+a|
+[.pl-6]
+.Example
+[%collapsible]
+====
+Global settings (e.g. in `build.gradle.kts` or `pom.xml`):
+
+* `konvert.anvil.default-injection-method` = `SINGLETON`
+* `konvert.anvil.default-scope` = `AppScope`
+
+[source,kotlin]
+----
+abstract class AppScope private constructor()
+
+@Konverter
+interface PersonMapper {
+    fun toDto(person: Person): PersonDto
+}
+class Person(val name: String)
+class PersonDto(val name: String)
+----
+Will generate:
+[source,kotlin]
+----
+@ContributesBinding(scope = AppScope::class)
+@Singleton
+class PersonMapperImpl: PersonMapper {
+    @Inject
+    public constructor()
+
+    override fun toDto(person: Person): PersonDto = PersonDto(name = person.name)
+}
+----
+====
+
+|===
+
+==== Koin
+
+[cols="4,1,1,7"]
+|===
+|Option |Possible values |Default |Description
+
+a|`*konvert.koin.default-injection-method*`
+a|`DISABLED`, `FACTORY`, `SINGLE`, `SCOPE`
+a|`DISABLED`
+a|Append some injection method by default to all generated mapper classes. Requires `konvert.koin.default-scope` to be set as well!
+
+a|`*konvert.koin.default-scope*`
+a|fully qualified class name or any string
+a|`-`
+a|Use this scope by default when `konvert.koin.default-injection-method` is set to `scope`.
+
+* If value is fully qualified class identifier it will be used as `@Scope(ProvidedType::class)`.
+* If value is string - it will be used as named scope, like `@Scope(name = "ProvidedName")`
+
+4+a|
+[.pl-6]
+.Example
+[%collapsible]
+====
+Global settings (e.g. in `build.gradle.kts` or `pom.xml`):
+
+* `konvert.koin.default-injection-method` = `SINGLE`
+
+[source,kotlin]
+----
+@Konverter
+interface PersonMapper {
+    fun toDto(person: Person): PersonDto
+}
+class Person(val name: String)
+class PersonDto(val name: String)
+----
+Will generate:
+[source,kotlin]
+----
+@Single
 class PersonMapperImpl: PersonMapper {
     override fun toDto(person: Person): PersonDto = PersonDto(name = person.name)
 }

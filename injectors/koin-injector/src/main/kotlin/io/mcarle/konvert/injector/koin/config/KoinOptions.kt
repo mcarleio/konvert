@@ -16,7 +16,7 @@ object DEFAULT_INJECTION_METHOD_OPTION : Option<InjectionMethod>("konvert.koin.d
 /**
  * Use this scope by default when `konvert.koin.default-injection-method` is set to `scope`.
  *
- * - If value is fully qualified class identifier it will by used as `@Scope(ProvidedType::class)`.
+ * - If value is fully qualified class identifier it will be used as `@Scope(ProvidedType::class)`.
  * - If value is string - it will be used as named scope, like `@Scope(name = "ProvidedName")`
  *
  * Default: ""

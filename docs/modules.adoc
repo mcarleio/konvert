@@ -10,20 +10,22 @@ Konvert is split into multiple modules.
 
 * `konvert-api`
 +
+This module brings the module `konvert-annotations` with it and adds constants for available converter names and option keys.
+
+**  `konvert-annotations`
++
 This module contains mainly annotations which you can use to annotate your classes or mapper interfaces to generate mapping code by `Konvert`.
 
 * `konvert`
 +
 This is the module which bundles `konvert-processor` and `konvert-converter` together, so that you can simply use this module as your KSP processor.
 
-== Core modules (bundled together in the `konvert` module):
-
-* `konvert-converter`
+** `konvert-converter`
 +
 Contains all the default ``TypeConverter``s of `Konvert`.
 See link:typeconverter[here to view them all].
 
-* `konvert-processor`
+** `konvert-processor`
 +
 This is the module which contains the actual KSP implementation, which will process the annotations, collect annotated converters and generate code for each mapping.
 
@@ -42,6 +44,7 @@ This module can be used to build your own plugins for `Konvert` to amend the beh
 --
 The following plugins are already available:
 
+* Generate *Anvil* annotations (e.g. `@Singleton`) by using `konvert-anvil-annotations` and `konvert-anvil-injector`
 * Generate *CDI* annotations (e.g. `@RequestScoped`) by using `konvert-cdi-annotations` and `konvert-cdi-injector`
 * Generate *Koin* annotations (e.g. `@Single`) by using `konvert-koin-annotations` and `konvert-koin-injector`
 * Generate *Spring* annotations (e.g. `@Component`) by using `konvert-spring-annotations` and `konvert-spring-injector`
