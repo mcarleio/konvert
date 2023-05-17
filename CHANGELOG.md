@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.5.1]
+
+### Bug fixes
+* actually use the collected classloaders from 1.5.0... [#13](https://github.com/mcarleio/konvert/issues/13)
+
 ## [1.5.0]
 
 ### New features
@@ -124,7 +129,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v1.5.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v1.5.1...HEAD
+
+[1.5.1]: https://github.com/mcarleio/konvert/compare/v1.5.0...v1.5.1
 
 [1.5.0]: https://github.com/mcarleio/konvert/compare/v1.4.0...v1.5.0
 
