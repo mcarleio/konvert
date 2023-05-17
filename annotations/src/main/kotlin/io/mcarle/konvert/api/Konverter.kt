@@ -35,22 +35,22 @@ annotation class Konverter(
      */
     companion object {
         private val mappers: MutableMap<KClass<*>, Any> = mutableMapOf()
-        private val classLoader = mutableListOf(
+        private val CLASS_LOADER_LIST = mutableListOf(
             ClassLoader.getSystemClassLoader()
         )
 
         fun addClassLoader(classLoader: ClassLoader) {
-            this.classLoader += classLoader
+            this.CLASS_LOADER_LIST += classLoader
         }
 
         inline fun <reified T : Any> get(): T = get(T::class)
 
         @Suppress("UNCHECKED_CAST")
         fun <T : Any> get(clazz: KClass<T>): T {
-            return withCurrentClassLoader(clazz) {
+            return withCurrentClassLoaders(clazz) { classLoaders ->
                 if (!mappers.containsKey(clazz)) {
                     val implFQN = "${clazz.qualifiedName}Impl"
-                    val implClass = classLoader.firstNotNullOfOrNull {
+                    val implClass = classLoaders.firstNotNullOfOrNull {
                         try {
                             it.loadClass(implFQN)
                         } catch (e: Exception) {
@@ -72,9 +72,9 @@ annotation class Konverter(
             }
         }
 
-        private inline fun <T: Any> withCurrentClassLoader(clazz: KClass<T>, block: (List<ClassLoader>) -> T): T {
+        private inline fun <T: Any> withCurrentClassLoaders(clazz: KClass<T>, block: (List<ClassLoader>) -> T): T {
             return block(
-                listOfNotNull(clazz.java.classLoader, Thread.currentThread().contextClassLoader, *classLoader.toTypedArray())
+                listOfNotNull(clazz.java.classLoader, Thread.currentThread().contextClassLoader, *CLASS_LOADER_LIST.toTypedArray())
             )
         }
     }
