@@ -2,6 +2,7 @@ package io.mcarle.konvert.processor.konvertfrom
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERT_FROM_PRIORITY
+import io.mcarle.konvert.converter.IterableToIterableConverter
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
@@ -309,6 +310,41 @@ data class SourceClass(val property: String)
             public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass =
                 TargetClass(
               property = sourceClass.property
+            )
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
+
+
+    @Test
+    fun recursiveTreeMap() {
+        val (compilation) = super.compileWith(
+            listOf(IterableToIterableConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertFrom
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(val children: List<SourceClass>)
+class TargetClass(val children: List<TargetClass>) {
+    @KonvertFrom(SourceClass::class)
+    companion object
+}
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass =
+                TargetClass(
+              children = sourceClass.children.map { TargetClass.fromSourceClass(sourceClass = it) }
             )
             """.trimIndent(),
             extensionFunctionCode
