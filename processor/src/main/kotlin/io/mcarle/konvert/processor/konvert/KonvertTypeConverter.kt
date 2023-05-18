@@ -55,7 +55,11 @@ class KonvertTypeConverter constructor(
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): String {
-        val getKonverterCode = "${Konverter::class.qualifiedName}.get<${mapKSClassDeclaration.qualifiedName?.asString()}>()"
+        val getKonverterCode = if (CurrentInterfaceContext.interfaceKSClassDeclaration == mapKSClassDeclaration) {
+            "this"
+        } else {
+            "${Konverter::class.qualifiedName}.get<${mapKSClassDeclaration.qualifiedName?.asString()}>()"
+        }
         val mappingCode = if (source.isNullable() && !sourceType.isNullable()) {
             "$fieldName?.let·{ $getKonverterCode.$mapFunctionName($paramName·=·it) }"
         } else {

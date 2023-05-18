@@ -43,6 +43,8 @@ object KonverterCodeGenerator {
 
         data.konvertData.forEach { konvertData ->
             withIsolatedConfiguration {
+                CurrentInterfaceContext.interfaceKSClassDeclaration = data.mapKSClassDeclaration
+
                 if (konvertData.annotationData == null) {
                     return@withIsolatedConfiguration
                 }
@@ -85,6 +87,8 @@ object KonverterCodeGenerator {
                     toType = true,
                     originating = data.mapKSClassDeclaration.containingFile
                 )
+
+                CurrentInterfaceContext.interfaceKSClassDeclaration = null
             }
         }
     }

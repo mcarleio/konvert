@@ -5,6 +5,7 @@ import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
 import io.mcarle.konvert.api.DEFAULT_KONVERT_PRIORITY
 import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.converter.IterableToIterableConverter
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
@@ -390,8 +391,8 @@ interface SomeConverter {
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
+        println(mapperCode)
 
         assertSourceEquals(
             """
@@ -402,7 +403,7 @@ interface SomeConverter {
               }
             }
             """.trimIndent(),
-            extensionFunctionCode
+            mapperCode
         )
         Konverter.addClassLoader(result.classLoader)
         val instance = Konverter.get(result.classLoader.loadClass("SomeConverter").kotlin)
@@ -450,8 +451,8 @@ interface SomeConverter {
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
+        println(mapperCode)
 
         assertSourceEquals(
             """
@@ -465,7 +466,7 @@ interface SomeConverter {
               }
             }
             """.trimIndent(),
-            extensionFunctionCode
+            mapperCode
         )
     }
 
@@ -510,8 +511,8 @@ interface SomeConverter {
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
+        println(mapperCode)
 
         assertSourceEquals(
             """
@@ -524,7 +525,7 @@ interface SomeConverter {
               }
             }
             """.trimIndent(),
-            extensionFunctionCode
+            mapperCode
         )
     }
 
@@ -568,8 +569,8 @@ interface SomeConverter {
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
+        println(mapperCode)
 
         assertSourceEquals(
             """
@@ -582,7 +583,7 @@ interface SomeConverter {
               }
             }
             """.trimIndent(),
-            extensionFunctionCode
+            mapperCode
         )
     }
 
@@ -627,8 +628,8 @@ interface SomeConverter {
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
+        println(mapperCode)
 
         assertSourceEquals(
             """
@@ -641,7 +642,7 @@ interface SomeConverter {
               }
             }
             """.trimIndent(),
-            extensionFunctionCode
+            mapperCode
         )
     }
 
@@ -686,8 +687,8 @@ interface SomeConverter {
                 """.trimIndent()
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
+        println(mapperCode)
 
         assertSourceEquals(
             """
@@ -700,7 +701,7 @@ interface SomeConverter {
               }
             }
             """.trimIndent(),
-            extensionFunctionCode
+            mapperCode
         )
     }
 
@@ -743,8 +744,8 @@ data class TargetClass(val property: String)
                 """.trimIndent() // @formatter:on
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("MyMapper${expectedSuffix}.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("MyMapper${expectedSuffix}.kt")
+        println(mapperCode)
 
         assertSourceEquals(
             """
@@ -754,7 +755,84 @@ data class TargetClass(val property: String)
               )
             }
             """.trimIndent(),
-            extensionFunctionCode
+            mapperCode
+        )
+    }
+
+    @Test
+    fun callThisWhenInsideSameKonverter() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: SourceProperty)
+class TargetClass(val property: TargetProperty)
+data class SourceProperty(val prop: String)
+data class TargetProperty(val prop: String)
+
+@Konverter
+interface Mapper {
+    fun toTarget(sourceClass: SourceClass): TargetClass
+    fun toTarget(source: SourceProperty): TargetProperty
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertSourceEquals(
+            """
+            public object MapperImpl : Mapper {
+              public override fun toTarget(sourceClass: SourceClass): TargetClass = TargetClass(
+                property = this.toTarget(source = sourceClass.property)
+              )
+
+              public override fun toTarget(source: SourceProperty): TargetProperty = TargetProperty(
+                prop = source.prop
+              )
+            }
+            """.trimIndent(),
+            mapperCode
+        )
+    }
+
+    @Test
+    fun recursiveTreeMap() {
+        val (compilation) = super.compileWith(
+            listOf(IterableToIterableConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceClass): TargetClass
+}
+
+class SourceClass(val children: List<SourceClass>)
+class TargetClass(val children: List<TargetClass>)
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertSourceEquals(
+            """
+            public object MapperImpl : Mapper {
+              public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+                children = source.children.map { this.toTarget(source = it) }
+              )
+            }
+            """.trimIndent(),
+            mapperCode
         )
     }
 
