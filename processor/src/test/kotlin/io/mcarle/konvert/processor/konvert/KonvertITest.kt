@@ -184,6 +184,48 @@ interface OtherMapper {
     }
 
     @Test
+    fun handleNullableOfSourceAndTargetParam() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+            """.trimIndent()
+            ),
+            SourceFile.kotlin(
+                name = "Mapper.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+
+@Konverter
+interface Mapper {
+fun toTargetClass(source: SourceClass?): TargetClass?
+}
+            """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertSourceEquals(
+            """
+        public object MapperImpl : Mapper {
+          public override fun toTargetClass(source: SourceClass?): TargetClass? = source?.let {
+            TargetClass(
+              property = source.property
+            )
+          }
+        }
+        """.trimIndent(),
+            mapperCode
+        )
+    }
+
+    @Test
     fun handleNullableOfSourceParamWhenUsingOtherKonverterWithSourceNullable() {
         val (compilation) = super.compileWith(
             listOf(SameTypeConverter()),
@@ -220,7 +262,15 @@ interface Mapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        assertContains(mapperCode, "source = sourceClass?.property")
+        assertSourceEquals("""
+            public object MapperImpl : Mapper {
+              public override fun toTarget(sourceClass: SourceClass?): TargetClass? = sourceClass?.let {
+                TargetClass(
+                  property = this.toTarget(source = sourceClass.property)
+                )
+              }
+            }
+        """.trimIndent(), mapperCode)
     }
 
     @Test
@@ -261,7 +311,19 @@ interface Mapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        assertContains(mapperCode, "sourceClass?.property?.let {")
+        assertSourceEquals("""
+            public object MapperImpl : Mapper {
+              public override fun toTarget(sourceClass: SourceClass?): TargetClass? = sourceClass?.let {
+                TargetClass(
+                  property = sourceClass.property?.let { this.toTarget(source = it) }
+                )
+              }
+
+              public override fun toTarget(source: SourceProperty): TargetProperty = TargetProperty(
+                prop = source.prop
+              )
+            }
+        """.trimIndent(), mapperCode)
     }
 
     @Test
@@ -698,6 +760,67 @@ interface SomeConverter {
             public object SomeConverterImpl : SomeConverter {
               public override fun toB(source: SomeClass): B? = B().also { someClass ->
                 someClass.property = source.property
+              }
+            }
+            """.trimIndent(),
+            mapperCode
+        )
+    }
+
+    @Test
+    fun handleSameClassNameInDifferentPackagesWithSourceImportAliasWithNullable() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            SourceFile.kotlin(
+                name = "a/SomeClass.kt",
+                contents =
+                """
+package a
+
+class SomeClass(val property: String)
+                """.trimIndent()
+            ),
+            SourceFile.kotlin(
+                name = "b/SomeClass.kt",
+                contents =
+                """
+package b
+
+class SomeClass {
+    var property: String = ""
+}
+                """.trimIndent()
+            ),
+            SourceFile.kotlin(
+                name = "SomeConverter.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import a.SomeClass as A
+import b.SomeClass
+
+@Konverter
+interface SomeConverter {
+    @Konvert
+    fun toSomeClass(source: A?): SomeClass?
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
+        println(mapperCode)
+
+        assertSourceEquals(
+            """
+            import b.SomeClass
+            import a.SomeClass as A
+
+            public object SomeConverterImpl : SomeConverter {
+              public override fun toSomeClass(source: A?): SomeClass? = source?.let {
+                SomeClass().also { someClass ->
+                  someClass.property = source.property
+                }
               }
             }
             """.trimIndent(),

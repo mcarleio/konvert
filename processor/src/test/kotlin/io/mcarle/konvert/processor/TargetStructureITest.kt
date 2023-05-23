@@ -6,6 +6,7 @@ import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.StringToIntConverter
 import io.mcarle.konvert.processor.exceptions.AmbiguousConstructorException
 import io.mcarle.konvert.processor.exceptions.NoMatchingConstructorException
+import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -699,6 +700,32 @@ class TargetClass(
         )
         assertEquals(expected = KotlinCompilation.ExitCode.COMPILATION_ERROR, actual = compilationResult.exitCode)
         assertContains(compilationResult.messages, NoMatchingConstructorException::class.qualifiedName!!)
+    }
+
+    @Test
+    fun throwNotNullOperatorNotEnabledExceptionWhenSourceNullableAndTargetNot() {
+        val (_, compilationResult) = super.compileWith(
+            listOf(SameTypeConverter()),
+            emptyList(),
+            false,
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceClass?): TargetClass
+}
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+                """.trimIndent()
+            )
+        )
+        assertEquals(expected = KotlinCompilation.ExitCode.COMPILATION_ERROR, actual = compilationResult.exitCode)
+        assertContains(compilationResult.messages, NotNullOperatorNotEnabledException::class.qualifiedName!!)
     }
 
     @Test

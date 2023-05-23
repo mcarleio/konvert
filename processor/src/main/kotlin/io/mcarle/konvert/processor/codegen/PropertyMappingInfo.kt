@@ -10,7 +10,6 @@ data class PropertyMappingInfo constructor(
     val constant: String?,
     val expression: String?,
     val ignore: Boolean,
-    val nullable: Boolean,
     val enableConverters: List<TypeConverterName>,
     val declaration: KSPropertyDeclaration?,
     val isBasedOnAnnotation: Boolean

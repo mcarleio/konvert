@@ -2,17 +2,23 @@ package io.mcarle.konvert.processor.codegen
 
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Origin
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
+import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.isNullable
+import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 import java.util.Locale
 
 class MappingCodeGenerator {
 
     fun generateMappingCode(
+        source: KSType,
+        target: KSType,
         sourceProperties: List<PropertyMappingInfo>,
         constructor: KSFunctionDeclaration,
         functionParamName: String?,
@@ -22,7 +28,27 @@ class MappingCodeGenerator {
         val typeName = targetClassImportName ?: constructor.parentDeclaration?.qualifiedName!!.asString()
         val className = constructor.parentDeclaration!!.simpleName.asString()
         val constructorCode = constructorCode(typeName, constructor, sourceProperties)
-        return "return·" + constructorCode + propertyCode(className, functionParamName, sourceProperties, targetProperties)
+        val propertyCode = propertyCode(className,
+            functionParamName,
+            sourceProperties,
+            targetProperties
+        )
+        return if (source.isNullable()) {
+            // source can only be nullable in case of @Konverter/@Konvert
+            assert(functionParamName != null)
+            val code = "return·$functionParamName?.let·{\n⇥$constructorCode$propertyCode⇤\n}"
+            if (target.isNullable()) {
+                code
+            } else {
+                if (Configuration.enforceNotNull) {
+                    "$code!!"
+                } else {
+                    throw NotNullOperatorNotEnabledException(source, target)
+                }
+            }
+        } else {
+            "return·$constructorCode$propertyCode"
+        }
     }
 
     private fun constructorCode(
@@ -157,28 +183,15 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
             }
             if (source.expression != null) {
                 return if (source.mappingParamName != null) {
-                    "${source.mappingParamName}.let { ${source.expression} }"
+                    "${source.mappingParamName}.let·{ ${source.expression} }"
                 } else {
-                    "let { ${source.expression} }"
+                    "let·{ ${source.expression} }"
                 }
             }
             throw IllegalStateException("Could not convert value $source")
         } else {
-            val sourceType = source.declaration.type.resolve().let {
-                if (source.nullable) {
-                    it.makeNullable()
-                } else {
-                    it
-                }
-            }
-
-            val paramName = source.mappingParamName?.let {
-                if (source.nullable) { // do not use sourceType.isNullable() as we need the info for the source/origin, not it's property
-                    "$it?."
-                } else {
-                    "$it."
-                }
-            } ?: ""
+            val sourceType = source.declaration.type.resolve()
+            val paramName = source.mappingParamName?.let { "$it." } ?: ""
 
             return TypeConverterRegistry.withAdditionallyEnabledConverters(source.enableConverters) {
                 firstOrNull { it.matches(sourceType, targetType) }

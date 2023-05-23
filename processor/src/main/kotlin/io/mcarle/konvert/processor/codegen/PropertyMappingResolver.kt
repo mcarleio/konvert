@@ -21,15 +21,14 @@ class PropertyMappingResolver(
 
         verifyAllPropertiesExist(mappings, properties, classDeclaration)
 
-        val propertiesWithoutSource = getPropertyMappingsWithoutSource(type.isNullable(), mappings, mappingParamName)
-        val propertiesWithSource = getPropertyMappingsWithSource(type.isNullable(), mappings, properties, mappingParamName)
-        val propertiesWithoutMappings = getPropertyMappingsWithoutMappings(type.isNullable(), properties, mappingParamName)
+        val propertiesWithoutSource = getPropertyMappingsWithoutSource(mappings, mappingParamName)
+        val propertiesWithSource = getPropertyMappingsWithSource(mappings, properties, mappingParamName)
+        val propertiesWithoutMappings = getPropertyMappingsWithoutMappings(properties, mappingParamName)
 
         return propertiesWithoutSource + propertiesWithSource + propertiesWithoutMappings
     }
 
     private fun getPropertyMappingsWithoutMappings(
-        nullable: Boolean,
         properties: List<KSPropertyDeclaration>,
         mappingParamName: String?
     ) = properties
@@ -41,7 +40,6 @@ class PropertyMappingResolver(
                 constant = null,
                 expression = null,
                 ignore = false,
-                nullable = nullable,
                 enableConverters = emptyList(),
                 declaration = property,
                 isBasedOnAnnotation = false
@@ -49,7 +47,6 @@ class PropertyMappingResolver(
         }
 
     private fun getPropertyMappingsWithSource(
-        nullable: Boolean,
         mappings: List<Mapping>,
         properties: List<KSPropertyDeclaration>,
         mappingParamName: String?
@@ -65,7 +62,6 @@ class PropertyMappingResolver(
             constant = annotation.constant.takeIf { it.isNotEmpty() },
             expression = annotation.expression.takeIf { it.isNotEmpty() },
             ignore = annotation.ignore,
-            nullable = nullable,
             enableConverters = annotation.enable.toList(),
             declaration = property,
             isBasedOnAnnotation = true
@@ -73,7 +69,6 @@ class PropertyMappingResolver(
     }
 
     private fun getPropertyMappingsWithoutSource(
-        nullable: Boolean,
         mappings: List<Mapping>,
         mappingParamName: String?
     ) = mappings.filter { it.source.isEmpty() }.map { annotation ->
@@ -84,7 +79,6 @@ class PropertyMappingResolver(
             constant = annotation.constant.takeIf { it.isNotEmpty() },
             expression = annotation.expression.takeIf { it.isNotEmpty() },
             ignore = annotation.ignore,
-            nullable = nullable,
             enableConverters = annotation.enable.toList(),
             declaration = null,
             isBasedOnAnnotation = true

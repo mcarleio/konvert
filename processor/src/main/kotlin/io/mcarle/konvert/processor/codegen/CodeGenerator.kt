@@ -12,6 +12,10 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.converter.api.classDeclaration
+import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.enforceNotNull
+import io.mcarle.konvert.converter.api.isNullable
+import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 
 class CodeGenerator(
@@ -38,9 +42,15 @@ class CodeGenerator(
 
         verifyPropertiesAndMandatoryParametersExist(sourceProperties, targetElements)
 
+        if (source.isNullable() && !target.isNullable() && !Configuration.enforceNotNull) {
+            throw NotNullOperatorNotEnabledException(source, target)
+        }
+
         val targetPropertiesWithoutParameters = extractDistinctProperties(targetElements)
 
         return MappingCodeGenerator().generateMappingCode(
+            source,
+            target,
             sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
             constructor,
             paramName,

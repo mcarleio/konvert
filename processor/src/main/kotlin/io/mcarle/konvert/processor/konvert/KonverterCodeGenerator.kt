@@ -52,12 +52,12 @@ object KonverterCodeGenerator {
                 Configuration.CURRENT += konvertData.annotationData.options.map { it.key to it.value }
 
                 if (konvertData.sourceTypeReference.toString() != konvertData.sourceType.makeNotNullable().toString()) {
-                    // add import alias
+                    // @Konverter annotated interface used alias for source, so the implementation should also use the same alias
                     codeBuilder.addImport(konvertData.sourceType, konvertData.sourceTypeReference.toString())
                 }
                 val targetClassImportName =
                     if (konvertData.targetTypeReference.toString() != konvertData.targetType.makeNotNullable().toString()) {
-                        // add import alias
+                        // @Konverter annotated interface used alias for target, so the implementation should also use the same alias
                         val alias = konvertData.targetTypeReference.toString()
                         codeBuilder.addImport(konvertData.targetType, alias)
                         alias
