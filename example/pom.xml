@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <kotlin.version>1.7.22</kotlin.version>
+        <kotlin.version>1.8.10</kotlin.version>
         <konvert.version>0.1.0-SNAPSHOT</konvert.version>
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.source>17</maven.compiler.source>
@@ -77,7 +77,7 @@
                     <dependency>
                         <groupId>com.dyescape</groupId>
                         <artifactId>kotlin-maven-symbol-processing</artifactId>
-                        <version>1.4</version>
+                        <version>1.5</version>
                     </dependency>
                     <dependency>
                         <groupId>io.mcarle</groupId>

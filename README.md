@@ -63,7 +63,7 @@ To use `Konvert` with Maven, you have to do the following steps:
            <dependency>
                <groupId>com.dyescape</groupId>
                <artifactId>kotlin-maven-symbol-processing</artifactId>
-               <version>1.4</version>
+               <version>1.5</version>
            </dependency>
            <dependency>
                <groupId>io.mcarle</groupId>
@@ -74,7 +74,7 @@ To use `Konvert` with Maven, you have to do the following steps:
    </plugin>
    ```
 
-   > At the time of writing, `kotlin-maven-symbol-processing` does not support Kotlin >=1.8.
+   > At the time of writing, `kotlin-maven-symbol-processing` does not support Kotlin >1.8.10.
    Please verify the details regarding the plugin by referring to the corresponding project's
    > [GitHub page](https://github.com/Dyescape/kotlin-maven-symbol-processing).
 
@@ -182,7 +182,7 @@ fun Person.asDto(): PersonDto = PersonDto(
 ```
 
 For further functionality, have a look into
-the [wiki](https://github.com/mcarleio/konvert/wiki),
+the [documentation](https://mcarleio.github.io/konvert/typeconverter/provided.html)
 the KDocs of the [annotations](annotations/src/main/kotlin/io/mcarle/konvert/api),
 the [example project](example/src/main/kotlin/io/mcarle/konvert/example)
 or the [tests](processor/src/test/kotlin/io/mcarle/konvert/processor).
