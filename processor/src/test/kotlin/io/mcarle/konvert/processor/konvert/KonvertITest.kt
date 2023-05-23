@@ -578,10 +578,11 @@ interface SomeConverter {
 
         assertSourceEquals(
             """
-            import a.SomeClass
+            import a.SomeClass as ASomeClass
+            import b.SomeClass as BSomeClass
 
             public object SomeConverterImpl : SomeConverter {
-              public override fun toSomeClass(source: SomeClass): b.SomeClass =
+              public override fun toSomeClass(source: ASomeClass): BSomeClass =
                   b.SomeClass().also { someClass ->
                 someClass.property = source.property
               }
@@ -636,10 +637,11 @@ interface SomeConverter {
 
         assertSourceEquals(
             """
-            import a.SomeClass
+            import a.SomeClass as ASomeClass
+            import b.SomeClass as BSomeClass
 
             public object SomeConverterImpl : SomeConverter {
-              public override fun toSomeClass(source: SomeClass): b.SomeClass? =
+              public override fun toSomeClass(source: ASomeClass): BSomeClass? =
                   b.SomeClass().also { someClass ->
                 someClass.property = source.property
               }

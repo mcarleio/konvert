@@ -15,9 +15,9 @@ val DependencyHandler.kotlinPoet get() = "com.squareup:kotlinpoet:${Versions.kot
 val DependencyHandler.kotlinPoetKsp get() = "com.squareup:kotlinpoet-ksp:${Versions.kotlinPoet}"
 
 object Versions {
-    const val kotlin = "1.8.10" // has to match buildSrc/gradle.properties
-    const val ksp = "1.0.9"
+    const val kotlin = "1.8.21" // has to match buildSrc/gradle.properties
+    const val ksp = "1.0.11"
     const val kotlinCompileTesting = "1.5.0"
-    const val kotlinPoet = "1.12.0"
-    const val jUnit = "5.9.2"
+    const val kotlinPoet = "1.13.2"
+    const val jUnit = "5.9.3"
 }
