@@ -183,13 +183,13 @@ fun Person.asDto(): PersonDto = PersonDto(
 
 For further functionality, have a look into
 the [wiki](https://github.com/mcarleio/konvert/wiki),
-the KDocs of the [api](api/src/main/kotlin/io/mcarle/konvert/api),
+the KDocs of the [annotations](annotations/src/main/kotlin/io/mcarle/konvert/api),
 the [example project](example/src/main/kotlin/io/mcarle/konvert/example)
 or the [tests](processor/src/test/kotlin/io/mcarle/konvert/processor).
 
 ## Further information
 
-* `Konvert` is primarily compiled and tested with JDK >=17. It is not guaranteed to work with anything below JDK 17.
+* `Konvert` is primarily compiled and tested with JDK >=17. It should, but is not guaranteed to work with anything below JDK 17.
 * `Konvert` is able to convert classes from and to classes written in Java (and probably also in other JVM languages).
 
 ## Building
