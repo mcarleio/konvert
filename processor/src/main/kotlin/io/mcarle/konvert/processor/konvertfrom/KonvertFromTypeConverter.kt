@@ -2,6 +2,7 @@ package io.mcarle.konvert.processor.konvertfrom
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.isNullable
@@ -25,11 +26,13 @@ class KonvertFromTypeConverter constructor(
         }
     }
 
-    override fun convert(fieldName: String, source: KSType, target: KSType): String {
-        return if (source.isNullable()) {
-            "$fieldName?.let·{ ${targetClassDeclaration.qualifiedName?.asString()}.$mapFunctionName($paramName·=·it) }"
-        } else {
-            "${targetClassDeclaration.qualifiedName?.asString()}.$mapFunctionName($paramName·=·$fieldName)"
-        } + appendNotNullAssertionOperatorIfNeeded(source, target)
+    override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
+        return CodeBlock.of(
+            if (source.isNullable()) {
+                "$fieldName?.let·{ ${targetClassDeclaration.qualifiedName?.asString()}.$mapFunctionName($paramName·=·it) }"
+            } else {
+                "${targetClassDeclaration.qualifiedName?.asString()}.$mapFunctionName($paramName·=·$fieldName)"
+            } + appendNotNullAssertionOperatorIfNeeded(source, target)
+        )
     }
 }

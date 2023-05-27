@@ -3,6 +3,7 @@ package io.mcarle.konvert.converter
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
+import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.isNullable
@@ -28,11 +29,13 @@ abstract class DateToTemporalConverter(
         }
     }
 
-    override fun convert(fieldName: String, source: KSType, target: KSType): String {
+    override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
         val sourceNullable = source.isNullable()
         val convertCode = convert(fieldName, if (sourceNullable) "?" else "")
 
-        return convertCode + appendNotNullAssertionOperatorIfNeeded(source, target)
+        return CodeBlock.of(
+            convertCode + appendNotNullAssertionOperatorIfNeeded(source, target)
+        )
     }
 
     abstract fun convert(fieldName: String, nc: String): String

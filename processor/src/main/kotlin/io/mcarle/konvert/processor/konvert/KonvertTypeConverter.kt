@@ -2,6 +2,7 @@ package io.mcarle.konvert.processor.konvert
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
@@ -54,7 +55,7 @@ class KonvertTypeConverter constructor(
         return false
     }
 
-    override fun convert(fieldName: String, source: KSType, target: KSType): String {
+    override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
         val getKonverterCode = if (CurrentInterfaceContext.interfaceKSClassDeclaration == mapKSClassDeclaration) {
             "this"
         } else {
@@ -65,7 +66,7 @@ class KonvertTypeConverter constructor(
         } else {
             "$getKonverterCode.$mapFunctionName($paramName·=·$fieldName)"
         }
-        return mappingCode + appendNotNullAssertionOperatorIfNeeded(source, target)
+        return CodeBlock.of(mappingCode + appendNotNullAssertionOperatorIfNeeded(source, target))
     }
 
 }

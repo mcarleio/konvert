@@ -2,6 +2,7 @@ package io.mcarle.konvert.converter.api
 
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSType
+import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.DEFAULT_PRIORITY
 import io.mcarle.konvert.api.Priority
 
@@ -43,5 +44,5 @@ interface TypeConverter {
      *
      * @param fieldName the property name, which should be converted
      */
-    fun convert(fieldName: String, source: KSType, target: KSType): String
+    fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock
 }
