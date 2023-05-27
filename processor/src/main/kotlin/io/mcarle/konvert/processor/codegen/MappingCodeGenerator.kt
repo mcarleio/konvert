@@ -6,6 +6,8 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Origin
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.joinToCode
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enforceNotNull
@@ -24,11 +26,12 @@ class MappingCodeGenerator {
         functionParamName: String?,
         targetClassImportName: String?,
         targetProperties: List<KSPropertyDeclaration>
-    ): String {
+    ): CodeBlock {
         val typeName = targetClassImportName ?: constructor.parentDeclaration?.qualifiedName!!.asString()
         val className = constructor.parentDeclaration!!.simpleName.asString()
         val constructorCode = constructorCode(typeName, constructor, sourceProperties)
-        val propertyCode = propertyCode(className,
+        val propertyCode = propertyCode(
+            className,
             functionParamName,
             sourceProperties,
             targetProperties
@@ -36,18 +39,18 @@ class MappingCodeGenerator {
         return if (source.isNullable()) {
             // source can only be nullable in case of @Konverter/@Konvert
             assert(functionParamName != null)
-            val code = "return·$functionParamName?.let·{\n⇥$constructorCode$propertyCode⇤\n}"
+            val code = "return·$functionParamName?.let·{\n⇥%L%L⇤\n}"
             if (target.isNullable()) {
-                code
+                CodeBlock.of(code, constructorCode, propertyCode)
             } else {
                 if (Configuration.enforceNotNull) {
-                    "$code!!"
+                    CodeBlock.of("$code!!", constructorCode, propertyCode)
                 } else {
                     throw NotNullOperatorNotEnabledException(source, target)
                 }
             }
         } else {
-            "return·$constructorCode$propertyCode"
+            CodeBlock.of("return·%L%L", constructorCode, propertyCode)
         }
     }
 
@@ -55,21 +58,23 @@ class MappingCodeGenerator {
         className: String,
         constructor: KSFunctionDeclaration,
         sourceProperties: List<PropertyMappingInfo>
-    ): String {
+    ): CodeBlock {
         return if (constructor.parameters.isEmpty()) {
-            "$className()"
+            CodeBlock.of("$className()")
         } else {
-            """
-$className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourceProperties = sourceProperties)}
+            CodeBlock.of(
+                """
+$className(${"⇥\n%L"}
 ⇤)
-            """.trimIndent()
+            """.trimIndent(), constructorParamsCode(constructor = constructor, sourceProperties = sourceProperties)
+            )
         }
     }
 
     private fun constructorParamsCode(
         constructor: KSFunctionDeclaration,
         sourceProperties: List<PropertyMappingInfo>
-    ): String {
+    ): CodeBlock {
         return constructor.parameters.mapNotNull { ksValueParameter ->
             val sourceHasParamNames = constructor.origin !in listOf(
                 Origin.JAVA,
@@ -88,21 +93,21 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
                 null
             } else if (valueParamIsNullable) {
                 // when constructor param is nullable, set it to null
-                "null"
+                CodeBlock.of("null")
             } else {
                 null
             }
 
             if (convertedValue != null) {
                 if (sourceHasParamNames) {
-                    "${sourcePropertyMappingInfo.targetName}·=·$convertedValue"
+                    CodeBlock.of("${sourcePropertyMappingInfo.targetName}·=·%L", convertedValue)
                 } else {
                     convertedValue
                 }
             } else {
                 null
             }
-        }.joinToString(separator = ",\n")
+        }.joinToCode(separator = ",\n")
     }
 
     private fun propertyCode(
@@ -110,18 +115,18 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
         functionParamName: String?,
         sourceProperties: List<PropertyMappingInfo>,
         targetProperties: List<KSPropertyDeclaration>
-    ): String {
-        if (noTargetOrAllIgnored(sourceProperties, targetProperties)) return ""
+    ): CodeBlock {
+        if (noTargetOrAllIgnored(sourceProperties, targetProperties)) return CodeBlock.of("")
 
         var varName = className.replaceFirstChar { it.lowercase(Locale.getDefault()) }
         if (varName == functionParamName) {
             varName += "0"
         }
 
-        return """
-.also·{·$varName·->${"⇥\n" + propertySettingCode(targetProperties, sourceProperties, varName)}
+        return CodeBlock.of("""
+.also·{·$varName·->${"⇥\n%L"}
 ⇤}
-        """.trimIndent()
+        """.trimIndent(), propertySettingCode(targetProperties, sourceProperties, varName))
     }
 
     private fun noTargetOrAllIgnored(sourceProperties: List<PropertyMappingInfo>, targetProperties: List<KSPropertyDeclaration>): Boolean {
@@ -137,7 +142,7 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
         targetProperties: List<KSPropertyDeclaration>,
         sourceProperties: List<PropertyMappingInfo>,
         targetVarName: String
-    ): String {
+    ): CodeBlock {
         return targetProperties.mapNotNull { targetProperty ->
             val sourceProperty = determinePropertyMappingInfo(sourceProperties, targetProperty)
             val convertedValue = convertValue(
@@ -146,11 +151,11 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
                 ignorable = true
             )
             if (convertedValue != null) {
-                "$targetVarName.${sourceProperty.targetName}·=·$convertedValue"
+                CodeBlock.of("$targetVarName.${sourceProperty.targetName}·=·$convertedValue")
             } else {
                 null
             }
-        }.joinToString("\n")
+        }.joinToCode("\n")
     }
 
     private fun determinePropertyMappingInfo(
@@ -171,7 +176,7 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
         } ?: throw PropertyMappingNotExistingException(ksPropertyDeclaration, propertyMappings)
     }
 
-    private fun convertValue(source: PropertyMappingInfo, targetTypeRef: KSTypeReference, ignorable: Boolean): String? {
+    private fun convertValue(source: PropertyMappingInfo, targetTypeRef: KSTypeReference, ignorable: Boolean): CodeBlock? {
         val targetType = targetTypeRef.resolve()
 
         if (source.declaration == null) {
@@ -179,14 +184,16 @@ $className(${"⇥\n" + constructorParamsCode(constructor = constructor, sourcePr
                 return null
             }
             if (source.constant != null) {
-                return source.constant
+                return CodeBlock.of(source.constant)
             }
             if (source.expression != null) {
-                return if (source.mappingParamName != null) {
-                    "${source.mappingParamName}.let·{ ${source.expression} }"
-                } else {
-                    "let·{ ${source.expression} }"
-                }
+                return CodeBlock.of(
+                    if (source.mappingParamName != null) {
+                        "${source.mappingParamName}.let·{ ${source.expression} }"
+                    } else {
+                        "let·{ ${source.expression} }"
+                    }
+                )
             }
             throw IllegalStateException("Could not convert value $source")
         } else {

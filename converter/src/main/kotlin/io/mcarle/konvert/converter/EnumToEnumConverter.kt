@@ -5,6 +5,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.classDeclaration
@@ -25,7 +26,7 @@ class EnumToEnumConverter : AbstractTypeConverter() {
         }
     }
 
-    override fun convert(fieldName: String, source: KSType, target: KSType): String {
+    override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
         val sourceEnumValues = source.classDeclaration()?.declarations
             ?.filter { it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY }
             ?.toList() ?: emptyList()
@@ -43,7 +44,7 @@ class EnumToEnumConverter : AbstractTypeConverter() {
 
 
         // @formatter:off
-        return """
+        return CodeBlock.of("""
 when·($fieldName)·{${ "\n⇥" +
         sourceEnumValues.joinToString("\n") {
             "${source.declaration.qualifiedName?.asString()}.${it.simpleName.asString()}·->·${target.declaration.qualifiedName?.asString()}.${it.simpleName.asString()}"
@@ -56,7 +57,8 @@ when·($fieldName)·{${ "\n⇥" +
         }
 }
 ⇤}${if (needsNotNullAssertionOperator(source, target)) "!!" else ""}
-        """.trimIndent()
+            """.trimIndent()
+        )
         // @formatter:on
     }
 

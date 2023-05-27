@@ -147,7 +147,11 @@ class TargetProperty<E>(val value: E)
         val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
         println(extensionFunctionCode)
 
-        assertContains(extensionFunctionCode, "get<KonvertInterface>().toTargetProperty(sourceProperty = ")
+        assertSourceEquals("""
+            public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
+              targetProperty = io.mcarle.konvert.api.Konverter.get<KonvertInterface>().toTargetProperty(sourceProperty = sourceProperty)
+            )
+        """.trimIndent(), extensionFunctionCode)
     }
 
     @Test

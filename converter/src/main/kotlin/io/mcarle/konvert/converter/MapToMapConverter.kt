@@ -4,6 +4,7 @@ import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Variance
+import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
@@ -52,7 +53,7 @@ class MapToMapConverter : AbstractTypeConverter() {
         }
     }
 
-    override fun convert(fieldName: String, source: KSType, target: KSType): String {
+    override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
         val genericTargetKeyVariance = target.arguments[0].variance.let {
             if (it == Variance.INVARIANT) {
                 target.declaration.typeParameters[0].variance
@@ -240,11 +241,13 @@ newKey·to·newValue
 
         val code = mapSourceContentCode + mapSourceContainerCode + appendNotNullAssertionOperatorIfNeeded(source, target)
 
-        return if (castNeeded) {
-            "($code·as·$target)" // encapsulate with braces
-        } else {
-            code
-        }
+        return CodeBlock.of(
+            if (castNeeded) {
+                "($code·as·$target)" // encapsulate with braces
+            } else {
+                code
+            }
+        )
     }
 
 

@@ -7,4 +7,5 @@ plugins {
 dependencies {
     api(project(":annotations"))
     api(symbolProcessingApi)
+    api(kotlinPoet)
 }

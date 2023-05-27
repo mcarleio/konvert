@@ -10,6 +10,7 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
+import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.converter.api.config.Configuration
@@ -30,7 +31,7 @@ class CodeGenerator(
         source: KSType,
         target: KSType,
         mappingCodeParentDeclaration: KSDeclaration
-    ): String {
+    ): CodeBlock {
         val sourceProperties = PropertyMappingResolver(logger).determinePropertyMappings(paramName, mappings, source)
 
         val targetClassDeclaration = target.classDeclaration()!!

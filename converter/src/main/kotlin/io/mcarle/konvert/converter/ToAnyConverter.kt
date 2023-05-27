@@ -2,6 +2,7 @@ package io.mcarle.konvert.converter
 
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.symbol.KSType
+import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 
@@ -16,8 +17,10 @@ class ToAnyConverter : AbstractTypeConverter() {
         }
     }
 
-    override fun convert(fieldName: String, source: KSType, target: KSType): String {
-        return fieldName + appendNotNullAssertionOperatorIfNeeded(source, target)
+    override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
+        return CodeBlock.of(
+            fieldName + appendNotNullAssertionOperatorIfNeeded(source, target)
+        )
     }
 
     override val enabledByDefault: Boolean = true
