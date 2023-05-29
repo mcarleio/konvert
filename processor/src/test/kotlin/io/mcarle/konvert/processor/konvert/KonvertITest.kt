@@ -5,6 +5,7 @@ import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
 import io.mcarle.konvert.api.DEFAULT_KONVERT_PRIORITY
 import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.converter.IntToStringConverter
 import io.mcarle.konvert.converter.IterableToIterableConverter
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
@@ -959,6 +960,67 @@ class TargetClass(val children: List<TargetClass>)
             """.trimIndent(),
             mapperCode
         )
+    }
+
+    @Test
+    fun useOtherMapperInDifferentPackage() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter(), IntToStringConverter()),
+            SourceFile.kotlin(
+                name = "a/TestCode.kt",
+                contents =
+                """
+package a
+
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.api.Mapping
+import b.SourceProperty
+import b.TargetProperty
+
+class SourceClass(val sourceProperty: SourceProperty<Int>)
+class TargetClass(val targetProperty: TargetProperty<String>)
+
+@Konverter
+interface ClassMapper {
+    @Konvert(mappings=[Mapping(source="sourceProperty", target="targetProperty")])
+    fun toTarget(source: SourceClass): TargetClass
+}
+                """.trimIndent()
+            ),
+            SourceFile.kotlin(
+                name = "b/TestCode.kt",
+                contents =
+                """
+package b
+
+import io.mcarle.konvert.api.Konverter
+
+@Konverter
+interface PropertyMapper {
+    fun toTarget(source: SourceProperty<Int>): TargetProperty<String> = TargetProperty("${'$'}{source.value}")
+}
+
+class SourceProperty<E>(val value: E)
+class TargetProperty<E>(val value: E)
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("ClassMapperKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals("""
+            package a
+
+            import b.PropertyMapper
+            import io.mcarle.konvert.api.Konverter
+
+            public object ClassMapperImpl : ClassMapper {
+              public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+                targetProperty = Konverter.get<PropertyMapper>().toTarget(source = source.sourceProperty)
+              )
+            }
+        """.trimIndent(), extensionFunctionCode)
     }
 
 }
