@@ -148,8 +148,10 @@ class TargetProperty<E>(val value: E)
         println(extensionFunctionCode)
 
         assertSourceEquals("""
+            import io.mcarle.konvert.api.Konverter
+
             public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
-              targetProperty = io.mcarle.konvert.api.Konverter.get<KonvertInterface>().toTargetProperty(sourceProperty = sourceProperty)
+              targetProperty = Konverter.get<KonvertInterface>().toTargetProperty(sourceProperty = sourceProperty)
             )
         """.trimIndent(), extensionFunctionCode)
     }
