@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Breaking Changes for custom `TypeConverter`
+* changed return type of the function `convert` from `String` to `CodeBlock`
+  * The simplest migration is to wrap your result `String` in a `CodeBlock` like this:
+    ```kotlin
+    fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
+        // ... do your stuff ...
+        return CodeBlock.of("your conversion code")
+    }
+    ```
+
 ## [1.5.1]
 
 ### Bug fixes
@@ -43,7 +53,7 @@ All notable changes to this project will be documented in this file.
   per `@Konverter` via `@Konfig`)
    * the `Konverter.get<YOUR_INTERFACE>()` implementation is extended to instantiate an instance of a class
 
-### Breaking Changes for custom TypeConverter
+### Breaking Changes for custom `TypeConverter`
 * changed signature of `TypeConverter.init` to only pass the resolver
    * removed `options` field from `AbstractTypeConverter`
 * changed option key `enforce-not-null` to `konvert.enforce-not-null`
