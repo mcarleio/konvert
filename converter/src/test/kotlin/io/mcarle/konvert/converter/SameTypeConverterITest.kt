@@ -50,7 +50,7 @@ class SameTypeConverterITest : ConverterITest() {
         assertSourceEquals(
             expected = """
                 public object FooMapperImpl : FooMapper {
-                  public override fun toYyy(it: Xxx): Yyy = Yyy(
+                  override fun toYyy(it: Xxx): Yyy = Yyy(
                     test = it.test$enforceNotNull
                   )
                 }

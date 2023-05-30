@@ -60,7 +60,7 @@ public class MapperImpl : Mapper {
   @Inject
   public constructor()
 
-  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+  override fun toTarget(source: SourceClass): TargetClass = TargetClass(
     property = source.property
   )
 }
@@ -122,7 +122,7 @@ public class MapperImpl : Mapper {
   @Inject
   public constructor()
 
-  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+  override fun toTarget(source: SourceClass): TargetClass = TargetClass(
     property = source.property
   )
 }
@@ -224,7 +224,7 @@ public class MapperImpl : Mapper {
   @Inject
   public constructor()
 
-  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+  override fun toTarget(source: SourceClass): TargetClass = TargetClass(
     property = source.property
   )
 }
@@ -286,7 +286,7 @@ public class MapperImpl : Mapper {
   @Inject
   public constructor()
 
-  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+  override fun toTarget(source: SourceClass): TargetClass = TargetClass(
     property = source.property
   )
 }
@@ -346,7 +346,7 @@ public class MapperImpl : Mapper {
   @Inject
   public constructor()
 
-  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+  override fun toTarget(source: SourceClass): TargetClass = TargetClass(
     property = source.property
   )
 }
@@ -401,7 +401,7 @@ public class MapperImpl : Mapper {
   @Inject
   public constructor()
 
-  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+  override fun toTarget(source: SourceClass): TargetClass = TargetClass(
     property = source.property
   )
 }
@@ -458,7 +458,7 @@ public class MapperImpl : Mapper {
   @Inject
   public constructor()
 
-  public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+  override fun toTarget(source: SourceClass): TargetClass = TargetClass(
     property = source.property
   )
 }

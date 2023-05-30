@@ -215,7 +215,7 @@ fun toTargetClass(source: SourceClass?): TargetClass?
         assertSourceEquals(
             """
         public object MapperImpl : Mapper {
-          public override fun toTargetClass(source: SourceClass?): TargetClass? = source?.let {
+          override fun toTargetClass(source: SourceClass?): TargetClass? = source?.let {
             TargetClass(
               property = source.property
             )
@@ -265,7 +265,7 @@ interface Mapper {
 
         assertSourceEquals("""
             public object MapperImpl : Mapper {
-              public override fun toTarget(sourceClass: SourceClass?): TargetClass? = sourceClass?.let {
+              override fun toTarget(sourceClass: SourceClass?): TargetClass? = sourceClass?.let {
                 TargetClass(
                   property = this.toTarget(source = sourceClass.property)
                 )
@@ -314,13 +314,13 @@ interface Mapper {
 
         assertSourceEquals("""
             public object MapperImpl : Mapper {
-              public override fun toTarget(sourceClass: SourceClass?): TargetClass? = sourceClass?.let {
+              override fun toTarget(sourceClass: SourceClass?): TargetClass? = sourceClass?.let {
                 TargetClass(
                   property = sourceClass.property?.let { this.toTarget(source = it) }
                 )
               }
 
-              public override fun toTarget(source: SourceProperty): TargetProperty = TargetProperty(
+              override fun toTarget(source: SourceProperty): TargetProperty = TargetProperty(
                 prop = source.prop
               )
             }
@@ -460,8 +460,7 @@ interface SomeConverter {
         assertSourceEquals(
             """
             public class SomeConverterImpl : SomeConverter {
-              public override fun toTargetClass(source: SourceClass): TargetClass =
-                  TargetClass().also { targetClass ->
+              override fun toTargetClass(source: SourceClass): TargetClass = TargetClass().also { targetClass ->
                 targetClass.property = source.property
               }
             }
@@ -523,8 +522,7 @@ interface SomeConverter {
             import b.TargetClass
 
             public object SomeConverterImpl : SomeConverter {
-              public override fun toTargetClass(source: SourceClass): TargetClass =
-                  TargetClass().also { targetClass ->
+              override fun toTargetClass(source: SourceClass): TargetClass = TargetClass().also { targetClass ->
                 targetClass.property = source.property
               }
             }
@@ -583,8 +581,7 @@ interface SomeConverter {
             import b.SomeClass as BSomeClass
 
             public object SomeConverterImpl : SomeConverter {
-              public override fun toSomeClass(source: ASomeClass): BSomeClass =
-                  b.SomeClass().also { someClass ->
+              override fun toSomeClass(source: ASomeClass): BSomeClass = b.SomeClass().also { someClass ->
                 someClass.property = source.property
               }
             }
@@ -642,8 +639,7 @@ interface SomeConverter {
             import b.SomeClass as BSomeClass
 
             public object SomeConverterImpl : SomeConverter {
-              public override fun toSomeClass(source: ASomeClass): BSomeClass? =
-                  b.SomeClass().also { someClass ->
+              override fun toSomeClass(source: ASomeClass): BSomeClass? = b.SomeClass().also { someClass ->
                 someClass.property = source.property
               }
             }
@@ -702,7 +698,7 @@ interface SomeConverter {
             import b.SomeClass as B
 
             public object SomeConverterImpl : SomeConverter {
-              public override fun toB(source: SomeClass): B = B().also { someClass ->
+              override fun toB(source: SomeClass): B = B().also { someClass ->
                 someClass.property = source.property
               }
             }
@@ -761,7 +757,7 @@ interface SomeConverter {
             import b.SomeClass as B
 
             public object SomeConverterImpl : SomeConverter {
-              public override fun toB(source: SomeClass): B? = B().also { someClass ->
+              override fun toB(source: SomeClass): B? = B().also { someClass ->
                 someClass.property = source.property
               }
             }
@@ -820,7 +816,7 @@ interface SomeConverter {
             import a.SomeClass as A
 
             public object SomeConverterImpl : SomeConverter {
-              public override fun toSomeClass(source: A?): SomeClass? = source?.let {
+              override fun toSomeClass(source: A?): SomeClass? = source?.let {
                 SomeClass().also { someClass ->
                   someClass.property = source.property
                 }
@@ -876,7 +872,7 @@ data class TargetClass(val property: String)
         assertSourceEquals(
             """
             public object MyMapperImpl : MyMapper {
-              public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+              override fun toTarget(source: SourceClass): TargetClass = TargetClass(
                 property = source.property
               )
             }
@@ -914,11 +910,11 @@ interface Mapper {
         assertSourceEquals(
             """
             public object MapperImpl : Mapper {
-              public override fun toTarget(sourceClass: SourceClass): TargetClass = TargetClass(
+              override fun toTarget(sourceClass: SourceClass): TargetClass = TargetClass(
                 property = this.toTarget(source = sourceClass.property)
               )
 
-              public override fun toTarget(source: SourceProperty): TargetProperty = TargetProperty(
+              override fun toTarget(source: SourceProperty): TargetProperty = TargetProperty(
                 prop = source.prop
               )
             }
@@ -953,7 +949,7 @@ class TargetClass(val children: List<TargetClass>)
         assertSourceEquals(
             """
             public object MapperImpl : Mapper {
-              public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+              override fun toTarget(source: SourceClass): TargetClass = TargetClass(
                 children = source.children.map { this.toTarget(source = it) }
               )
             }
@@ -1016,7 +1012,7 @@ class TargetProperty<E>(val value: E)
             import io.mcarle.konvert.api.Konverter
 
             public object ClassMapperImpl : ClassMapper {
-              public override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+              override fun toTarget(source: SourceClass): TargetClass = TargetClass(
                 targetProperty = Konverter.get<PropertyMapper>().toTarget(source = source.sourceProperty)
               )
             }

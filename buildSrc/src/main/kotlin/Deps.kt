@@ -18,6 +18,6 @@ object Versions {
     const val kotlin = "1.8.21" // has to match buildSrc/gradle.properties
     const val ksp = "1.0.11"
     const val kotlinCompileTesting = "1.5.0"
-    const val kotlinPoet = "1.13.2"
+    const val kotlinPoet = "1.14.2"
     const val jUnit = "5.9.3"
 }
