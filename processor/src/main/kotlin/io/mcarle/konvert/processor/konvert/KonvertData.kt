@@ -7,6 +7,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
+import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
 import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Mapping
@@ -27,6 +28,8 @@ class KonvertData(
     val targetClassDeclaration: KSClassDeclaration = targetType.classDeclaration()!!
     val mapFunctionName: String = mapKSFunctionDeclaration.simpleName.asString()
     val paramName: String = mapKSFunctionDeclaration.parameters.first().name!!.asString()
+
+    val priority = annotationData?.priority ?: DEFAULT_KONVERTER_PRIORITY
 
     data class AnnotationData(
         val mappings: List<Mapping>,

@@ -68,7 +68,7 @@ object KonverterCodeGenerator {
                     }
 
                 codeBuilder.addFunction(
-                    funSpec = FunSpec.builder(konvertData.mapFunctionName)
+                    funBuilder = FunSpec.builder(konvertData.mapFunctionName)
                         .addModifiers(KModifier.OVERRIDE)
                         .returns(konvertData.targetTypeReference.toTypeName())
                         .addParameter(konvertData.paramName, konvertData.sourceTypeReference.toTypeName())
@@ -82,8 +82,8 @@ object KonverterCodeGenerator {
                                 konvertData.targetType,
                                 konvertData.mapKSFunctionDeclaration
                             )
-                        )
-                        .build(),
+                        ),
+                    priority = konvertData.priority,
                     toType = true,
                     originating = data.mapKSClassDeclaration.containingFile
                 )
@@ -112,6 +112,17 @@ object KonverterCodeGenerator {
                     }
                 }
 
+        }
+    }
+
+    fun toFunctionFullyQualifiedNames(data: KonverterData): List<String> {
+        val qualifiedName = data.mapKSClassDeclaration.qualifiedName?.asString()
+        return data.konvertData.map {
+            if (qualifiedName.isNullOrEmpty()) {
+                it.mapFunctionName
+            } else {
+                "$qualifiedName.${it.mapFunctionName}"
+            }
         }
     }
 

@@ -24,7 +24,7 @@ To use `Konvert` with Gradle, you have to do the following steps:
 2. Add the KSP plugin matching your Kotlin version:
    ```kotlin
    plugins {
-       id("com.google.devtools.ksp").version("1.8.10-1.0.9")
+       id("com.google.devtools.ksp").version("1.8.21-1.0.11")
    }
    ```
 
@@ -110,14 +110,13 @@ There are three different ways to use `Konvert`:
       Person(firstName = personDto.firstName, lastName = personDto.lastName)
    ```
 
-3. Using `@Konverter` and `@Konvert`:
+3. Using `@Konverter`:
    ```kotlin
    data class Person(val firstName: String, val lastName: String)
    data class PersonDto(val firstName: String, val lastName: String)
 
    @Konverter
    interface PersonMapper {
-      @Konvert
       fun toDto(person: Person): PersonDto
    }
    ```
@@ -182,14 +181,14 @@ fun Person.asDto(): PersonDto = PersonDto(
 ```
 
 For further functionality, have a look into
-the [documentation](https://mcarleio.github.io/konvert/typeconverter/provided.html)
+the [documentation](https://mcarleio.github.io/konvert/)
 the KDocs of the [annotations](annotations/src/main/kotlin/io/mcarle/konvert/api),
 the [example project](example/src/main/kotlin/io/mcarle/konvert/example)
 or the [tests](processor/src/test/kotlin/io/mcarle/konvert/processor).
 
 ## Further information
 
-* `Konvert` is primarily compiled and tested with JDK >=17. It should, but is not guaranteed to work with anything below JDK 17.
+* `Konvert` is primarily compiled and tested with JDK >=17. It should also work with anything below JDK 17, but is not guaranteed to.
 * `Konvert` is able to convert classes from and to classes written in Java (and probably also in other JVM languages).
 
 ## Building

@@ -8,8 +8,8 @@ import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.Priority
-import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.classDeclaration
+import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.AnnotatedConverterData
 import io.mcarle.konvert.processor.from
 
@@ -20,11 +20,14 @@ class KonvertToData(
 ) : AnnotatedConverterData {
 
     val mapFunctionName: String = annotationData.mapFunctionName.ifEmpty { "to${targetClassDeclaration.toClassName().simpleName}" }
+    val priority = annotationData.priority
 
-    override fun toTypeConverters(): List<TypeConverter> {
+
+    override fun toTypeConverters(): List<AnnotatedConverter> {
         return listOf(
             KonvertToTypeConverter(
-                priority = annotationData.priority,
+                priority = priority,
+                alreadyGenerated = false,
                 mapFunctionName = mapFunctionName,
                 sourceClassDeclaration = sourceClassDeclaration,
                 targetClassDeclaration = targetClassDeclaration

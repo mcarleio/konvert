@@ -55,7 +55,9 @@ interface Mapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        val converter = TypeConverterRegistry.firstIsInstanceOrNull<KonvertTypeConverter>()
+        val converter = TypeConverterRegistry.filterIsInstance<KonvertTypeConverter>().firstOrNull {
+            !it.alreadyGenerated
+        }
         assertNotNull(converter, "No KonverterTypeConverter registered")
         assertEquals("toTarget", converter.mapFunctionName)
         assertEquals("source", converter.paramName)
@@ -93,7 +95,9 @@ interface Mapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        val converter = TypeConverterRegistry.firstIsInstanceOrNull<KonvertTypeConverter>()
+        val converter = TypeConverterRegistry.filterIsInstance<KonvertTypeConverter>().firstOrNull {
+            !it.alreadyGenerated
+        }
         assertNotNull(converter, "No KonverterTypeConverter registered")
         assertEquals("toTarget", converter.mapFunctionName)
         assertEquals("source", converter.paramName)
@@ -132,7 +136,9 @@ interface Mapper {
         )
         assertThrows<IllegalArgumentException> { compilation.generatedSourceFor("MapperKonverter.kt") }
 
-        val converter = TypeConverterRegistry.firstIsInstanceOrNull<KonvertTypeConverter>()
+        val converter = TypeConverterRegistry.filterIsInstance<KonvertTypeConverter>().firstOrNull {
+            !it.alreadyGenerated
+        }
         assertNotNull(converter, "No KonverterTypeConverter registered")
         assertEquals("toTarget", converter.mapFunctionName)
         assertEquals("source", converter.paramName)

@@ -2,11 +2,15 @@ package io.mcarle.konvert.processor.codegen
 
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSType
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
+import io.mcarle.konvert.api.GeneratedKonverter
+import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.addGeneratedKonverterAnnotation
 import io.mcarle.konvert.converter.api.config.generatedFilenameSuffix
 
 class CodeBuilder private constructor(
@@ -14,7 +18,23 @@ class CodeBuilder private constructor(
     private val typeBuilder: TypeSpec.Builder?,
     val originating: MutableSet<KSFile>
 ) {
-    fun addFunction(funSpec: FunSpec, toType: Boolean = false, originating: KSFile?) {
+    fun addFunction(funBuilder: FunSpec.Builder, priority: Priority, toType: Boolean = false, originating: KSFile?) {
+        addFunction(
+            funSpec = funBuilder.apply {
+                if (Configuration.addGeneratedKonverterAnnotation) {
+                    addAnnotation(
+                        AnnotationSpec.builder(GeneratedKonverter::class)
+                            .addMember("${GeneratedKonverter::priority.name} = %L", priority)
+                            .build()
+                    )
+                }
+            }.build(),
+            toType = toType,
+            originating = originating
+        )
+    }
+
+    private fun addFunction(funSpec: FunSpec, toType: Boolean, originating: KSFile?) {
         if (toType) {
             typeBuilder?.addFunction(funSpec)
         } else {

@@ -7,8 +7,8 @@ import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.Priority
-import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.classDeclaration
+import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.AnnotatedConverterData
 import io.mcarle.konvert.processor.from
 import java.util.Locale
@@ -23,10 +23,13 @@ class KonvertFromData(
     val mapFunctionName: String = annotationData.mapFunctionName.ifEmpty { "from${sourceClassDeclaration.simpleName.asString()}" }
     val paramName: String = sourceClassDeclaration.simpleName.asString().replaceFirstChar { it.lowercase(Locale.getDefault()) }
 
-    override fun toTypeConverters(): List<TypeConverter> {
+    val priority = annotationData.priority
+
+    override fun toTypeConverters(): List<AnnotatedConverter> {
         return listOf(
             KonvertFromTypeConverter(
-                priority = annotationData.priority,
+                priority = priority,
+                alreadyGenerated = false,
                 mapFunctionName = mapFunctionName,
                 paramName = paramName,
                 sourceClassDeclaration = sourceClassDeclaration,

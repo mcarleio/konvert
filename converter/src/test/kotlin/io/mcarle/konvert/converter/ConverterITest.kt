@@ -2,10 +2,12 @@ package io.mcarle.konvert.converter
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
+import com.tschuchort.compiletesting.kspArgs
 import com.tschuchort.compiletesting.kspWithCompilation
 import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
+import io.mcarle.konvert.converter.api.config.ADD_GENERATED_KONVERTER_ANNOTATION_OPTION
 import io.mcarle.konvert.processor.KonvertProcessorProvider
 import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlin.config.JvmTarget
@@ -166,6 +168,7 @@ interface $mapperClassName {
             sources = sourceFiles
             verbose = false
             jvmTarget = JvmTarget.JVM_17.description
+            kspArgs += (ADD_GENERATED_KONVERTER_ANNOTATION_OPTION.key to "false")
             kspWithCompilation = true
         }
 

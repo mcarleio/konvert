@@ -48,3 +48,22 @@ object KONVERTER_GENERATE_CLASS_OPTION : Option<Boolean>("konvert.konverter.gene
  * Default: `Konverter`
  */
 object GENERATED_FILENAME_SUFFIX_OPTION : Option<String>("konvert.generated-filename-suffix", "Konverter")
+
+/**
+ * This setting will, if enabled, add @[io.mcarle.konvert.api.GeneratedKonverter] to all generated functions
+ *
+ * Given:
+ * ```kotlin
+ * @KonvertTo(SomeTargetClass::class)
+ * class SomeSourceClass
+ * ```
+ *
+ * When enabled, will add the annotation like this:
+ * ```kotlin
+ * @GeneratedKonverter(priority = 3000)
+ * fun SomeSourceClass.toSomeTargetClass() = SomeTargetClass()
+ * ```
+ *
+ * Default: true
+ */
+object ADD_GENERATED_KONVERTER_ANNOTATION_OPTION : Option<Boolean>("konvert.add-generated-konverter-annotation", true)

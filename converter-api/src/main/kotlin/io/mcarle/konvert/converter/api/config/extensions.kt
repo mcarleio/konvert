@@ -19,6 +19,12 @@ val Configuration.Companion.generatedFilenameSuffix: String
     get() = GENERATED_FILENAME_SUFFIX_OPTION.get(CURRENT) { it }
 
 /**
+ * @see ADD_GENERATED_KONVERTER_ANNOTATION_OPTION
+ */
+val Configuration.Companion.addGeneratedKonverterAnnotation: Boolean
+    get() = ADD_GENERATED_KONVERTER_ANNOTATION_OPTION.get(CURRENT, String::toBoolean)
+
+/**
  * Reads the value for [Option.key] from the provided `options` or fallbacks to the [Option.defaultValue].
  */
 inline fun <T> Option<T>.get(configuration: Configuration, mapping: (String) -> T): T {
