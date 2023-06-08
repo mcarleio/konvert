@@ -8,7 +8,6 @@ import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
-import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -43,7 +42,9 @@ class TargetClass(
         val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
         println(extensionFunctionCode)
 
-        val converter = TypeConverterRegistry.firstIsInstanceOrNull<KonvertToTypeConverter>()
+        val converter = TypeConverterRegistry.filterIsInstance<KonvertToTypeConverter>().firstOrNull {
+            !it.alreadyGenerated
+        }
         assertNotNull(converter, "No KonvertToTypeConverter registered")
         assertEquals("toTargetClass", converter.mapFunctionName)
         assertEquals("SourceClass", converter.sourceClassDeclaration.simpleName.asString())
@@ -147,13 +148,15 @@ class TargetProperty<E>(val value: E)
         val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
         println(extensionFunctionCode)
 
-        assertSourceEquals("""
+        assertSourceEquals(
+            """
             import io.mcarle.konvert.api.Konverter
 
             public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
               targetProperty = Konverter.get<KonvertInterface>().toTargetProperty(sourceProperty = sourceProperty)
             )
-        """.trimIndent(), extensionFunctionCode)
+        """.trimIndent(), extensionFunctionCode
+        )
     }
 
     @Test

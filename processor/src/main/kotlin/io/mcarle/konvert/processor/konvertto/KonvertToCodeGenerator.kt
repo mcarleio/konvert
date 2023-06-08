@@ -31,7 +31,7 @@ object KonvertToCodeGenerator {
             }
 
         fileSpecBuilder.addFunction(
-            funSpec = FunSpec.builder(data.mapFunctionName)
+            funBuilder = FunSpec.builder(data.mapFunctionName)
                 .returns(data.targetClassDeclaration.asStarProjectedType().toTypeName())
                 .receiver(data.sourceClassDeclaration.asStarProjectedType().toTypeName())
                 .addCode(
@@ -44,12 +44,23 @@ object KonvertToCodeGenerator {
                         data.targetClassDeclaration.asStarProjectedType(),
                         data.sourceClassDeclaration
                     )
-                )
-                .build(),
+                ),
+            priority = data.priority,
             toType = false,
             originating = data.sourceClassDeclaration.containingFile
         )
 
+    }
+
+    fun toFunctionFullyQualifiedNames(data: KonvertToData): List<String> {
+        val packageName = data.sourceClassDeclaration.packageName.asString()
+        return listOf(
+            if (packageName.isEmpty()) {
+                data.mapFunctionName
+            } else {
+                "$packageName.${data.mapFunctionName}"
+            }
+        )
     }
 
 }

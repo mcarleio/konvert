@@ -32,7 +32,9 @@ class KonvertProcessor(
     override fun process(resolver: Resolver): List<KSAnnotated> {
         return withIsolatedConfiguration(environment) {
             val data = collectDataForAnnotatedConverters(resolver)
-            registerTypeConverters(data.flatMap { it.toTypeConverters() })
+            val existingKonverter = collectGeneratedKonverter(resolver)
+            val newKonverter = data.flatMap { it.toTypeConverters() }
+            registerTypeConverters(existingKonverter + newKonverter)
 
             initCodeBuilder()
             initTypeConverters(resolver)
@@ -41,8 +43,14 @@ class KonvertProcessor(
 
             writeFiles()
 
+            generateMetaInfFiles(data)
+
             emptyList()
         }
+    }
+
+    private fun collectGeneratedKonverter(resolver: Resolver): List<TypeConverter> {
+        return GeneratedKonverterLoader(resolver, logger).load()
     }
 
     private fun writeFiles() {
@@ -67,6 +75,10 @@ class KonvertProcessor(
         }
     }
 
+    private fun generateMetaInfFiles(converterData: List<AnnotatedConverterData>) {
+        return GeneratedKonverterWriter(codeGenerator, logger).write(converterData)
+    }
+
     private fun registerTypeConverters(typeConverters: List<TypeConverter>) {
         typeConverters
             .groupBy { it.priority }
@@ -88,4 +100,5 @@ class KonvertProcessor(
             KonvertFromDataCollector.collect(resolver, logger) +
             KonverterDataCollector.collect(resolver, logger)
     }
+
 }

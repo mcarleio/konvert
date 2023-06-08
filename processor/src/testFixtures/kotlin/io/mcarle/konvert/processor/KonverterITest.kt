@@ -7,6 +7,7 @@ import com.tschuchort.compiletesting.kspWithCompilation
 import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
+import io.mcarle.konvert.converter.api.config.ADD_GENERATED_KONVERTER_ANNOTATION_OPTION
 import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlin.config.JvmTarget
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -16,6 +17,8 @@ import java.io.File
 abstract class KonverterITest {
     @TempDir
     protected lateinit var temporaryFolder: File
+
+    protected open var addGeneratedKonverterAnnotation = false
 
     fun compileWith(enabledConverters: List<TypeConverter>, vararg code: SourceFile): Pair<KotlinCompilation, KotlinCompilation.Result> {
         return compileWith(enabledConverters, emptyList(), *code)
@@ -40,9 +43,9 @@ abstract class KonverterITest {
 
     fun compileWith(
         enabledConverters: List<TypeConverter>,
-        otherConverters: List<TypeConverter>,
-        expectSuccess: Boolean,
-        options: Map<String, String>,
+        otherConverters: List<TypeConverter> = emptyList(),
+        expectSuccess: Boolean = true,
+        options: Map<String, String> = emptyMap(),
         vararg code: SourceFile
     ): Pair<KotlinCompilation, KotlinCompilation.Result> {
         TypeConverterRegistry.reinitConverterList(*enabled(*enabledConverters.toTypedArray()), *otherConverters.toTypedArray())
@@ -81,11 +84,19 @@ abstract class KonverterITest {
             sources = sourceFiles
             verbose = false
             jvmTarget = JvmTarget.JVM_17.description
-            kspArgs += options
+            kspArgs += options.toMutableMap().apply {
+                putIfAbsent(ADD_GENERATED_KONVERTER_ANNOTATION_OPTION.key, "$addGeneratedKonverterAnnotation")
+            }
             kspWithCompilation = true
         }
 
     protected fun assertSourceEquals(@Language("kotlin") expected: String, generatedCode: String) {
+        assertEquals(
+            expected.trimIndent(),
+            generatedCode.trimIndent()
+        )
+    }
+    protected fun assertContentEquals(expected: String, generatedCode: String) {
         assertEquals(
             expected.trimIndent(),
             generatedCode.trimIndent()

@@ -24,7 +24,7 @@ object KonvertFromCodeGenerator {
         )
 
         codeBuilder.addFunction(
-            funSpec = FunSpec.builder(data.mapFunctionName)
+            funBuilder = FunSpec.builder(data.mapFunctionName)
                 .returns(data.targetClassDeclaration.asStarProjectedType().toTypeName())
                 .addParameter(data.paramName, data.sourceClassDeclaration.asStarProjectedType().toTypeName())
                 .receiver(data.targetCompanionDeclaration.asStarProjectedType().toTypeName())
@@ -38,10 +38,21 @@ object KonvertFromCodeGenerator {
                         data.targetClassDeclaration.asStarProjectedType(),
                         data.targetCompanionDeclaration
                     )
-                )
-                .build(),
+                ),
+            priority = data.priority,
             toType = false,
             originating = data.targetClassDeclaration.containingFile
+        )
+    }
+
+    fun toFunctionFullyQualifiedNames(data: KonvertFromData): List<String> {
+        val packageName = data.targetClassDeclaration.packageName.asString()
+        return listOf(
+            if (packageName.isEmpty()) {
+                data.mapFunctionName
+            } else {
+                "$packageName.${data.mapFunctionName}"
+            }
         )
     }
 

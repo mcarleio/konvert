@@ -8,15 +8,17 @@ import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.isNullable
+import io.mcarle.konvert.processor.AnnotatedConverter
 
 class KonvertTypeConverter constructor(
     override val priority: Priority,
+    override val alreadyGenerated: Boolean,
     internal val sourceType: KSType,
     internal val targetType: KSType,
     internal val mapFunctionName: String,
     internal val paramName: String,
     internal val mapKSClassDeclaration: KSClassDeclaration
-) : AbstractTypeConverter() {
+) : AbstractTypeConverter(), AnnotatedConverter {
 
     override val enabledByDefault: Boolean = true
 

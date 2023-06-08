@@ -45,7 +45,9 @@ class TargetClass(
         val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKonverter.kt")
         println(extensionFunctionCode)
 
-        val converter = TypeConverterRegistry.firstIsInstanceOrNull<KonvertFromTypeConverter>()
+        val converter = TypeConverterRegistry.filterIsInstance<KonvertFromTypeConverter>().firstOrNull {
+            !it.alreadyGenerated
+        }
         assertNotNull(converter, "No KonvertFromTypeConverter registered")
         assertEquals("fromSourceClass", converter.mapFunctionName)
         assertEquals("sourceClass", converter.paramName)
@@ -81,7 +83,9 @@ class TargetClass(
         val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKonverter.kt")
         println(extensionFunctionCode)
 
-        val converter = TypeConverterRegistry.firstIsInstanceOrNull<KonvertFromTypeConverter>()
+        val converter = TypeConverterRegistry.filterIsInstance<KonvertFromTypeConverter>().firstOrNull {
+            !it.alreadyGenerated
+        }
         assertNotNull(converter, "No KonvertFromTypeConverter registered")
         assertEquals("fromSourceClass", converter.mapFunctionName)
         assertEquals("sourceClass", converter.paramName)
