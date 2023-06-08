@@ -19,8 +19,9 @@ java {
 }
 
 kover {
-    useKoverTool()
-    disabledForProject = System.getenv("CI") == null
+    if (System.getenv("CI") == null) {
+        disable()
+    }
 }
 
 tasks.withType<KotlinCompile>().configureEach {

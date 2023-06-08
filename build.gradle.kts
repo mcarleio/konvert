@@ -21,16 +21,18 @@ koverReport {
             packages("io.mcarle.konvert")
         }
     }
-    html {
-        onCheck = true
-    }
-    xml {
-        onCheck = true
+    defaults {
+        html {
+            onCheck = true
+        }
+        xml {
+            onCheck = true
+        }
     }
 }
 
 kover {
-    disabledForProject = true
+    disable()
 }
 
 /**
