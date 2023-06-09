@@ -1,1 +1,2 @@
+thisLineShouldBeIgnoredAsNoFunctionExistsWithThisName
 io.mcarle.konvert.processor.SomeTestMapperImpl.toSomeOtherTestClass
