@@ -103,6 +103,35 @@ class PersonDto(val name: String)
 Will generate a file `Person_XX.kt` instead of `PersonKonverter.kt`
 ====
 
+a|`*konvert.add-generated-konverter-annotation*`
+a|`true`/`false`
+a|`true`
+a|This setting will add the `@GeneratedKonverter` annotation on the generated functions. Together with a file being written to META-INF containing all generated functions FQN, this annotation is used to reuse previously generated konverter functions from other modules or libraries.
+If you do not want your generated konverter functions to be reused in other modules, you can turn this setting globally or per annotation.
+
+4+a|
+[.pl-6]
+.Example
+[%collapsible]
+====
+[source,kotlin]
+----
+@KonvertTo(PersonDto::class, priority = 123)
+class Person(val name: String)
+@KonvertTo(Person::class, options=[
+    Konfig(key="konvert.add-generated-konverter-annotation", value="false")
+])
+class PersonDto(val name: String)
+----
+Will generate:
+[source,kotlin]
+----
+@GeneratedKonverter(priority = 123)
+fun Person.toPersonDto() = PersonDto(name = name)
+fun PersonDto.toPerson() = Person(name = name)
+----
+====
+
 |===
 
 === `@Konverter` Options
