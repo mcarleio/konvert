@@ -116,13 +116,8 @@ object KonverterCodeGenerator {
     }
 
     fun toFunctionFullyQualifiedNames(data: KonverterData): List<String> {
-        val qualifiedName = data.mapKSClassDeclaration.qualifiedName?.asString()
         return data.konvertData.map {
-            if (qualifiedName.isNullOrEmpty()) {
-                it.mapFunctionName
-            } else {
-                "$qualifiedName.${it.mapFunctionName}"
-            }
+           "${data.mapKSClassDeclaration.qualifiedName?.asString()}.${it.mapFunctionName}"
         }
     }
 
