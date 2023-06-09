@@ -39,3 +39,9 @@ ksp {
 tasks.test {
     useJUnitPlatform()
 }
+
+kover {
+    excludeSourceSets {
+        names(sourceSets.testFixtures.name)
+    }
+}
