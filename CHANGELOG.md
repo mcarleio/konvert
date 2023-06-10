@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.0.0]
+
 ### New features
 * call own functions of a `@Konverter` annotated interface directly instead of calling `Konverter.get` [[c828f05](https://github.com/mcarleio/konvert/commit/c828f0594c8d660726fc1eb9fa083459fc94e3af)]
 * functions in `@Konverter` are now allowed to have a nullable source parameter [[4bf1c97](https://github.com/mcarleio/konvert/commit/4bf1c974fd51bdd341a5f17078cfd45b982c83ef)]
@@ -148,7 +150,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v1.5.1...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v2.0.0...HEAD
+
+[2.0.0]: https://github.com/mcarleio/konvert/compare/v1.5.1...v2.0.0
 
 [1.5.1]: https://github.com/mcarleio/konvert/compare/v1.5.0...v1.5.1
 
