@@ -4,8 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New features
+* call own functions of a `@Konverter` annotated interface directly instead of calling `Konverter.get` [[c828f05](https://github.com/mcarleio/konvert/commit/c828f0594c8d660726fc1eb9fa083459fc94e3af)]
+* functions in `@Konverter` are now allowed to have a nullable source parameter [[4bf1c97](https://github.com/mcarleio/konvert/commit/4bf1c974fd51bdd341a5f17078cfd45b982c83ef)]
+* use more imports instead of fully qualified names [[1a40238](https://github.com/mcarleio/konvert/commit/1a40238138728fd390e6a60c670bbd5579e9156e)]
+* enable (re-) usage of generated konverter from other modules or libraries [[5d358ea](https://github.com/mcarleio/konvert/commit/5d358ea1f986b3fa78e72a4bcf1a1536471c5d24)]
+  * therefore, generate META-INF files containing all generated functions
+  * add `@GeneratedKonverter` annotation to all generated functions
+  * and add a new option `konvert.add-generated-konverter-annotation` to disable this feature
+
 ### Breaking Changes for custom `TypeConverter`
-* changed return type of the function `convert` from `String` to `CodeBlock`
+* changed return type of the function `convert` from `String` to `CodeBlock` [[cc3cadd](https://github.com/mcarleio/konvert/commit/cc3caddca7323e1ff8fad0df4e5944e75b86ad2c)]
   * The simplest migration is to wrap your result `String` in a `CodeBlock` like this:
     ```kotlin
     fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
