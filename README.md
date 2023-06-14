@@ -147,7 +147,7 @@ fun Person.toPersonDto(): PersonDto = PersonDto(
 )
 ```
 
-Have a look at the [documentation](https://mcarleio.github.io/konvert/typeconverter/provided.html) for a list of provided type converters.
+Have a look at the [documentation](https://mcarleio.github.io/konvert/typeconverter/) for a list of provided type converters.
 
 🛈: You can also create your own type converter library by
 implementing [TypeConverter](converter-api/src/main/kotlin/io/mcarle/konvert/converter/api/TypeConverter.kt) and register it

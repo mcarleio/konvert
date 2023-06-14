@@ -4,7 +4,7 @@
 = Plugins
 
 [.fs-6.fw-300]
-The processor of convert can be extended by implementing a module using the `plugin-api`.
+The processor can be extended by implementing a module using the `plugin-api`.
 `Konvert` already comes with <<modules.adoc#plugin-api,some plugins>>.
 
 == Usage of plugin modules
