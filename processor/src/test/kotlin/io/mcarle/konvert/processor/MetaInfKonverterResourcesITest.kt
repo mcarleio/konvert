@@ -2,6 +2,7 @@ package io.mcarle.konvert.processor
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.SameTypeConverter
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
@@ -119,7 +120,76 @@ interface Mapper {
 
         assertContentEquals(
             """
-            ${expectedPackagePrefix}Mapper.toTarget
+            ${expectedPackagePrefix}MapperImpl.toTarget
+            """.trimIndent(),
+            metaInfFileContent
+        )
+    }
+
+    @Test
+    fun generateLineForKonverterWithExistingCodeInMETA_INF() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            emptyList(),
+            true,
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceClass): TargetClass = TargetClass(source.property)
+}
+                """.trimIndent()
+            )
+        )
+        val metaInfFileContent = compilation.generatedSourceFor("io.mcarle.konvert.api.Konvert")
+        println(metaInfFileContent)
+
+        assertContentEquals(
+            """
+            MapperImpl.toTarget
+            """.trimIndent(),
+            metaInfFileContent
+        )
+    }
+
+    @Test
+    fun generateLineForKonverterForInheritedImplementedFunctions() {
+        val (compilation) = super.compileWith(
+            listOf(SameTypeConverter()),
+            emptyList(),
+            true,
+            SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+
+interface IMapper {
+    fun toTarget(source: SourceClass): TargetClass = TargetClass(source.property)
+}
+
+@Konverter
+interface Mapper: IMapper {
+}
+                """.trimIndent()
+            )
+        )
+        val metaInfFileContent = compilation.generatedSourceFor("io.mcarle.konvert.api.Konvert")
+        println(metaInfFileContent)
+
+        assertContentEquals(
+            """
+            MapperImpl.toTarget
             """.trimIndent(),
             metaInfFileContent
         )

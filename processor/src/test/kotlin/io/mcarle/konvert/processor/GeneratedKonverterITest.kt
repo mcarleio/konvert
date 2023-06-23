@@ -22,15 +22,25 @@ class GeneratedKonverterITest : KonverterITest() {
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertTypeConverter>()
             .filter { it.alreadyGenerated }
-        assertEquals(1, alreadyGeneratedKonverterList.size, "missing generated konverter")
-        val converter = alreadyGeneratedKonverterList.first()
-        assertEquals("toSomeOtherTestClass", converter.mapFunctionName)
-        assertEquals("SomeTestClass", converter.sourceType.toClassName().simpleName)
-        assertEquals("SomeOtherTestClass", converter.targetType.toClassName().simpleName)
-        assertEquals("source", converter.paramName)
-        assertEquals("SomeTestMapper", converter.mapKSClassDeclaration.simpleName.asString())
-        assertEquals(true, converter.enabledByDefault)
-        assertEquals(12, converter.priority)
+        assertEquals(2, alreadyGeneratedKonverterList.size, "missing generated konverter")
+        alreadyGeneratedKonverterList[0].let { converter ->
+            assertEquals("toSomeOtherTestClass", converter.mapFunctionName)
+            assertEquals("SomeTestClass", converter.sourceType.toClassName().simpleName)
+            assertEquals("SomeOtherTestClass", converter.targetType.toClassName().simpleName)
+            assertEquals("source", converter.paramName)
+            assertEquals("SomeTestMapper", converter.mapKSClassDeclaration.simpleName.asString())
+            assertEquals(true, converter.enabledByDefault)
+            assertEquals(12, converter.priority)
+        }
+        alreadyGeneratedKonverterList[1].let { converter ->
+            assertEquals("fromSomeOtherTestClass", converter.mapFunctionName)
+            assertEquals("SomeOtherTestClass", converter.sourceType.toClassName().simpleName)
+            assertEquals("SomeTestClass", converter.targetType.toClassName().simpleName)
+            assertEquals("source", converter.paramName)
+            assertEquals("SomeTestMapper", converter.mapKSClassDeclaration.simpleName.asString())
+            assertEquals(true, converter.enabledByDefault)
+            assertEquals(123, converter.priority)
+        }
     }
 
     @Test
@@ -372,6 +382,7 @@ data class SomeOtherTestClass(val s: Int) {
 
 interface SomeTestMapper {
     fun toSomeOtherTestClass(source: SomeTestClass): SomeOtherTestClass
+    fun fromSomeOtherTestClass(source: SomeOtherTestClass): SomeTestClass = SomeTestClass(source.s.toString())
 }
 
 /**
@@ -395,6 +406,14 @@ object SomeTestMapperImpl : SomeTestMapper {
     @GeneratedKonverter(priority = 12)
     override fun toSomeOtherTestClass(source: SomeTestClass): SomeOtherTestClass {
         return SomeOtherTestClass(source.s.toInt())
+    }
+
+    /**
+     * Is referenced by META-INF/konvert/io.mcarle.konvert.api.Konvert
+     */
+    @GeneratedKonverter(priority = 123)
+    override fun fromSomeOtherTestClass(source: SomeOtherTestClass): SomeTestClass {
+        return super.fromSomeOtherTestClass(source)
     }
 }
 

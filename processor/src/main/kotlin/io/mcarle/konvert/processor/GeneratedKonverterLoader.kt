@@ -3,6 +3,7 @@ package io.mcarle.konvert.processor
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getFunctionDeclarationsByName
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
@@ -11,6 +12,7 @@ import io.mcarle.konvert.api.GeneratedKonverter
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.classDeclaration
@@ -27,7 +29,7 @@ class GeneratedKonverterLoader(
         return loadKonvertTypeConverter() + loadKonvertToTypeConverter() + loadKonvertFromTypeConverter()
     }
 
-    private fun <T : TypeConverter> load(
+    private fun <T : TypeConverter> loadByFunctions(
         resourceFile: String,
         processor: (GeneratedKonverterData) -> T
     ): List<T> {
@@ -39,8 +41,28 @@ class GeneratedKonverterLoader(
             .map(processor)
     }
 
+    private fun <T : TypeConverter> loadByClasses(
+        resourceFile: String,
+        processor: (GeneratedKonverterData) -> T
+    ): List<T> {
+        return ClassLoader.getSystemResources(resourceFile)
+            .toList()
+            .flatMap { it.readText().lineSequence() }
+            .filter { it.isNotBlank() }
+            .groupBy { it.substringBeforeLast('.') }
+            .flatMap {
+                GeneratedKonverterData.from(
+                    classFqn = it.key,
+                    functionsFqn = it.value,
+                    resolver = resolver,
+                    logger = logger
+                )
+            }
+            .map(processor)
+    }
+
     private fun loadKonvertTypeConverter(): List<KonvertTypeConverter> {
-        return load("META-INF/konvert/io.mcarle.konvert.api.${Konvert::class.simpleName}") { data ->
+        return loadByClasses("META-INF/konvert/io.mcarle.konvert.api.${Konvert::class.simpleName}") { data ->
             KonvertTypeConverter(
                 priority = data.priority,
                 alreadyGenerated = true,
@@ -55,7 +77,7 @@ class GeneratedKonverterLoader(
     }
 
     private fun loadKonvertToTypeConverter(): List<KonvertToTypeConverter> {
-        return load("META-INF/konvert/io.mcarle.konvert.api.${KonvertTo::class.simpleName}") { data ->
+        return loadByFunctions("META-INF/konvert/io.mcarle.konvert.api.${KonvertTo::class.simpleName}") { data ->
             KonvertToTypeConverter(
                 priority = data.priority,
                 alreadyGenerated = true,
@@ -67,7 +89,7 @@ class GeneratedKonverterLoader(
     }
 
     private fun loadKonvertFromTypeConverter(): List<KonvertFromTypeConverter> {
-        return load("META-INF/konvert/io.mcarle.konvert.api.${KonvertFrom::class.simpleName}") { data ->
+        return loadByFunctions("META-INF/konvert/io.mcarle.konvert.api.${KonvertFrom::class.simpleName}") { data ->
             KonvertFromTypeConverter(
                 priority = data.priority,
                 alreadyGenerated = true,
@@ -85,12 +107,38 @@ class GeneratedKonverterLoader(
     ) {
 
         companion object {
-            @OptIn(KspExperimental::class)
-            fun from(fqn: String, resolver: Resolver, logger: KSPLogger): Sequence<GeneratedKonverterData> =
-                resolver.getFunctionDeclarationsByName(fqn, true).mapNotNull {
-                    val priority = it.getAnnotationsByType(GeneratedKonverter::class)
-                        .firstOrNull()
-                        ?.priority
+            fun from(
+                classFqn: String,
+                functionsFqn: List<String>,
+                resolver: Resolver,
+                logger: KSPLogger
+            ): Sequence<GeneratedKonverterData> {
+                return resolver.getClassDeclarationByName(classFqn)?.let { classDecl ->
+                    classDecl.getAllFunctions()
+                        .filter { funDecl -> funDecl.qualifiedName?.asString() in functionsFqn }
+                        .mapNotNull {
+                            val priority = extractPriority(it)
+
+                            if (priority != null) {
+                                GeneratedKonverterData(
+                                    function = it,
+                                    priority = priority
+                                )
+                            } else {
+                                logger.logging("Ignoring $classFqn, as there is no ${GeneratedKonverter::class.simpleName}, ${Konvert::class.simpleName} or ${Konverter::class.simpleName} annotation")
+                                null
+                            }
+                        }
+                } ?: emptySequence()
+            }
+
+            fun from(
+                fqn: String,
+                resolver: Resolver,
+                logger: KSPLogger
+            ): Sequence<GeneratedKonverterData> {
+                return resolver.getFunctionDeclarationsByName(fqn, true).mapNotNull {
+                    val priority = extractPriority(it)
 
                     if (priority != null) {
                         GeneratedKonverterData(
@@ -102,6 +150,15 @@ class GeneratedKonverterLoader(
                         null
                     }
                 }
+            }
+
+            @OptIn(KspExperimental::class)
+            private fun extractPriority(funDeclaration: KSFunctionDeclaration): Priority? {
+                return funDeclaration.getAnnotationsByType(GeneratedKonverter::class)
+                    .firstOrNull()
+                    ?.priority
+            }
+
         }
     }
 }
