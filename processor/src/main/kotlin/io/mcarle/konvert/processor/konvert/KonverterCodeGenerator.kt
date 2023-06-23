@@ -126,7 +126,7 @@ object KonverterCodeGenerator {
 
     fun toFunctionFullyQualifiedNames(data: KonverterData): List<String> {
         return data.konvertData.map {
-           "${data.mapKSClassDeclaration.qualifiedName?.asString()}.${it.mapFunctionName}"
+           "${data.mapKSClassDeclaration.qualifiedName?.asString()}Impl.${it.mapFunctionName}"
         }
     }
 
