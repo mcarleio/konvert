@@ -16,7 +16,8 @@ import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.processor.from
 
 class KonvertData(
-    val annotationData: AnnotationData?,
+    val annotationData: AnnotationData,
+    val isAbstract: Boolean,
     val sourceTypeReference: KSTypeReference,
     val targetTypeReference: KSTypeReference,
     val mapKSFunctionDeclaration: KSFunctionDeclaration,
@@ -29,7 +30,7 @@ class KonvertData(
     val mapFunctionName: String = mapKSFunctionDeclaration.simpleName.asString()
     val paramName: String = mapKSFunctionDeclaration.parameters.first().name!!.asString()
 
-    val priority = annotationData?.priority ?: DEFAULT_KONVERTER_PRIORITY
+    val priority = annotationData.priority
 
     data class AnnotationData(
         val mappings: List<Mapping>,
@@ -50,11 +51,11 @@ class KonvertData(
                     .map { Konfig.from(it) },
             )
 
-            fun default(resolver: Resolver) = with(Konvert()) {
+            fun default(resolver: Resolver, isAbstract: Boolean) = with(Konvert()) {
                 AnnotationData(
                     mappings = this.mappings.toList(),
                     constructor = this.constructor.mapNotNull { resolver.getClassDeclarationByName(it.qualifiedName!!) },
-                    priority = this.priority,
+                    priority = if (isAbstract) this.priority else DEFAULT_KONVERTER_PRIORITY,
                     options = emptyList()
                 )
             }

@@ -63,13 +63,15 @@ object KonverterDataCollector {
 
                     KonvertData(
                         annotationData = annotation,
+                        isAbstract = true,
                         sourceTypeReference = source,
                         targetTypeReference = target,
                         mapKSFunctionDeclaration = it
                     )
                 } else if (source != null && target != null) {
                     KonvertData(
-                        annotationData = if (it.isAbstract) KonvertData.AnnotationData.default(resolver) else null,
+                        annotationData = annotation ?: KonvertData.AnnotationData.default(resolver, it.isAbstract),
+                        isAbstract = it.isAbstract,
                         sourceTypeReference = source,
                         targetTypeReference = target,
                         mapKSFunctionDeclaration = it

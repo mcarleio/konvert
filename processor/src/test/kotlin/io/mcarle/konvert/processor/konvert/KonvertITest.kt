@@ -134,7 +134,10 @@ interface Mapper {
                 """.trimIndent()
             )
         )
-        assertThrows<IllegalArgumentException> { compilation.generatedSourceFor("MapperKonverter.kt") }
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "super.toTarget(source)")
 
         val converter = TypeConverterRegistry.filterIsInstance<KonvertTypeConverter>().firstOrNull {
             !it.alreadyGenerated
@@ -276,6 +279,8 @@ interface Mapper {
                   property = this.toTarget(source = sourceClass.property)
                 )
               }
+
+              override fun toTarget(source: SourceProperty?): TargetProperty? = super.toTarget(source)
             }
         """.trimIndent(), mapperCode)
     }

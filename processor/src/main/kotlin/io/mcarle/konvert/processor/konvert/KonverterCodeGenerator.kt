@@ -30,10 +30,6 @@ object KonverterCodeGenerator {
             logger = logger
         )
 
-        if (data.konvertData.none { it.annotationData != null }) {
-            return
-        }
-
         val codeBuilder = retrieveCodeBuilder(
             data.mapKSClassDeclaration,
             data.mapKSClassDeclaration.packageName.asString(),
@@ -45,7 +41,20 @@ object KonverterCodeGenerator {
             withIsolatedConfiguration {
                 CurrentInterfaceContext.interfaceKSClassDeclaration = data.mapKSClassDeclaration
 
-                if (konvertData.annotationData == null) {
+                if (!konvertData.isAbstract) {
+                    codeBuilder.addFunction(
+                        funBuilder = FunSpec.builder(konvertData.mapFunctionName)
+                            .addModifiers(KModifier.OVERRIDE)
+                            .returns(konvertData.targetTypeReference.toTypeName())
+                            .addParameter(konvertData.paramName, konvertData.sourceTypeReference.toTypeName())
+                            .addCode(
+                                "return super.${konvertData.mapFunctionName}(${konvertData.paramName})"
+                            ),
+                        priority = konvertData.priority,
+                        toType = true,
+                        originating = data.mapKSClassDeclaration.containingFile
+                    )
+
                     return@withIsolatedConfiguration
                 }
 
