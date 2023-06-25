@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.1.0]
+
+### New features
+* override implemented interface functions (simply calling `super`) to add the `@GeneratedKonverter` annotation
+  * this enables to load them on startup when processing entries in `META-INF/io.mcarle.konvert.api.Konvert`
+
+### Bug fixes
+* add `Impl` suffix to classes in `META-INF/io.mcarle.konvert.api.Konvert` (i.e. do not reference the interface, but the implementing class/object)
+
 ## [2.0.0]
 
 ### New features
@@ -150,7 +159,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v2.0.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v2.1.0...HEAD
+
+[2.1.0]: https://github.com/mcarleio/konvert/compare/v2.0.0...v2.1.0
 
 [2.0.0]: https://github.com/mcarleio/konvert/compare/v1.5.1...v2.0.0
 
