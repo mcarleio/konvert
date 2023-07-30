@@ -20,37 +20,32 @@ abstract class KonverterITest {
 
     protected open var addGeneratedKonverterAnnotation = false
 
-    fun compileWith(enabledConverters: List<TypeConverter>, vararg code: SourceFile): Pair<KotlinCompilation, KotlinCompilation.Result> {
-        return compileWith(enabledConverters, emptyList(), *code)
-    }
-
     fun compileWith(
         enabledConverters: List<TypeConverter>,
-        otherConverters: List<TypeConverter>,
-        vararg code: SourceFile
+        otherConverters: List<TypeConverter> = emptyList(),
+        expectResultCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
+        options: Map<String, String> = emptyMap(),
+        code: SourceFile
     ): Pair<KotlinCompilation, KotlinCompilation.Result> {
-        return compileWith(enabledConverters, otherConverters, true, emptyMap(), *code)
-    }
-
-    fun compileWith(
-        enabledConverters: List<TypeConverter>,
-        otherConverters: List<TypeConverter>,
-        expectSuccess: Boolean,
-        vararg code: SourceFile
-    ): Pair<KotlinCompilation, KotlinCompilation.Result> {
-        return compileWith(enabledConverters, otherConverters, expectSuccess, emptyMap(), *code)
+        return compileWith(
+            enabledConverters = enabledConverters,
+            otherConverters = otherConverters,
+            expectResultCode = expectResultCode,
+            options = options,
+            code = arrayOf(code)
+        )
     }
 
     fun compileWith(
         enabledConverters: List<TypeConverter>,
         otherConverters: List<TypeConverter> = emptyList(),
-        expectSuccess: Boolean = true,
+        expectResultCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
         options: Map<String, String> = emptyMap(),
-        vararg code: SourceFile
+        code: Array<SourceFile>
     ): Pair<KotlinCompilation, KotlinCompilation.Result> {
         TypeConverterRegistry.reinitConverterList(*enabled(*enabledConverters.toTypedArray()), *otherConverters.toTypedArray())
 
-        return compile(expectSuccess, options, *code)
+        return compile(expectResultCode, options, *code)
     }
 
     private fun enabled(vararg converter: TypeConverter): Array<out TypeConverter> {
@@ -62,16 +57,14 @@ abstract class KonverterITest {
     }
 
     private fun compile(
-        expectSuccess: Boolean,
+        expectResultCode: KotlinCompilation.ExitCode,
         options: Map<String, String>,
         vararg sourceFiles: SourceFile
     ): Pair<KotlinCompilation, KotlinCompilation.Result> {
         val compilation = prepareCompilation(options, sourceFiles.toList())
 
         val result = compilation.compile()
-        if (expectSuccess) {
-            assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode)
-        }
+        assertEquals(expectResultCode, result.exitCode)
 
         return compilation to result
     }

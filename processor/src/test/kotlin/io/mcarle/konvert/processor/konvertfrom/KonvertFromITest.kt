@@ -21,9 +21,9 @@ class KonvertFromITest : KonverterITest() {
 
     @Test
     fun annotationOnCompanionObject() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -59,9 +59,9 @@ class TargetClass(
 
     @Test
     fun annotationOnClass() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -97,9 +97,9 @@ class TargetClass(
 
     @Test
     fun useOtherMapper() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -133,21 +133,22 @@ data class TargetProperty(val value: String) {
 
     @Test
     fun handleDifferentPackages() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
-                name = "a/SourceClass.kt",
-                contents =
-                """
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/SourceClass.kt",
+                    contents =
+                    """
 package a
 
 class SourceClass(val property: String)
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "b/TargetClass.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/TargetClass.kt",
+                    contents =
+                    """
 package b
 
 import io.mcarle.konvert.api.KonvertFrom
@@ -158,7 +159,8 @@ class TargetClass {
     companion object
     var property: String = ""
 }
-                """.trimIndent()
+                    """.trimIndent()
+                )
             )
         )
         val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKonverter.kt")
@@ -181,21 +183,22 @@ class TargetClass {
 
     @Test
     fun handleSameClassNameInDifferentPackages() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
-                name = "a/SomeClass.kt",
-                contents =
-                """
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/SomeClass.kt",
+                    contents =
+                    """
 package a
 
 class SomeClass(val property: String)
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "b/SomeClass.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/SomeClass.kt",
+                    contents =
+                    """
 package b
 import io.mcarle.konvert.api.KonvertFrom
 
@@ -204,7 +207,8 @@ class SomeClass {
     companion object
     var property: String = ""
 }
-                """.trimIndent()
+                    """.trimIndent()
+                )
             )
         )
         val extensionFunctionCode = compilation.generatedSourceFor("SomeClassKonverter.kt")
@@ -225,22 +229,23 @@ class SomeClass {
 
     @Test
     fun handleSameClassNameInDifferentPackagesWithImportAlias() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
-                name = "a/SomeClass.kt",
-                contents =
-                """
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/SomeClass.kt",
+                    contents =
+                    """
 package a
 
 
 class SomeClass(val property: String)
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "b/SomeClass.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/SomeClass.kt",
+                    contents =
+                    """
 package b
 
 import io.mcarle.konvert.api.KonvertFrom
@@ -251,7 +256,8 @@ class SomeClass {
     companion object
     var property: String = ""
 }
-                """.trimIndent()
+                    """.trimIndent()
+                )
             )
         )
         val extensionFunctionCode = compilation.generatedSourceFor("SomeClassKonverter.kt")
@@ -280,16 +286,14 @@ class SomeClass {
         ]
     )
     fun configurationTest(globalSuffix: String?, localSuffix: String?, expectedSuffix: String) {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            if (globalSuffix != null) {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            options = if (globalSuffix != null) {
                 mapOf(GENERATED_FILENAME_SUFFIX_OPTION.key to globalSuffix)
             } else {
                 mapOf()
             },
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents = // @formatter:off
                 """
@@ -324,9 +328,9 @@ data class SourceClass(val property: String)
 
     @Test
     fun recursiveTreeMap() {
-        val (compilation) = super.compileWith(
-            listOf(IterableToIterableConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(IterableToIterableConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """

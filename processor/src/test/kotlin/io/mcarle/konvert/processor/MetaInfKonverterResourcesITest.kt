@@ -18,11 +18,9 @@ class MetaInfKonverterResourcesITest : KonverterITest() {
         }
         val packageCodeLine = if (packageName.isNotEmpty()) "package $packageName" else ""
         val expectedPackagePrefix = packageName + if (packageName.isNotEmpty()) "." else ""
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = codeFileName,
                 contents =
                 """
@@ -55,11 +53,9 @@ class TargetClass(val property: String)
         }
         val packageCodeLine = if (packageName.isNotEmpty()) "package $packageName" else ""
         val expectedPackagePrefix = packageName + if (packageName.isNotEmpty()) "." else ""
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = codeFileName,
                 contents =
                 """
@@ -94,11 +90,9 @@ class TargetClass(val property: String) {
         }
         val packageCodeLine = if (packageName.isNotEmpty()) "package $packageName" else ""
         val expectedPackagePrefix = packageName + if (packageName.isNotEmpty()) "." else ""
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = codeFileName,
                 contents =
                 """
@@ -128,11 +122,9 @@ interface Mapper {
 
     @Test
     fun generateLineForKonverterWithExistingCodeInMETA_INF() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -161,11 +153,9 @@ interface Mapper {
 
     @Test
     fun generateLineForKonverterForInheritedImplementedFunctions() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """

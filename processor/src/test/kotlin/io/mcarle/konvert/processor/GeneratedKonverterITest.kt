@@ -18,7 +18,7 @@ class GeneratedKonverterITest : KonverterITest() {
 
     @Test
     fun loadGeneratedKonvertTypeConverter() {
-        super.compileWith(emptyList())
+        compileWith(enabledConverters = emptyList(), code = emptyArray())
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertTypeConverter>()
             .filter { it.alreadyGenerated }
@@ -45,7 +45,7 @@ class GeneratedKonverterITest : KonverterITest() {
 
     @Test
     fun loadGeneratedKonvertToTypeConverter() {
-        super.compileWith(emptyList())
+        compileWith(enabledConverters = emptyList(), code = emptyArray())
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertToTypeConverter>()
             .filter { it.alreadyGenerated }
@@ -60,7 +60,7 @@ class GeneratedKonverterITest : KonverterITest() {
 
     @Test
     fun loadGeneratedKonvertFromTypeConverter() {
-        super.compileWith(emptyList())
+        compileWith(enabledConverters = emptyList(), code = emptyArray())
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertFromTypeConverter>()
             .filter { it.alreadyGenerated }
@@ -76,11 +76,9 @@ class GeneratedKonverterITest : KonverterITest() {
 
     @Test
     fun useGeneratedKonverterWithHighestPriority() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -114,11 +112,9 @@ class TargetClass(val property: SomeOtherTestClass)
 
     @Test
     fun generateGeneratedKonverterAnnotationForKonvertTo() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -148,11 +144,9 @@ class TargetClass(val property: String)
 
     @Test
     fun generateGeneratedKonverterAnnotationForKonvertFrom() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -186,11 +180,9 @@ class TargetClass(val property: String) {
 
     @Test
     fun generateGeneratedKonverterAnnotationForKonverter() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -228,11 +220,9 @@ interface Mapper {
 
     @Test
     fun doNotGenerateGeneratedKonverterAnnotationIfOptionDisabledInKonvertToOptions() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -260,11 +250,9 @@ class TargetClass(val property: String)
 
     @Test
     fun doNotGenerateGeneratedKonverterAnnotationIfOptionDisabledInKonvertFromOptions() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -296,11 +284,9 @@ class TargetClass(val property: String) {
 
     @Test
     fun doNotGenerateGeneratedKonverterAnnotationIfOptionDisabledInKonvertOptions() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -336,11 +322,9 @@ interface Mapper {
 
     @Test
     fun doNotGenerateGeneratedKonverterAnnotationIfOptionDisabledInKonverterOptions() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """

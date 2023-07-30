@@ -13,9 +13,9 @@ class KoinInjectorITest : KonverterITest() {
 
     @Test
     fun single() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -44,9 +44,9 @@ class TargetClass(val property: String)
 
     @Test
     fun singleWithBinding() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -78,9 +78,9 @@ class TargetClass(val property: String)
 
     @Test
     fun factory() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -109,9 +109,9 @@ class TargetClass(val property: String)
 
     @Test
     fun factoryWithBinding() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -143,9 +143,9 @@ class TargetClass(val property: String)
 
     @Test
     fun singleNamed() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -179,9 +179,9 @@ class TargetClass(val property: String)
 
     @Test
     fun singleWithClasses() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -216,9 +216,9 @@ class TargetClass(val property: String)
 
     @Test
     fun factoryScoped() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -256,9 +256,9 @@ class TargetClass(val property: String)
 
     @Test
     fun factoryScopedWithClass() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -296,9 +296,9 @@ class TargetClass(val property: String)
 
     @Test
     fun scopedWithBinding() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -339,12 +339,10 @@ class TargetClass(val property: String)
 
     @Test
     fun defaultFactory() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
             options = mapOf(DEFAULT_INJECTION_METHOD_OPTION.key to "factory"),
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -374,12 +372,10 @@ class TargetClass(val property: String)
 
     @Test
     fun defaultSingle() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
             options = mapOf(DEFAULT_INJECTION_METHOD_OPTION.key to "single"),
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -409,12 +405,10 @@ class TargetClass(val property: String)
 
     @Test
     fun defaultScopeWithClassParam() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
             options = mapOf(DEFAULT_INJECTION_METHOD_OPTION.key to "scope", DEFAULT_SCOPE_OPTION.key to "test.module.TestScope"),
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -449,12 +443,10 @@ class TargetClass(val property: String)
 
     @Test
     fun defaultScopeWithStringParam() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
             options = mapOf(DEFAULT_INJECTION_METHOD_OPTION.key to "scope", DEFAULT_SCOPE_OPTION.key to "ScopeName"),
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """

@@ -17,9 +17,9 @@ class TargetStructureITest : KonverterITest() {
 
     @Test
     fun setPropertiesAfterConstructor() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -61,9 +61,9 @@ class TargetClass(
 
     @Test
     fun ignoreDefinedProperties() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -106,9 +106,9 @@ class TargetClass(
 
     @Test
     fun useSameSourcePropertyForDifferentTargets() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -148,9 +148,9 @@ class TargetClass(
 
     @Test
     fun useConstantAndExpression() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -187,10 +187,10 @@ class TargetClass(
 
     @Test
     fun enableProvidedConverter() {
-        val (compilation) = super.compileWith(
-            emptyList(),
-            listOf(StringToIntConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = emptyList(),
+            otherConverters = listOf(StringToIntConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -224,9 +224,9 @@ class TargetClass(
 
     @Test
     fun doNotSetPropertiesNotPartOfNonEmptyConstructor() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -262,9 +262,9 @@ class TargetClass(
 
     @Test
     fun setExplicitDefinedPropertiesNotPartOfNonEmptyConstructor() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -303,9 +303,9 @@ class TargetClass(
 
     @Test
     fun setNotDefinedPropertiesOnEmptyConstructor() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -341,9 +341,9 @@ class TargetClass {
 
     @Test
     fun setMutableProperties() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -383,9 +383,9 @@ class TargetClass {
 
     @Test
     fun doNotSetFinalProperties() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -421,9 +421,9 @@ class TargetClass {
 
     @Test
     fun useDefinedConstructor() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -470,9 +470,9 @@ typealias MyInt = Int
 
     @Test
     fun enforceUsingEmptyConstructor() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -512,9 +512,9 @@ class TargetClass(
 
     @Test
     fun doNotUseEmptyConstructorWhenAnotherDefined() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -559,9 +559,9 @@ typealias MyInt = Int
 
     @Test
     fun ignorePrivateConstructor() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -608,11 +608,10 @@ class TargetClass {
 
     @Test
     fun throwAmbiguousConstructorException() {
-        val (_, compilationResult) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            false,
-            SourceFile.kotlin(
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -642,11 +641,10 @@ class TargetClass {
 
     @Test
     fun throwNoMatchingConstructorException() {
-        val (_, compilationResult) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            false,
-            SourceFile.kotlin(
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -676,11 +674,10 @@ class TargetClass {
 
     @Test
     fun throwNoMatchingConstructorExceptionWhenConstructorTypesWrong() {
-        val (_, compilationResult) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            false,
-            SourceFile.kotlin(
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -704,11 +701,10 @@ class TargetClass(
 
     @Test
     fun throwNotNullOperatorNotEnabledExceptionWhenSourceNullableAndTargetNot() {
-        val (_, compilationResult) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            false,
-            SourceFile.kotlin(
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -730,11 +726,9 @@ class TargetClass(val property: String)
 
     @Test
     fun workWithValueClasses() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """

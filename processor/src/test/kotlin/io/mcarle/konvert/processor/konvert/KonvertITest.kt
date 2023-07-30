@@ -13,9 +13,7 @@ import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
 import io.mcarle.konvert.converter.api.config.KONVERTER_GENERATE_CLASS_OPTION
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
-import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import kotlin.test.assertContains
@@ -27,9 +25,9 @@ class KonvertITest : KonverterITest() {
 
     @Test
     fun converter() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -70,9 +68,9 @@ interface Mapper {
 
     @Test
     fun defaultMappingsOnMissingKonvertAnnotation() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -110,9 +108,9 @@ interface Mapper {
 
     @Test
     fun registerConverterForImplementedFunctions() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -154,9 +152,9 @@ interface Mapper {
 
     @Test
     fun useOtherMapper() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -195,27 +193,29 @@ interface OtherMapper {
 
     @Test
     fun handleNullableOfSourceAndTargetParam() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
-                name = "TestCode.kt",
-                contents =
-                """
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "TestCode.kt",
+                    contents =
+                    """
 class SourceClass(val property: String)
 class TargetClass(val property: String)
-            """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "Mapper.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "Mapper.kt",
+                    contents =
+                    """
 import io.mcarle.konvert.api.Konverter
 
 @Konverter
 interface Mapper {
 fun toTargetClass(source: SourceClass?): TargetClass?
 }
-            """.trimIndent()
+                    """.trimIndent()
+                )
             )
         )
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
@@ -237,9 +237,9 @@ fun toTargetClass(source: SourceClass?): TargetClass?
 
     @Test
     fun handleNullableOfSourceParamWhenUsingOtherKonverterWithSourceNullable() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -272,7 +272,8 @@ interface Mapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        assertSourceEquals("""
+        assertSourceEquals(
+            """
             public object MapperImpl : Mapper {
               override fun toTarget(sourceClass: SourceClass?): TargetClass? = sourceClass?.let {
                 TargetClass(
@@ -282,14 +283,15 @@ interface Mapper {
 
               override fun toTarget(source: SourceProperty?): TargetProperty? = super.toTarget(source)
             }
-        """.trimIndent(), mapperCode)
+        """.trimIndent(), mapperCode
+        )
     }
 
     @Test
     fun handleNullableOfSourceParamWhenUsingOtherKonverter() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -323,7 +325,8 @@ interface Mapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        assertSourceEquals("""
+        assertSourceEquals(
+            """
             public object MapperImpl : Mapper {
               override fun toTarget(sourceClass: SourceClass?): TargetClass? = sourceClass?.let {
                 TargetClass(
@@ -335,14 +338,15 @@ interface Mapper {
                 prop = source.prop
               )
             }
-        """.trimIndent(), mapperCode)
+        """.trimIndent(), mapperCode
+        )
     }
 
     @Test
     fun useSelfImplementedKonverter() {
-        val (compilation) = super.compileWith(
-            listOf(),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -384,9 +388,9 @@ interface OtherMapper {
 
     @Test
     fun useSelfImplementedKonverterWithGenerics() {
-        val (compilation) = super.compileWith(
-            listOf(),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -428,31 +432,30 @@ interface OtherMapper {
 
     @Test
     fun configGenerateClassInsteadOfObject() {
-        val (compilation, result) = super.compileWith(
+        val (compilation, result) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
             options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "false"),
-            SourceFile.kotlin(
-                name = "SourceClass.kt",
-                contents =
-                """
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "SourceClass.kt",
+                    contents =
+                    """
 class SourceClass(val property: String)
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "TargetClass.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "TargetClass.kt",
+                    contents =
+                    """
 class TargetClass {
     var property: String = ""
 }
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "SomeConverter.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "SomeConverter.kt",
+                    contents =
+                    """
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Konfig
@@ -462,7 +465,8 @@ interface SomeConverter {
     @Konvert
     fun toTargetClass(source: SourceClass): TargetClass
 }
-                """.trimIndent()
+                    """.trimIndent()
+                )
             )
         )
         val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
@@ -485,32 +489,33 @@ interface SomeConverter {
 
     @Test
     fun handleDifferentPackages() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
-                name = "a/SourceClass.kt",
-                contents =
-                """
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/SourceClass.kt",
+                    contents =
+                    """
 package a
 
 class SourceClass(val property: String)
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "b/TargetClass.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/TargetClass.kt",
+                    contents =
+                    """
 package b
 
 class TargetClass {
     var property: String = ""
 }
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "SomeConverter.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "SomeConverter.kt",
+                    contents =
+                    """
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konvert
 import a.SourceClass
@@ -521,7 +526,8 @@ interface SomeConverter {
     @Konvert
     fun toTargetClass(source: SourceClass): TargetClass
 }
-                """.trimIndent()
+                    """.trimIndent()
+                )
             )
         )
         val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
@@ -545,32 +551,33 @@ interface SomeConverter {
 
     @Test
     fun handleSameClassNameInDifferentPackagesWithFQN() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
-                name = "a/SomeClass.kt",
-                contents =
-                """
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/SomeClass.kt",
+                    contents =
+                    """
 package a
 
 class SomeClass(val property: String)
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "b/SomeClass.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/SomeClass.kt",
+                    contents =
+                    """
 package b
 
 class SomeClass {
     var property: String = ""
 }
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "SomeConverter.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "SomeConverter.kt",
+                    contents =
+                    """
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konvert
 import a.SomeClass
@@ -580,7 +587,8 @@ interface SomeConverter {
     @Konvert
     fun toSomeClass(source: SomeClass): b.SomeClass
 }
-                """.trimIndent()
+                    """.trimIndent()
+                )
             )
         )
         val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
@@ -603,32 +611,33 @@ interface SomeConverter {
 
     @Test
     fun handleSameClassNameInDifferentPackagesWithFQNAndNullable() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
-                name = "a/SomeClass.kt",
-                contents =
-                """
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/SomeClass.kt",
+                    contents =
+                    """
 package a
 
 class SomeClass(val property: String)
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "b/SomeClass.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/SomeClass.kt",
+                    contents =
+                    """
 package b
 
 class SomeClass {
     var property: String = ""
 }
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "SomeConverter.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "SomeConverter.kt",
+                    contents =
+                    """
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konvert
 import a.SomeClass
@@ -638,7 +647,8 @@ interface SomeConverter {
     @Konvert
     fun toSomeClass(source: SomeClass): b.SomeClass?
 }
-                """.trimIndent()
+                    """.trimIndent()
+                )
             )
         )
         val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
@@ -661,32 +671,33 @@ interface SomeConverter {
 
     @Test
     fun handleSameClassNameInDifferentPackagesWithImportAlias() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
-                name = "a/SomeClass.kt",
-                contents =
-                """
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/SomeClass.kt",
+                    contents =
+                    """
 package a
 
 class SomeClass(val property: String)
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "b/SomeClass.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/SomeClass.kt",
+                    contents =
+                    """
 package b
 
 class SomeClass {
     var property: String = ""
 }
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "SomeConverter.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "SomeConverter.kt",
+                    contents =
+                    """
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konvert
 import a.SomeClass
@@ -697,7 +708,8 @@ interface SomeConverter {
     @Konvert
     fun toB(source: SomeClass): B
 }
-                """.trimIndent()
+                    """.trimIndent()
+                )
             )
         )
         val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
@@ -720,32 +732,33 @@ interface SomeConverter {
 
     @Test
     fun handleSameClassNameInDifferentPackagesWithImportAliasWithNullable() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
-                name = "a/SomeClass.kt",
-                contents =
-                """
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/SomeClass.kt",
+                    contents =
+                    """
 package a
 
 class SomeClass(val property: String)
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "b/SomeClass.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/SomeClass.kt",
+                    contents =
+                    """
 package b
 
 class SomeClass {
     var property: String = ""
 }
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "SomeConverter.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "SomeConverter.kt",
+                    contents =
+                    """
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konvert
 import a.SomeClass
@@ -756,7 +769,8 @@ interface SomeConverter {
     @Konvert
     fun toB(source: SomeClass): B?
 }
-                """.trimIndent()
+                    """.trimIndent()
+                )
             )
         )
         val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
@@ -779,32 +793,33 @@ interface SomeConverter {
 
     @Test
     fun handleSameClassNameInDifferentPackagesWithSourceImportAliasWithNullable() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
-                name = "a/SomeClass.kt",
-                contents =
-                """
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/SomeClass.kt",
+                    contents =
+                    """
 package a
 
 class SomeClass(val property: String)
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "b/SomeClass.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/SomeClass.kt",
+                    contents =
+                    """
 package b
 
 class SomeClass {
     var property: String = ""
 }
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "SomeConverter.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "SomeConverter.kt",
+                    contents =
+                    """
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konvert
 import a.SomeClass as A
@@ -815,7 +830,8 @@ interface SomeConverter {
     @Konvert
     fun toSomeClass(source: A?): SomeClass?
 }
-                """.trimIndent()
+                    """.trimIndent()
+                )
             )
         )
         val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
@@ -848,16 +864,14 @@ interface SomeConverter {
         ]
     )
     fun configurationTest(globalSuffix: String?, localSuffix: String?, expectedSuffix: String) {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            emptyList(),
-            true,
-            if (globalSuffix != null) {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            options = if (globalSuffix != null) {
                 mapOf(GENERATED_FILENAME_SUFFIX_OPTION.key to globalSuffix)
             } else {
                 mapOf()
             },
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents = // @formatter:off
                 """
@@ -894,9 +908,9 @@ data class TargetClass(val property: String)
 
     @Test
     fun callThisWhenInsideSameKonverter() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -936,9 +950,9 @@ interface Mapper {
 
     @Test
     fun recursiveTreeMap() {
-        val (compilation) = super.compileWith(
-            listOf(IterableToIterableConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(IterableToIterableConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -971,12 +985,13 @@ class TargetClass(val children: List<TargetClass>)
 
     @Test
     fun useOtherMapperInDifferentPackage() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter(), IntToStringConverter()),
-            SourceFile.kotlin(
-                name = "a/TestCode.kt",
-                contents =
-                """
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IntToStringConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/TestCode.kt",
+                    contents =
+                    """
 package a
 
 import io.mcarle.konvert.api.Konverter
@@ -993,12 +1008,12 @@ interface ClassMapper {
     @Konvert(mappings=[Mapping(source="sourceProperty", target="targetProperty")])
     fun toTarget(source: SourceClass): TargetClass
 }
-                """.trimIndent()
-            ),
-            SourceFile.kotlin(
-                name = "b/TestCode.kt",
-                contents =
-                """
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/TestCode.kt",
+                    contents =
+                    """
 package b
 
 import io.mcarle.konvert.api.Konverter
@@ -1010,13 +1025,15 @@ interface PropertyMapper {
 
 class SourceProperty<E>(val value: E)
 class TargetProperty<E>(val value: E)
-                """.trimIndent()
+                    """.trimIndent()
+                )
             )
         )
         val extensionFunctionCode = compilation.generatedSourceFor("ClassMapperKonverter.kt")
         println(extensionFunctionCode)
 
-        assertSourceEquals("""
+        assertSourceEquals(
+            """
             package a
 
             import b.PropertyMapper
@@ -1027,7 +1044,8 @@ class TargetProperty<E>(val value: E)
                 targetProperty = Konverter.get<PropertyMapper>().toTarget(source = source.sourceProperty)
               )
             }
-        """.trimIndent(), extensionFunctionCode)
+        """.trimIndent(), extensionFunctionCode
+        )
     }
 
 }

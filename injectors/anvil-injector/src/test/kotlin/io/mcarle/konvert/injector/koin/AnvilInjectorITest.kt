@@ -1,5 +1,6 @@
 package io.mcarle.konvert.injector.koin
 
+import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.config.KONVERTER_GENERATE_CLASS_OPTION
@@ -14,12 +15,10 @@ class AnvilInjectorITest : KonverterITest() {
 
     @Test
     fun contributesBinding() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
             options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents = """
 import io.mcarle.konvert.api.Konverter
@@ -71,12 +70,10 @@ public class MapperImpl : Mapper {
 
     @Test
     fun contributesBindingAsSingleton() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
+        val (compilation) = compileWith(
+            listOf(element = SameTypeConverter()),
             options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -132,12 +129,10 @@ public class MapperImpl : Mapper {
 
     @Test
     fun contributesMultibinding() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
             options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -174,12 +169,10 @@ class TargetClass(val property: String)
 
     @Test
     fun contributesMultibindingWithNamedQualifier() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
             options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -234,12 +227,10 @@ public class MapperImpl : Mapper {
 
     @Test
     fun contributesMultibindingWithCustomQualifier() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
             options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -296,12 +287,10 @@ public class MapperImpl : Mapper {
 
     @Test
     fun contributesMultibindingWithStringMapKey() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
             options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -356,16 +345,14 @@ public class MapperImpl : Mapper {
 
     @Test
     fun contributesBindingByDefault() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
             options = mapOf(
                 KONVERTER_GENERATE_CLASS_OPTION.key to "true",
                 DEFAULT_INJECTION_METHOD_OPTION.key to "factory",
                 DEFAULT_SCOPE_OPTION.key to "test.module.AppScope"
             ),
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """
@@ -411,16 +398,14 @@ public class MapperImpl : Mapper {
 
     @Test
     fun contributesBindingAsSingletonByDefault() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            otherConverters = emptyList(),
-            expectSuccess = true,
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
             options = mapOf(
                 KONVERTER_GENERATE_CLASS_OPTION.key to "true",
                 DEFAULT_INJECTION_METHOD_OPTION.key to "singleton",
                 DEFAULT_SCOPE_OPTION.key to "test.module.AppScope"
             ),
-            SourceFile.kotlin(
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """

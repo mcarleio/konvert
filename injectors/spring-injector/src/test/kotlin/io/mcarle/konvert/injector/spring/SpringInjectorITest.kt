@@ -11,9 +11,9 @@ class SpringInjectorITest : KonverterITest() {
 
     @Test
     fun componentAndScope() {
-        val (compilation) = super.compileWith(
-            listOf(SameTypeConverter()),
-            SourceFile.kotlin(
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
                 """

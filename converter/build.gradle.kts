@@ -14,16 +14,11 @@ dependencies {
     ksp("dev.zacsweers.autoservice:auto-service-ksp:1.0.0")
 
     testImplementation(project(":processor"))
+    testImplementation(testFixtures(project(":processor")))
     testImplementation(kotlinTest)
     testImplementation(kotlinReflect)
-    testImplementation(kotlinCompilerEmbeddable)
-    testImplementation(symbolProcessing)
-    testImplementation(kotlinCompileTesting)
-    testImplementation(kotlinCompileTestingKsp)
-
     testImplementation("com.github.dpaukov:combinatoricslib3:3.3.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:${Versions.jUnit}")
     testImplementation("org.reflections:reflections:0.10.2")
 }
 
