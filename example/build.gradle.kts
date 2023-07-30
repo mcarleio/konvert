@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.8.10"
-    id("com.google.devtools.ksp").version("1.8.10-1.0.9")
+    kotlin("jvm") version "1.9.0"
+    id("com.google.devtools.ksp").version("1.9.0-1.0.12")
 }
 
 val konvertVersion = "0.1.0-SNAPSHOT"

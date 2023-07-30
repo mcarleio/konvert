@@ -24,7 +24,7 @@ To use `Konvert` with Gradle, you have to do the following steps:
 2. Add the KSP plugin matching your Kotlin version:
    ```kotlin
    plugins {
-       id("com.google.devtools.ksp").version("1.8.21-1.0.11")
+       id("com.google.devtools.ksp").version("1.9.0-1.0.12")
    }
    ```
 
@@ -63,7 +63,7 @@ To use `Konvert` with Maven, you have to do the following steps:
            <dependency>
                <groupId>com.dyescape</groupId>
                <artifactId>kotlin-maven-symbol-processing</artifactId>
-               <version>1.5</version>
+               <version>1.6</version>
            </dependency>
            <dependency>
                <groupId>io.mcarle</groupId>
@@ -73,10 +73,6 @@ To use `Konvert` with Maven, you have to do the following steps:
        </dependencies>
    </plugin>
    ```
-
-   > At the time of writing, `kotlin-maven-symbol-processing` does not support Kotlin >1.8.10.
-   Please verify the details regarding the plugin by referring to the corresponding project's
-   > [GitHub page](https://github.com/Dyescape/kotlin-maven-symbol-processing).
 
 ### Code
 
