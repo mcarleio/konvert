@@ -4,5 +4,5 @@ plugins {
 }
 
 dependencies {
-    api("io.insert-koin:koin-annotations:1.1.1")
+    api("io.insert-koin:koin-annotations:1.2.2")
 }

@@ -10,8 +10,8 @@ dependencies {
     api(symbolProcessingApi)
 
     // auto service
-    implementation("com.google.auto.service:auto-service-annotations:1.0.1")
-    ksp("dev.zacsweers.autoservice:auto-service-ksp:1.0.0")
+    implementation("com.google.auto.service:auto-service-annotations:1.1.1")
+    ksp("dev.zacsweers.autoservice:auto-service-ksp:1.1.0")
 
     testImplementation(project(":processor"))
     testImplementation(testFixtures(project(":processor")))

@@ -4,5 +4,5 @@ plugins {
 }
 
 dependencies {
-    api("org.springframework:spring-context:6.0.8")
+    api("org.springframework:spring-context:6.0.11")
 }

@@ -16,8 +16,8 @@ dependencies {
     implementation(kotlinPoetKsp)
 
     // auto service
-    implementation("com.google.auto.service:auto-service-annotations:1.0.1")
-    ksp("dev.zacsweers.autoservice:auto-service-ksp:1.0.0")
+    implementation("com.google.auto.service:auto-service-annotations:1.1.1")
+    ksp("dev.zacsweers.autoservice:auto-service-ksp:1.1.0")
 
     testImplementation(project(":annotations"))
     testImplementation(project(":converter"))
@@ -29,7 +29,6 @@ dependencies {
     testFixturesApi(kotlinCompilerEmbeddable)
     testFixturesApi(symbolProcessing)
     testFixturesImplementation("org.junit.jupiter:junit-jupiter-api:${Versions.jUnit}")
-    testFixturesImplementation("com.google.auto.service:auto-service-annotations:1.0.1")
 }
 
 ksp {

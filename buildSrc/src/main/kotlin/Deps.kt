@@ -1,3 +1,5 @@
+@file:Suppress("UnusedReceiverParameter")
+
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.kotlin.dsl.kotlin
 
@@ -15,9 +17,14 @@ val DependencyHandler.kotlinPoet get() = "com.squareup:kotlinpoet:${Versions.kot
 val DependencyHandler.kotlinPoetKsp get() = "com.squareup:kotlinpoet-ksp:${Versions.kotlinPoet}"
 
 object Versions {
-    const val kotlin = "1.8.21" // has to match buildSrc/gradle.properties
-    const val ksp = "1.0.11"
+    const val kotlin = "1.9.0" // has to match buildSrc/gradle.properties
+    const val ksp = "1.0.12"
+
+    // once increased from to >1.5.0, check if
+    //  processor/src/testFixtures/kotlin/io/mcarle/konvert/processor/removeOnceNotNeeded.kt
+    // is still needed
     const val kotlinCompileTesting = "1.5.0"
+
     const val kotlinPoet = "1.14.2"
-    const val jUnit = "5.9.3"
+    const val jUnit = "5.10.0"
 }
