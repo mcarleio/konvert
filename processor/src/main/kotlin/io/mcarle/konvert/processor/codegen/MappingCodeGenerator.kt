@@ -83,7 +83,15 @@ $className(${"⇥\n%L"}
             val valueParamHasDefault = ksValueParameter.hasDefault && sourceHasParamNames
             val valueParamIsNullable = ksValueParameter.type.resolve().isNullable()
 
-            val sourcePropertyMappingInfo = determinePropertyMappingInfo(sourceProperties, ksValueParameter)
+            val sourcePropertyMappingInfo = try {
+                determinePropertyMappingInfo(sourceProperties, ksValueParameter)
+            } catch (e: PropertyMappingNotExistingException) {
+                if (valueParamHasDefault) {
+                    return@mapNotNull null
+                } else {
+                    throw e
+                }
+            }
             val convertedValue = convertValue(
                 source = sourcePropertyMappingInfo,
                 targetTypeRef = ksValueParameter.type,
@@ -123,10 +131,12 @@ $className(${"⇥\n%L"}
             varName += "0"
         }
 
-        return CodeBlock.of("""
+        return CodeBlock.of(
+            """
 .also·{·$varName·->${"⇥\n%L"}
 ⇤}
-        """.trimIndent(), propertySettingCode(targetProperties, sourceProperties, varName))
+        """.trimIndent(), propertySettingCode(targetProperties, sourceProperties, varName)
+        )
     }
 
     private fun noTargetOrAllIgnored(sourceProperties: List<PropertyMappingInfo>, targetProperties: List<KSPropertyDeclaration>): Boolean {

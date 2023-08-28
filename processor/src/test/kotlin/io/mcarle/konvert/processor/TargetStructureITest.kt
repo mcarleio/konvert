@@ -776,4 +776,34 @@ value class TargetValueClass(val value: String)
         )
     }
 
+    @Test
+    fun ignoreMissingSourceParamForConstructorParametersWithDefaultValue() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(TargetClass::class)
+data class SourceClass(val property: String)
+data class TargetClass(val property: String, val optional: Boolean = true)
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
+              property = property
+            )
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
 }
