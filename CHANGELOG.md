@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.2.0]
+
+Update to Kotlin 1.9.0 and KSP 1.0.12
+
+### Bug fixes
+* ignore missing source property for a target constructor parameter with a default value [#16](https://github.com/mcarleio/konvert/issues/16)
+  ```kotlin
+  @KonvertTo(Target::class)
+  data class Source(val property: String)
+  data class Target(val property: String, val withDefaultVal: Int = 42)
+  ```
+
 ## [2.1.0]
 
 ### New features
@@ -159,7 +171,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v2.1.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v2.2.0...HEAD
+
+[2.2.0]: https://github.com/mcarleio/konvert/compare/v2.1.0...v2.2.0
 
 [2.1.0]: https://github.com/mcarleio/konvert/compare/v2.0.0...v2.1.0
 
