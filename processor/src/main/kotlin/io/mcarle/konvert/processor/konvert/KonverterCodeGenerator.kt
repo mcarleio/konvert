@@ -4,6 +4,7 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
@@ -60,12 +61,12 @@ object KonverterCodeGenerator {
 
                 Configuration.CURRENT += konvertData.annotationData.options.map { it.key to it.value }
 
-                if (konvertData.sourceTypeReference.toString() != konvertData.sourceType.makeNotNullable().toString()) {
+                if (isAlias(konvertData.sourceTypeReference, konvertData.sourceType)) {
                     // @Konverter annotated interface used alias for source, so the implementation should also use the same alias
                     codeBuilder.addImport(konvertData.sourceType, konvertData.sourceTypeReference.toString())
                 }
                 val targetClassImportName =
-                    if (konvertData.targetTypeReference.toString() != konvertData.targetType.makeNotNullable().toString()) {
+                    if (isAlias(konvertData.targetTypeReference, konvertData.targetType)) {
                         // @Konverter annotated interface used alias for target, so the implementation should also use the same alias
                         val alias = konvertData.targetTypeReference.toString()
                         codeBuilder.addImport(konvertData.targetType, alias)
@@ -100,6 +101,10 @@ object KonverterCodeGenerator {
                 CurrentInterfaceContext.interfaceKSClassDeclaration = null
             }
         }
+    }
+
+    private fun isAlias(typeReference: KSTypeReference, type: KSType): Boolean {
+        return typeReference.toString() != type.makeNotNullable().toString().takeWhile { it != '<' }
     }
 
     private fun retrieveCodeBuilder(
