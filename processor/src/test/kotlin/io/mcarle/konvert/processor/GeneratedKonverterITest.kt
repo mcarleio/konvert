@@ -3,6 +3,7 @@ package io.mcarle.konvert.processor
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.GeneratedKonverter
+import io.mcarle.konvert.converter.IterableToIterableConverter
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.ADD_GENERATED_KONVERTER_ANNOTATION_OPTION
@@ -22,7 +23,7 @@ class GeneratedKonverterITest : KonverterITest() {
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertTypeConverter>()
             .filter { it.alreadyGenerated }
-        assertEquals(2, alreadyGeneratedKonverterList.size, "missing generated konverter")
+        assertEquals(3, alreadyGeneratedKonverterList.size, "missing generated konverter")
         alreadyGeneratedKonverterList[0].let { converter ->
             assertEquals("toSomeOtherTestClass", converter.mapFunctionName)
             assertEquals("SomeTestClass", converter.sourceType.toClassName().simpleName)
@@ -31,6 +32,15 @@ class GeneratedKonverterITest : KonverterITest() {
             assertEquals("SomeTestMapper", converter.mapKSClassDeclaration.simpleName.asString())
             assertEquals(true, converter.enabledByDefault)
             assertEquals(12, converter.priority)
+        }
+        alreadyGeneratedKonverterList[2].let { converter ->
+            assertEquals("toSomeOtherTestClasses", converter.mapFunctionName)
+            assertEquals("List<SomeTestClass>", converter.sourceType.toString()) // toClassName() would here result in exception due to Resolver not initialized
+            assertEquals("List<SomeOtherTestClass>", converter.targetType.toString())  // toClassName() would here result in exception due to Resolver not initialized
+            assertEquals("source", converter.paramName)
+            assertEquals("SomeTestMapper", converter.mapKSClassDeclaration.simpleName.asString())
+            assertEquals(true, converter.enabledByDefault)
+            assertEquals(333, converter.priority)
         }
         alreadyGeneratedKonverterList[1].let { converter ->
             assertEquals("fromSomeOtherTestClass", converter.mapFunctionName)
@@ -104,6 +114,77 @@ class TargetClass(val property: SomeOtherTestClass)
             @GeneratedKonverter(priority = 3_000)
             public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
               property = property.toSomeOtherTestClass()
+            )
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
+    @Test
+    fun useGeneratedKonverterInsteadOfIterableToIterableConverter() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(IterableToIterableConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.processor.SomeTestClass
+import io.mcarle.konvert.processor.SomeOtherTestClass
+
+@KonvertTo(TargetClass::class)
+class SourceClass(val property: List<SomeTestClass>)
+class TargetClass(val property: List<SomeOtherTestClass>)
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            import io.mcarle.konvert.api.GeneratedKonverter
+            import io.mcarle.konvert.api.Konverter
+            import io.mcarle.konvert.processor.SomeTestMapper
+
+            @GeneratedKonverter(priority = 3_000)
+            public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
+              property = Konverter.get<SomeTestMapper>().toSomeOtherTestClasses(source = property)
+            )
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
+    @Test
+    fun useIterableToIterableConverterInsteadOfGeneratedKonverterWhenNotExactMatch() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(IterableToIterableConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.processor.SomeTestClass
+import io.mcarle.konvert.processor.SomeOtherTestClass
+
+@KonvertTo(TargetClass::class)
+class SourceClass(val property: List<SomeTestClass>)
+class TargetClass(val property: Set<SomeOtherTestClass>)
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            import io.mcarle.konvert.api.GeneratedKonverter
+            import io.mcarle.konvert.processor.toSomeOtherTestClass
+
+            @GeneratedKonverter(priority = 3_000)
+            public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
+              property = property.map { it.toSomeOtherTestClass() }.toSet()
             )
             """.trimIndent(),
             extensionFunctionCode
@@ -366,6 +447,7 @@ data class SomeOtherTestClass(val s: Int) {
 
 interface SomeTestMapper {
     fun toSomeOtherTestClass(source: SomeTestClass): SomeOtherTestClass
+    fun toSomeOtherTestClasses(source: List<SomeTestClass>): List<SomeOtherTestClass>
     fun fromSomeOtherTestClass(source: SomeOtherTestClass): SomeTestClass = SomeTestClass(source.s.toString())
 }
 
@@ -398,6 +480,14 @@ object SomeTestMapperImpl : SomeTestMapper {
     @GeneratedKonverter(priority = 123)
     override fun fromSomeOtherTestClass(source: SomeOtherTestClass): SomeTestClass {
         return super.fromSomeOtherTestClass(source)
+    }
+
+    /**
+     * Is referenced by META-INF/konvert/io.mcarle.konvert.api.Konvert
+     */
+    @GeneratedKonverter(priority = 333)
+    override fun toSomeOtherTestClasses(source: List<SomeTestClass>): List<SomeOtherTestClass> {
+        return source.map { toSomeOtherTestClass(it) }
     }
 }
 
