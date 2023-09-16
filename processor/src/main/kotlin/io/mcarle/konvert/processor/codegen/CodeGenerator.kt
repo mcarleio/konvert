@@ -12,10 +12,12 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.Mapping
+import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.isNullable
+import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 
@@ -32,6 +34,21 @@ class CodeGenerator(
         target: KSType,
         mappingCodeParentDeclaration: KSDeclaration
     ): CodeBlock {
+        if (paramName != null) {
+            val existingTypeConverter = TypeConverterRegistry
+                .firstOrNull {
+                    it.matches(source, target) && it !is AnnotatedConverter
+                }
+
+            if (existingTypeConverter != null) {
+                logger.logging("", source.declaration)
+                return CodeBlock.of(
+                    "return·%L",
+                    existingTypeConverter.convert(paramName, source, target)
+                )
+            }
+        }
+
         val sourceProperties = PropertyMappingResolver(logger).determinePropertyMappings(paramName, mappings, source)
 
         val targetClassDeclaration = target.classDeclaration()!!
