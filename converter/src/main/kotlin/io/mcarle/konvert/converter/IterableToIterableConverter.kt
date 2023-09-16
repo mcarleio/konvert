@@ -67,15 +67,16 @@ class IterableToIterableConverter : AbstractTypeConverter() {
         }
         val genericSourceType = source.arguments[0].type!!.resolve()
         val genericTargetType = target.arguments[0].type!!.resolve()
-        val typeConverter = TypeConverterRegistry.firstOrNull {
+        val typeConverter = TypeConverterRegistry.first {
             it.matches(
                 source = genericSourceType,
                 target = genericTargetType,
             )
-        }!!
+        }
         val nc = if (source.isNullable()) "?" else ""
         var listTypeChanged = false
         var castNeeded = false
+        var mapCodeBlock: CodeBlock? = null
 
         val mapSourceContentCode = when {
             genericSourceType == genericTargetType -> fieldName
@@ -93,7 +94,8 @@ class IterableToIterableConverter : AbstractTypeConverter() {
 
             else -> {
                 listTypeChanged = true
-                "$fieldName$nc.map·{ ${typeConverter.convert("it", genericSourceType, genericTargetType)} }"
+                mapCodeBlock = typeConverter.convert("it", genericSourceType, genericTargetType)
+                "$fieldName$nc.map·{ %L }"
             }
         }
 
@@ -121,7 +123,8 @@ class IterableToIterableConverter : AbstractTypeConverter() {
                 "($code·as·$target)" // encapsulate with braces
             } else {
                 code
-            }
+            },
+            *listOfNotNull(mapCodeBlock).toTypedArray()
         )
     }
 
