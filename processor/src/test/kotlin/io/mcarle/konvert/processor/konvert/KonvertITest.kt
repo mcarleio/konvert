@@ -1048,4 +1048,58 @@ class TargetProperty<E>(val value: E)
         )
     }
 
+    @Test
+    fun useIterableTypeConverter() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IterableToIterableConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+import java.util.ArrayList
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceClass): TargetClass
+    fun toTargetList(source: List<SourceClass>): List<TargetClass>
+    fun toTargetSet(source: List<SourceClass>): Set<TargetClass>
+    fun toTargetArrayList(source: Iterable<SourceClass>): ArrayList<TargetClass>
+}
+                    """.trimIndent(),
+                    name = "TestCode.kt"
+                )
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            import java.util.ArrayList
+            import kotlin.collections.Iterable
+            import kotlin.collections.List
+            import kotlin.collections.Set
+
+            public object MapperImpl : Mapper {
+              override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+                property = source.property
+              )
+
+              override fun toTargetList(source: List<SourceClass>): List<TargetClass> = source.map {
+                  this.toTarget(source = it) }
+
+              override fun toTargetSet(source: List<SourceClass>): Set<TargetClass> = source.map {
+                  this.toTarget(source = it) }.toSet()
+
+              override fun toTargetArrayList(source: Iterable<SourceClass>): ArrayList<TargetClass> =
+                  source.map { this.toTarget(source = it) }.toCollection(kotlin.collections.ArrayList())
+            }
+        """.trimIndent(), extensionFunctionCode
+        )
+    }
+
 }
