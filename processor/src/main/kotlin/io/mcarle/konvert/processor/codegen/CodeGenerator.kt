@@ -41,7 +41,6 @@ class CodeGenerator(
                 }
 
             if (existingTypeConverter != null) {
-                logger.logging("", source.declaration)
                 return CodeBlock.of(
                     "return·%L",
                     existingTypeConverter.convert(paramName, source, target)
