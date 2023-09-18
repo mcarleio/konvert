@@ -17,8 +17,8 @@ val DependencyHandler.kotlinPoet get() = "com.squareup:kotlinpoet:${Versions.kot
 val DependencyHandler.kotlinPoetKsp get() = "com.squareup:kotlinpoet-ksp:${Versions.kotlinPoet}"
 
 object Versions {
-    const val kotlin = "1.9.0" // has to match buildSrc/gradle.properties
-    const val ksp = "1.0.12"
+    const val kotlin = "1.9.10" // has to match buildSrc/gradle.properties
+    const val ksp = "1.0.13"
 
     // once increased from to >1.5.0, check if
     //  processor/src/testFixtures/kotlin/io/mcarle/konvert/processor/removeOnceNotNeeded.kt
