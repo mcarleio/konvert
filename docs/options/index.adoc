@@ -132,6 +132,28 @@ fun PersonDto.toPerson() = Person(name = name)
 ----
 ====
 
+a|`*konvert.enable-converters*`
+a|list of `TypeConverter` names divided by comma or semicolon
+a|empty list
+a|All listed `TypeConverter` names are registered to be enabled in the current context.
+This can be useful if you need a certain `TypeConverter`, e.g. `StringToIntConverter`, a lot of times
+and do not want to enable it on each field mapping via `@Mapping`.
+
+4+a|
+[.pl-6]
+.Example
+[%collapsible]
+====
+[source,kotlin]
+----
+@KonvertTo(PersonDto::class, options=[
+    Konfig(key="konvert.enable-converters", value="StringToIntConverter, StringToLocalDateConverter")
+])
+class Person(val age: String, val birthday: String)
+class PersonDto(val age: Int, val birthday: LocalDate)
+----
+====
+
 |===
 
 === `@Konverter` Options
