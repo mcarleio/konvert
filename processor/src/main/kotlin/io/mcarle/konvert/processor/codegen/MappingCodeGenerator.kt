@@ -13,6 +13,7 @@ import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enableConverters
 import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.isNullable
+import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 import java.util.Locale
@@ -38,16 +39,15 @@ class MappingCodeGenerator {
             targetProperties
         )
         return if (source.isNullable()) {
-            // source can only be nullable in case of @Konverter/@Konvert
-            assert(functionParamName != null)
-            val code = "return·$functionParamName?.let·{\n⇥%L%L⇤\n}"
+            // source can only be nullable in case of @Konverter/@Konvert which require a functionParamName
+            val code = "return·${functionParamName!!}?.let·{\n⇥%L%L⇤\n}"
             if (target.isNullable()) {
                 CodeBlock.of(code, constructorCode, propertyCode)
             } else {
                 if (Configuration.enforceNotNull) {
                     CodeBlock.of("$code!!", constructorCode, propertyCode)
                 } else {
-                    throw NotNullOperatorNotEnabledException(source, target)
+                    throw NotNullOperatorNotEnabledException(functionParamName, source, target)
                 }
             }
         } else {
@@ -214,9 +214,24 @@ $className(${"⇥\n%L"}
             return TypeConverterRegistry.withAdditionallyEnabledConverters(source.enableConverters + Configuration.enableConverters) {
                 firstOrNull { it.matches(sourceType, targetType) }
                     ?.convert(paramName + source.sourceName!!, sourceType, targetType)
-                    ?: throw NoSuchElementException("Could not find converter for ${paramName + source.sourceName} -> ${source.targetName}: $sourceType -> $targetType")
+                    ?: throwException(paramName + source.sourceName, sourceType, source.targetName, targetType)
             }
 
         }
+    }
+
+    private fun throwException(
+        sourceName: String,
+        sourceType: KSType,
+        targetName: String,
+        targetType: KSType
+    ): Nothing {
+        val notNullOperatorNeeded = sourceType.isNullable() && !targetType.isNullable()
+        val typeConverterExisting = { TypeConverterRegistry.any { it.matches(sourceType, targetType.makeNullable()) } }
+
+        if (notNullOperatorNeeded && !Configuration.enforceNotNull && typeConverterExisting()) {
+            throw NotNullOperatorNotEnabledException(sourceName, sourceType, targetName, targetType)
+        }
+        throw NoMatchingTypeConverterException(sourceName, sourceType, targetName, targetType)
     }
 }

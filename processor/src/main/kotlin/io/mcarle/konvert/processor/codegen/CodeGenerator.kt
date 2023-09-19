@@ -60,7 +60,7 @@ class CodeGenerator(
         verifyPropertiesAndMandatoryParametersExist(sourceProperties, targetElements)
 
         if (source.isNullable() && !target.isNullable() && !Configuration.enforceNotNull) {
-            throw NotNullOperatorNotEnabledException(source, target)
+            throw NotNullOperatorNotEnabledException(paramName, source, target)
         }
 
         val targetPropertiesWithoutParameters = extractDistinctProperties(targetElements)
