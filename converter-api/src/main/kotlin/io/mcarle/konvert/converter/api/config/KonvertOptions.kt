@@ -2,6 +2,8 @@
 
 package io.mcarle.konvert.converter.api.config
 
+import io.mcarle.konvert.api.TypeConverterName
+
 /**
  * Special handling for the case, that the source type is nullable and target type is not nullable:
  * When enabled, the converters will use the not-null assertion operator to enforce the mapped value to be non-null.
@@ -67,3 +69,15 @@ object GENERATED_FILENAME_SUFFIX_OPTION : Option<String>("konvert.generated-file
  * Default: true
  */
 object ADD_GENERATED_KONVERTER_ANNOTATION_OPTION : Option<Boolean>("konvert.add-generated-konverter-annotation", true)
+
+/**
+ * Enables the provided [io.mcarle.konvert.converter.api.TypeConverter]s, as some are not enabled by default
+ * (see [io.mcarle.konvert.converter.api.TypeConverter.enabledByDefault]).
+ *
+ * See in package [io.mcarle.konvert.api.converter] for a list of provided type converter names.
+ *
+ * To enable multiple, you can pass them with either a comma or semikolon in between.
+ *
+ * Default: empty
+ */
+object ENABLE_CONVERTERS_OPTION : Option<List<TypeConverterName>>("konvert.enable-converters", emptyList())

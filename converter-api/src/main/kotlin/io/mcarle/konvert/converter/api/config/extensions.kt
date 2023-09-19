@@ -1,5 +1,7 @@
 package io.mcarle.konvert.converter.api.config
 
+import io.mcarle.konvert.api.TypeConverterName
+
 /**
  * @see ENFORCE_NOT_NULL_OPTION
  */
@@ -23,6 +25,12 @@ val Configuration.Companion.generatedFilenameSuffix: String
  */
 val Configuration.Companion.addGeneratedKonverterAnnotation: Boolean
     get() = ADD_GENERATED_KONVERTER_ANNOTATION_OPTION.get(CURRENT, String::toBoolean)
+
+/**
+ * @see ENABLE_CONVERTERS_OPTION
+ */
+val Configuration.Companion.enableConverters: List<TypeConverterName>
+    get() = ENABLE_CONVERTERS_OPTION.get(CURRENT) { configString -> configString.split(";", ",").map { it.trim() } }
 
 /**
  * Reads the value for [Option.key] from the provided `options` or fallbacks to the [Option.defaultValue].

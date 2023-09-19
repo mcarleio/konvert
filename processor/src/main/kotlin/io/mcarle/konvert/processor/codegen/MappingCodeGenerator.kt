@@ -10,6 +10,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.joinToCode
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.enableConverters
 import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
@@ -210,7 +211,7 @@ $className(${"⇥\n%L"}
             val sourceType = source.declaration.type.resolve()
             val paramName = source.mappingParamName?.let { "$it." } ?: ""
 
-            return TypeConverterRegistry.withAdditionallyEnabledConverters(source.enableConverters) {
+            return TypeConverterRegistry.withAdditionallyEnabledConverters(source.enableConverters + Configuration.enableConverters) {
                 firstOrNull { it.matches(sourceType, targetType) }
                     ?.convert(paramName + source.sourceName!!, sourceType, targetType)
                     ?: throw NoSuchElementException("Could not find converter for ${paramName + source.sourceName} -> ${source.targetName}: $sourceType -> $targetType")
