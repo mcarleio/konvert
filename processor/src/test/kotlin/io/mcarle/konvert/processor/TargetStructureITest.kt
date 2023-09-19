@@ -4,6 +4,7 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.StringToIntConverter
+import io.mcarle.konvert.converter.api.config.ENABLE_CONVERTERS_OPTION
 import io.mcarle.konvert.processor.exceptions.AmbiguousConstructorException
 import io.mcarle.konvert.processor.exceptions.NoMatchingConstructorException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
@@ -800,6 +801,39 @@ data class TargetClass(val property: String, val optional: Boolean = true)
             """
             public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
               property = property
+            )
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
+    @Test
+    fun enableConvertersOption() {
+        val (compilation) = compileWith(
+            enabledConverters = emptyList(), // intentionally empty, as enabled via option
+            otherConverters = listOf(StringToIntConverter()), // StringToIntConverter is not enabled by default
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Konfig
+
+@KonvertTo(TargetClass::class, options = [
+    Konfig(key = "${ENABLE_CONVERTERS_OPTION.key}", value= "StringToIntConverter")
+])
+data class SourceClass(val property: String)
+data class TargetClass(val property: Int)
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
+              property = property.toInt()
             )
             """.trimIndent(),
             extensionFunctionCode
