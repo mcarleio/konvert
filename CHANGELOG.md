@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.3.0]
+
+Update to Kotlin 1.9.10 and KSP 1.0.13
+
+### Improvements
+* Generate mapping code with help of existing `TypeConverter`, e.g. between iterables [#20](https://github.com/mcarleio/konvert/issues/20)
+  ```kotlin
+  @Konverter
+  interface Mapper {
+    fun toDto(source: Source): Target
+    fun toDto(sources: List<Source>): List<Target> // <- will use the IterableToIterable TypeConverter
+  }
+  data class Source(val property: String)
+  data class Target(val property: String)
+  ```
+* New option (`konvert.enable-converters`) to enable TypeConverters via configuration (related to [#19](https://github.com/mcarleio/konvert/issues/19))
+* Started throwing better understandable exceptions (related to [#18](https://github.com/mcarleio/konvert/issues/18))
+
+### Bug fixes:
+* replace implicit CodeBlock.toString() calls
+* ignore generics when looking for aliases
+
 ## [2.2.0]
 
 Update to Kotlin 1.9.0 and KSP 1.0.12
@@ -171,7 +193,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v2.2.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v2.3.0...HEAD
+
+[2.3.0]: https://github.com/mcarleio/konvert/compare/v2.2.0...v2.3.0
 
 [2.2.0]: https://github.com/mcarleio/konvert/compare/v2.1.0...v2.2.0
 
