@@ -10,8 +10,8 @@ class NotNullOperatorNotEnabledException : RuntimeException {
     )
 
     constructor(sourceName: String?, sourceType: KSType, targetName: String?, targetType: KSType) : this(
-        source = if (sourceName.isNullOrEmpty()) "" else "$sourceName.$sourceType",
-        target = if (targetName.isNullOrEmpty()) "" else "$targetName.$targetType"
+        source = if (sourceName.isNullOrEmpty()) "$sourceType" else "$sourceName.$sourceType",
+        target = if (targetName.isNullOrEmpty()) "$targetType" else "$targetName.$targetType"
     )
 
     private constructor(source: String, target: String) : super(
