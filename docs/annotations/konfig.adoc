@@ -1,0 +1,19 @@
+:page-title: @Konfig
+:page-parent: Annotations
+:page-nav_order: 5
+
+= @Konfig
+
+With the annotation `@Konfig` you can define values for provided link:../options[options]
+in the annotations link:konverter[@Konverter], link:konvert[@Konvert], link:konvert-to[@KonvertTo] or link:konvert-from[@KonvertFrom].
+
+== Example
+
+[source,kotlin]
+----
+import io.mcarle.konvert.api.config.ENFORCE_NOT_NULL
+
+@Konverter(options=[
+    Konfig(key=ENFORCE_NOT_NULL, value="true")
+])
+----

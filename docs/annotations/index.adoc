@@ -2,9 +2,18 @@
 :page-title: Annotations
 :page-has_children: true
 :page-nav_order: 3
+:page-has_toc: false
 
 = Annotations
 
 [.fs-6.fw-300]
-Konvert comes with mainly three different ways to be used:
+Konvert comes with mainly three annotations to be used.
+
+* link:konvert-to[@KonvertTo]
+* link:konvert-from[@KonvertFrom]
+* link:konverter[@Konverter] (along with link:konvert[@Konvert])
+
+Additionally, there is
+the link:mapping[@Mapping] annotation, which enables to customize the mappings
+and the link:konfig[@Konfig] annotation, which is used change configuration.
 

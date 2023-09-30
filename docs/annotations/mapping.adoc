@@ -1,0 +1,127 @@
+:page-title: @Mapping
+:page-parent: Annotations
+:page-nav_order: 4
+
+= @Mapping
+
+With the annotation `@Mapping` you can customize how to determine the value for a field of the target class.
+The only mandatory parameter is `target`, where you enter the field name of the target class.
+
+Then you have a few parameters to describe how the value for that field is determined.
+
+== Parameters
+
+=== `source`
+
+With `source` you define from which field of the source class the value should be converted.
+
+[source,kotlin]
+----
+@KonvertTo(PersonDto::class, mappings=[
+    Mapping(source="firstName", target="givenName"),
+    Mapping(source="lastName", target="familyName"),
+])
+class Person(val firstName: String, val lastName: String)
+class PersonDto(val givenName: String, val familyName: String)
+----
+
+=== `constant`
+
+The value you provide here will be placed **as is** into the generated code.
+As the name indicates, this should be used for _constant values_.
+
+[source,kotlin]
+----
+@KonvertTo(Car::class, mappings=[
+     Mapping(target="brand", constant="Brand.AUDI")
+])
+class Audi
+class Car(val brand: Brand)
+enum class Brand { AUDI }
+----
+
+=== `expression`
+
+The value you provide here will be placed **as is** into the generated code.
+As the name indicates, you can use it for _expressions_.
+You can use the variable named **it** (always not null) to get the source object.
+You have to make sure yourself, that you handle the nullability correct in your expression.
+
+[source,kotlin]
+----
+@KonvertTo(FullName::class, mappings=[
+     Mapping(target="fullName", expression="if (it.firstName == null) it.lastName else \"${it.firstName} ${it.lastName}\"")
+])
+class Name(val firstName: String?, val lastName: String)
+class FullName(val fullName: String)
+----
+
+[TIP]
+====
+For complex expressions it is much better to call a function which does the mapping:
+
+[source,kotlin]
+----
+@KonvertTo(FullName::class, mappings=[
+     Mapping(target="fullName", expression="joinNames(it)")
+])
+class Name(val firstName: String?, val lastName: String)
+class FullName(val fullName: String)
+
+fun joinNames(name: Name): String = if (name.firstName == null) name.lastName else "${name.firstName} ${name.lastName}"
+----
+====
+
+=== `ignore`
+
+You normally need to provide a value for all declared properties on the target.
+In some cases, you do not want to set a value.
+In the following scenarios you may use ignore:
+
+- The target class has a property which is already initialized and does not need a value:
++
+[source,kotlin]
+----
+@KonvertTo(DefectCar::class, mappings=[
+     Mapping(target="price", ignore=true)
+])
+class NewCar(val price: Double)
+class DefectCar {
+  var price: Double? = null
+}
+----
+
+- The target class has a nullable constructor argument:
++
+[source,kotlin]
+----
+@KonvertTo(DefectCar::class, mappings=[
+    Mapping(target="repairCosts", ignore=true)
+])
+class Car
+class DefectCar(val repairCosts: Double?)
+----
+
+=== `enable`
+
+Enables all `TypeConverter` with the provided names for this single mapping.
+
+[source,kotlin]
+----
+import java.util.Date
+import io.mcarle.konvert.api.converter.LONG_EPOCH_SECONDS_TO_DATE_CONVERTER
+
+@KonvertTo(Person::class, mappings=[
+    Mapping(target="birthday", enable=[LONG_EPOCH_SECONDS_TO_DATE_CONVERTER])
+])
+class PersonDto(val birthday: Long)
+class Person(val birthday: Date)
+----
+
+You find all provided type converter names in package `io.mcarle.konvert.api.converter`.
+
+[TIP]
+====
+See also the option link:../options[`konvert.enable-converters`]
+if you want to enable a type converter for multiple mappings or even globally.
+====

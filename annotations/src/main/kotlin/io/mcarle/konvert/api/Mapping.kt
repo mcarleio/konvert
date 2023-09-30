@@ -61,14 +61,6 @@ annotation class Mapping(
      *      var price: Double? = null
      *    }
      *    ```
-     * * Your source does not have the information for a target with default value
-     *    ```kotlin
-     *    @KonvertTo(CarToRepair::class, mappings=[
-     *         Mapping(target="defect", ignore=true)
-     *    ])
-     *    class Car
-     *    class CarToRepair(val defect: Boolean = true)
-     *    ```
      * * Your source does not have the information for a nullable target
      *    ```kotlin
      *    @KonvertTo(DefectCar::class, mappings=[

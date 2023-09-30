@@ -48,6 +48,8 @@ In case you have options in `@Konverter` and `@Konvert`, then the later one will
 
 == Available Options
 
+TIP: Have a look in the package `io.mcarle.konvert.api.config` for all provided options.
+
 === General Options
 
 [cols="4,1,1,7"]
