@@ -1,0 +1,39 @@
+:page-title: Structure
+:page-parent: TypeConverter
+
+== Structure
+
+A `TypeConverter` has the following properties and functions.
+
+=== Properties
+
+* `val name: String`
++
+All `TypeConverter` must have a (unique) name. It should also describe the mapping, e.g. `StringToIntConverter`.
+A list of provided `TypeConverter` names is generated and published in package `io.mcarle.konvert.api.converter`.
+
+* `val enabledByDefault: Boolean`
++
+Not all converters may be suitable for every use case: For example a conversion of a `String` to an `Int` may not always be possible.
+But sometimes, you exactly want to do that specific conversion and you link:../annotations/mapping#enable[enable it].
+
+* `val priority: Int`
++
+Used to sort all the available converters, as the first possible converter will be used.
+This enables to e.g. override a specific converter by defining a lower value here.
++
+NOTE: Lower values have higher priorities!
+
+=== Functions
+
+* `fun init(resolver: Resolver)`
++
+Used to initialise all TypeConverters in the beginning of the KSP with the resolver.
+
+* `fun matches(source: KSType, target: KSType): Boolean`
++
+Used to check, if this type converter is able to do the conversion from `source` to `target`
+
+* `fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock`
++
+Called to generate the kotlin code to convert the field `fieldName` of type `source` to type `target`.

@@ -102,6 +102,7 @@ class Car
 class DefectCar(val repairCosts: Double?)
 ----
 
+[#enable]
 === `enable`
 
 Enables all `TypeConverter` with the provided names for this single mapping.

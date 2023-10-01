@@ -1,0 +1,23 @@
+:page-title: TypeConverter
+:page-nav_order: 4
+:page-has_children: true
+:page-has_toc: false
+
+= TypeConverter
+
+[.fs-6.fw-300]
+The type converters are the linchpin of Konvert.
+
+Every mapping between types, e.g. from `String` to `Int`, is implemented by a `TypeConverter`.
+Without any `TypeConverter`, Konvert would not even know how to map from `String` to `String`.
+
+Therefore, Konvert link:provided[provides a lot of `TypeConverter`] in the link:../modules[`konvert-converter` module].
+You can even simply create your own (little) library with a collection of custom `TypeConverter` and provide them to Konvert during KSP
+(TODO: document).
+
+== Startup
+
+During compilation startup, Konvert uses link:https://en.wikipedia.org/wiki/Service_provider_interface[SPI^]
+to collect the implementations of `TypeConverter` on the KSP classpath.
+Additionally, Konvert has a similar concept to load all previously generated mapping functions and registers them as well as `TypeConverter`
+(TODO: document).

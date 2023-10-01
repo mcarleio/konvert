@@ -1,14 +1,14 @@
 ---
 layout: default
-title: Provided TypeConverters
-nav_order: 4
+parent: TypeConverter
+title: Provided with Konvert
 ---
 
 {% comment %} @formatter:off {% endcomment %}
-# Provided TypeConverters
+# Provided with Konvert
 {: .no_toc }
 
-`Konvert` already provides a lot of default `TypeConverter`s:
+`Konvert` already provides a lot of default `TypeConverter`:
 {: .fs-6.fw-300 }
 
 - TOC

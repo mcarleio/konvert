@@ -40,7 +40,7 @@ interface TypeConverter {
     fun matches(source: KSType, target: KSType): Boolean
 
     /**
-     * Called to generate the kotlin code to convert source to from.
+     * Called to generate the kotlin code to convert `source` to `target`.
      *
      * @param fieldName the property name, which should be converted
      */
