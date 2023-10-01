@@ -1,8 +1,17 @@
 :page-layout: home
 :page-title: Home
 :page-nav_order: 1
+:maven-image: https://img.shields.io/maven-central/v/io.mcarle/konvert.svg
+:maven-url: https://central.sonatype.com/artifact/io.mcarle/konvert/
+:license-image: https://img.shields.io/github/license/mcarleio/konvert.svg
+:codecov-image: https://img.shields.io/codecov/c/github/mcarleio/konvert.svg
+:codecov-url: https://codecov.io/gh/mcarleio/konvert
 
 = Welcome to Konvert!
+
+image:{maven-image}[link={maven-url},alt=Maven Central]
+image:{license-image}[link={github}/blob/main/LICENSE,alt=License]
+image:{codecov-image}[link={codecov-url},alt=Code Coverage]
 
 [.fs-6.fw-300]
 Konvert is a lightweight Kotlin compiler plugin which is using https://github.com/google/ksp[KSP (Kotlin Symbol Processing) API].

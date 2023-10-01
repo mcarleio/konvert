@@ -4,7 +4,7 @@
 = Use-cases
 
 [.fs-6.fw-300]
-Good use-cases for Konvert are given, when the classes - between which you want to map - are very similar structured.
+Good use-cases for Konvert are given, when the classes between which you want to map are structured very similar.
 
 The following is a simple example for that, as the target class `PersonDto` has the same fields as `Person`:
 [source,kotlin]

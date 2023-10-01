@@ -10,4 +10,5 @@ The default priority for this annotation is `{default-priority}`.
 
 === `mappings`
 
-Define a mapping for each property, which can not be automatically converted (TODO)
+Define a mapping for each property, which can not be automatically converted.
+See the link:mapping[@Mapping] annotation for details on how to do so.

@@ -15,5 +15,5 @@ Konvert comes with mainly three annotations to be used.
 
 Additionally, there is
 the link:mapping[@Mapping] annotation, which enables to customize the mappings
-and the link:konfig[@Konfig] annotation, which is used change configuration.
+and the link:konfig[@Konfig] annotation, which is used to change configuration.
 
