@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.3.1]
+
+### Publication fix
+* Fix published maven `pom.xml` for `konvert-processor` to not include dependency to itself and testFixtures dependencies [#22](https://github.com/mcarleio/konvert/issues/22) (thanks to [@iDevSK](https://github.com/iDevSK) [#23](https://github.com/mcarleio/konvert/pull/23))
+
 ## [2.3.0]
 
 Update to Kotlin 1.9.10 and KSP 1.0.13
@@ -193,7 +198,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v2.3.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v2.3.1...HEAD
+
+[2.3.1]: https://github.com/mcarleio/konvert/compare/v2.3.0...v2.3.1
 
 [2.3.0]: https://github.com/mcarleio/konvert/compare/v2.2.0...v2.3.0
 
