@@ -1102,4 +1102,117 @@ interface Mapper {
         )
     }
 
+    @Test
+    fun ignorePrivateFunctions() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceClass): TargetClass
+
+    private fun ignoreMe(source: SourceClass): TargetClass = toTarget(source)
+}
+                    """.trimIndent(),
+                    name = "TestCode.kt"
+                )
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public object MapperImpl : Mapper {
+              override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+                property = source.property
+              )
+            }
+        """.trimIndent(), extensionFunctionCode
+        )
+    }
+
+    @Test
+    fun ignoreExtensionFunctions() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceClass): TargetClass
+
+    fun SourceClass.ignoreMe(source: SourceClass): TargetClass = toTarget(source)
+}
+                    """.trimIndent(),
+                    name = "TestCode.kt"
+                )
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public object MapperImpl : Mapper {
+              override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+                property = source.property
+              )
+            }
+        """.trimIndent(), extensionFunctionCode
+        )
+    }
+
+    @Test
+    fun ignoreFunctionsWithUnitReturnType() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceClass): TargetClass
+    fun ignoreMe(source: SourceClass) {}
+}
+                    """.trimIndent(),
+                    name = "TestCode.kt"
+                )
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public object MapperImpl : Mapper {
+              override fun toTarget(source: SourceClass): TargetClass = TargetClass(
+                property = source.property
+              )
+            }
+        """.trimIndent(), extensionFunctionCode
+        )
+    }
+
 }

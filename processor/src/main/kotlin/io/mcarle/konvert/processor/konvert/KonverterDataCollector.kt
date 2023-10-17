@@ -1,5 +1,7 @@
 package io.mcarle.konvert.processor.konvert
 
+import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.isPrivate
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
@@ -43,10 +45,27 @@ object KonverterDataCollector {
                     return@mapNotNull null
                 }
 
+                if (it.isPrivate()) {
+                    // ignore private functions
+                    return@mapNotNull null
+                }
+
+                if (it.extensionReceiver != null) {
+                    // ignore extension functions
+                    return@mapNotNull null
+                }
+
                 val source =
                     if (it.parameters.size > 1 || it.parameters.isEmpty()) null
                     else it.parameters.first().type
-                val target = it.returnType
+                val target = it.returnType?.let {  returnType ->
+                    if (returnType.resolve().declaration == resolver.getClassDeclarationByName<Unit>()) {
+                        null
+                    } else {
+                        returnType
+                    }
+                }
+
 
                 val annotation = it.annotations.firstOrNull { annotation ->
                     (annotation.annotationType.toTypeName() as? ClassName)?.canonicalName == Konvert::class.qualifiedName
@@ -79,7 +98,11 @@ object KonverterDataCollector {
                 } else if (it.isAbstract) {
                     throw RuntimeException("Method $it is abstract and does not meet criteria for automatic source and target detection")
                 } else {
-                    logger.warn("Could not determine source and/or target", it)
+                    if (annotation != null) {
+                        logger.warn("Could not determine source and/or target", it)
+                    } else {
+                        logger.logging("Could not determine source and/or target", it)
+                    }
                     null
                 }
             }.toList()
