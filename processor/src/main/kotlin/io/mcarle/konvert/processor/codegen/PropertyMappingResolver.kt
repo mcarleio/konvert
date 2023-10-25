@@ -4,9 +4,9 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.converter.api.classDeclaration
-import io.mcarle.konvert.converter.api.isNullable
 
 class PropertyMappingResolver(
     private val logger: KSPLogger
@@ -14,7 +14,8 @@ class PropertyMappingResolver(
     fun determinePropertyMappings(
         mappingParamName: String?,
         mappings: List<Mapping>,
-        type: KSType
+        type: KSType,
+        additionalSourceParameters: List<KSValueParameter>
     ): List<PropertyMappingInfo> {
         val classDeclaration = type.classDeclaration()!!
         val properties = classDeclaration.getAllProperties().toList()
@@ -23,10 +24,29 @@ class PropertyMappingResolver(
 
         val propertiesWithoutSource = getPropertyMappingsWithoutSource(mappings, mappingParamName)
         val propertiesWithSource = getPropertyMappingsWithSource(mappings, properties, mappingParamName)
+        val propertiesFromAdditionalParameters = getPropertyMappingsFromAdditionalParameters(additionalSourceParameters)
         val propertiesWithoutMappings = getPropertyMappingsWithoutMappings(properties, mappingParamName)
 
-        return propertiesWithoutSource + propertiesWithSource + propertiesWithoutMappings
+        return propertiesWithoutSource + propertiesWithSource + propertiesFromAdditionalParameters + propertiesWithoutMappings
     }
+
+    private fun getPropertyMappingsFromAdditionalParameters(
+        properties: List<KSValueParameter>,
+    ) = properties
+        .map { property ->
+            val paramName = property.name!!.asString()
+            PropertyMappingInfo(
+                mappingParamName = null,
+                sourceName = null,
+                targetName = paramName,
+                constant = paramName,
+                expression = null,
+                ignore = false,
+                enableConverters = emptyList(),
+                declaration = null,
+                isBasedOnAnnotation = false
+            )
+        }
 
     private fun getPropertyMappingsWithoutMappings(
         properties: List<KSPropertyDeclaration>,

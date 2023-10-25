@@ -7,6 +7,7 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.converter.api.config.Configuration
@@ -47,7 +48,17 @@ object KonverterCodeGenerator {
                         funBuilder = FunSpec.builder(konvertData.mapFunctionName)
                             .addModifiers(KModifier.OVERRIDE)
                             .returns(konvertData.targetTypeReference.toTypeName())
-                            .addParameter(konvertData.paramName, konvertData.sourceTypeReference.toTypeName())
+                            .addParameters(konvertData.mapKSFunctionDeclaration.parameters.map {
+                                val builder = ParameterSpec.builder(
+                                    name = it.name!!.asString(),
+                                    type = it.type.toTypeName(),
+                                    modifiers = emptyArray()
+                                )
+                                if (it.isVararg) {
+                                    builder.addModifiers(KModifier.VARARG)
+                                }
+                                builder.build()
+                            })
                             .addCode(
                                 "return super.${konvertData.mapFunctionName}(${konvertData.paramName})"
                             ),
@@ -81,7 +92,17 @@ object KonverterCodeGenerator {
                     funBuilder = FunSpec.builder(konvertData.mapFunctionName)
                         .addModifiers(KModifier.OVERRIDE)
                         .returns(konvertData.targetTypeReference.toTypeName())
-                        .addParameter(konvertData.paramName, konvertData.sourceTypeReference.toTypeName())
+                        .addParameters(konvertData.mapKSFunctionDeclaration.parameters.map {
+                            val builder = ParameterSpec.builder(
+                                name = it.name!!.asString(),
+                                type = it.type.toTypeName(),
+                                modifiers = emptyArray()
+                            )
+                            if (it.isVararg) {
+                                builder.addModifiers(KModifier.VARARG)
+                            }
+                            builder.build()
+                        })
                         .addCode(
                             mapper.generateCode(
                                 konvertData.annotationData.mappings.asIterable().validated(konvertData.mapKSFunctionDeclaration, logger),
@@ -90,7 +111,8 @@ object KonverterCodeGenerator {
                                 targetClassImportName,
                                 konvertData.sourceType,
                                 konvertData.targetType,
-                                konvertData.mapKSFunctionDeclaration
+                                konvertData.mapKSFunctionDeclaration,
+                                konvertData.additionalParameters
                             )
                         ),
                     priority = konvertData.priority,
@@ -130,9 +152,11 @@ object KonverterCodeGenerator {
     }
 
     fun toFunctionFullyQualifiedNames(data: KonverterData): List<String> {
-        return data.konvertData.map {
-           "${data.mapKSClassDeclaration.qualifiedName?.asString()}Impl.${it.mapFunctionName}"
-        }
+        return data.konvertData
+            .filter { it.additionalParameters.isEmpty() } // filter out mappings with more than one parameter
+            .map {
+                "${data.mapKSClassDeclaration.qualifiedName?.asString()}Impl.${it.mapFunctionName}"
+            }
     }
 
 }

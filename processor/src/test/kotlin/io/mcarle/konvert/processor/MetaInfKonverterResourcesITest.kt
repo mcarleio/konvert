@@ -3,6 +3,7 @@ package io.mcarle.konvert.processor
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.SameTypeConverter
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
@@ -183,6 +184,31 @@ interface Mapper: IMapper {
             """.trimIndent(),
             metaInfFileContent
         )
+    }
+
+    @Test
+    fun doNotGenerateLineForKonverterFunctionsWithMultipleParameters() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String, val other: Int)
+
+@Konverter
+interface Mapper {
+    fun toTarget(@Konverter.Source source: SourceClass, other: Int): TargetClass
+}
+                """.trimIndent()
+            )
+        )
+        assertThrows<IllegalArgumentException> {
+            compilation.generatedSourceFor("io.mcarle.konvert.api.Konvert")
+        }
     }
 
 }

@@ -36,7 +36,8 @@ object KonvertFromCodeGenerator {
                         data.targetClassDeclaration.simpleName.asString(),
                         data.sourceClassDeclaration.asStarProjectedType(),
                         data.targetClassDeclaration.asStarProjectedType(),
-                        data.targetCompanionDeclaration
+                        data.targetCompanionDeclaration,
+                        emptyList()
                     )
                 ),
             priority = data.priority,
