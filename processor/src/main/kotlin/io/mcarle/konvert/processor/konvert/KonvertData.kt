@@ -7,6 +7,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
 import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.Konvert
@@ -15,12 +16,13 @@ import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.processor.from
 
-class KonvertData(
+class KonvertData constructor(
     val annotationData: AnnotationData,
     val isAbstract: Boolean,
     val sourceTypeReference: KSTypeReference,
     val targetTypeReference: KSTypeReference,
     val mapKSFunctionDeclaration: KSFunctionDeclaration,
+    val additionalParameters: List<KSValueParameter>
 ) {
 
     val sourceType: KSType = sourceTypeReference.resolve()
@@ -28,7 +30,7 @@ class KonvertData(
     val targetType: KSType = targetTypeReference.resolve()
     val targetClassDeclaration: KSClassDeclaration = targetType.classDeclaration()!!
     val mapFunctionName: String = mapKSFunctionDeclaration.simpleName.asString()
-    val paramName: String = mapKSFunctionDeclaration.parameters.first().name!!.asString()
+    val paramName: String = (mapKSFunctionDeclaration.parameters - additionalParameters).first().name!!.asString()
 
     val priority = annotationData.priority
 

@@ -32,7 +32,8 @@ class CodeGenerator(
         targetClassImportName: String?,
         source: KSType,
         target: KSType,
-        mappingCodeParentDeclaration: KSDeclaration
+        mappingCodeParentDeclaration: KSDeclaration,
+        additionalSourceParameters: List<KSValueParameter>
     ): CodeBlock {
         if (paramName != null) {
             val existingTypeConverter = TypeConverterRegistry
@@ -48,7 +49,7 @@ class CodeGenerator(
             }
         }
 
-        val sourceProperties = PropertyMappingResolver(logger).determinePropertyMappings(paramName, mappings, source)
+        val sourceProperties = PropertyMappingResolver(logger).determinePropertyMappings(paramName, mappings, source, additionalSourceParameters)
 
         val targetClassDeclaration = target.classDeclaration()!!
 

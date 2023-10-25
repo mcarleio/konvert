@@ -30,6 +30,10 @@ annotation class Konverter(
     val options: Array<Konfig> = []
 ) {
 
+    @Retention(AnnotationRetention.RUNTIME)
+    @Target(AnnotationTarget.VALUE_PARAMETER)
+    annotation class Source
+
     /**
      * This object can be used to load the generated class of an interface, which is annotated with `@Konverter`.
      */

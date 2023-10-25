@@ -1215,4 +1215,49 @@ interface Mapper {
         )
     }
 
+    @Test
+    fun allowMultipleFunctionParametersIfOneIsAnnotatedWithSource() {
+        addGeneratedKonverterAnnotation = true
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String, val otherValue: Int)
+
+@Konverter
+interface Mapper {
+    fun toTarget(@Konverter.Source source: SourceClass, otherValue: Int, vararg furtherParams: String): TargetClass
+}
+                    """.trimIndent(),
+                    name = "TestCode.kt"
+                )
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            import kotlin.Int
+            import kotlin.String
+
+            public object MapperImpl : Mapper {
+              override fun toTarget(
+                source: SourceClass,
+                otherValue: Int,
+                vararg furtherParams: String,
+              ): TargetClass = TargetClass(
+                property = source.property,
+                otherValue = otherValue
+              )
+            }
+        """.trimIndent(), extensionFunctionCode
+        )
+    }
+
 }

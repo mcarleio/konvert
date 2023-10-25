@@ -22,11 +22,14 @@ class CodeBuilder private constructor(
         addFunction(
             funSpec = funBuilder.apply {
                 if (Configuration.addGeneratedKonverterAnnotation) {
-                    addAnnotation(
-                        AnnotationSpec.builder(GeneratedKonverter::class)
-                            .addMember("${GeneratedKonverter::priority.name} = %L", priority)
-                            .build()
-                    )
+                    // do not add annotation to functions with multiple parameters
+                    if (this.parameters.size <= 1) {
+                        addAnnotation(
+                            AnnotationSpec.builder(GeneratedKonverter::class)
+                                .addMember("${GeneratedKonverter::priority.name} = %L", priority)
+                                .build()
+                        )
+                    }
                 }
             }.build(),
             toType = toType,

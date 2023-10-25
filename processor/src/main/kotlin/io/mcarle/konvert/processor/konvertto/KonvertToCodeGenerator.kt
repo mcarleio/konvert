@@ -42,7 +42,8 @@ object KonvertToCodeGenerator {
                         targetClassImportName,
                         data.sourceClassDeclaration.asStarProjectedType(),
                         data.targetClassDeclaration.asStarProjectedType(),
-                        data.sourceClassDeclaration
+                        data.sourceClassDeclaration,
+                        emptyList()
                     )
                 ),
             priority = data.priority,
