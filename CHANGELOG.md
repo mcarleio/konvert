@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.4.0]
+
+### New features
+* allow functions with multiple parameters in `@Konverter` annotated interfaces if one is defined as source with `@Konverter.Source`
+   ```kotlin
+   @Konverter
+   interface Mapper {
+    fun toDto(@Konverter.Source source: Source, otherProperty: Int): Target
+   }
+   data class Source(val property: String)
+   data class Target(val property: String, val otherProperty: Int)
+   ```
+
+### Bug fixes:
+* ignore private and extension functions in `@Konverter` annotated interfaces [#30](https://github.com/mcarleio/konvert/issues/30)
+
+
 ## [2.3.1]
 
 ### Publication fix
@@ -198,7 +215,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v2.3.1...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v2.4.0...HEAD
+
+[2.4.0]: https://github.com/mcarleio/konvert/compare/v2.3.1...v2.4.0
 
 [2.3.1]: https://github.com/mcarleio/konvert/compare/v2.3.0...v2.3.1
 
