@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ## [2.4.0]
 
 ### New features
-* allow functions with multiple parameters in `@Konverter` annotated interfaces if one is defined as source with `@Konverter.Source`
+* allow functions with multiple parameters in `@Konverter` annotated interfaces if one is defined as source with `@Konverter.Source` [#28](https://github.com/mcarleio/konvert/issues/28)
    ```kotlin
    @Konverter
    interface Mapper {
