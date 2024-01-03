@@ -67,7 +67,7 @@ annotation class Konverter(
                     }?.get(null)
 
                     if (implInstance == null) {
-                        implInstance = implClass.constructors.firstOrNull { it.parameterCount == 0 }?.newInstance()
+                        implInstance = implClass.constructors.firstOrNull { it.parameterTypes.isEmpty() }?.newInstance()
                             ?: throw RuntimeException("Could not determine INSTANCE or empty constructor for $implClass")
                     }
                     mappers[clazz] = implInstance
