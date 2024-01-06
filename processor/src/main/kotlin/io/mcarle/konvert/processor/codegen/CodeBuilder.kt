@@ -21,15 +21,14 @@ class CodeBuilder private constructor(
     fun addFunction(funBuilder: FunSpec.Builder, priority: Priority, toType: Boolean = false, originating: KSFile?) {
         addFunction(
             funSpec = funBuilder.apply {
-                if (Configuration.addGeneratedKonverterAnnotation) {
-                    // do not add annotation to functions with multiple parameters
-                    if (this.parameters.size <= 1) {
-                        addAnnotation(
-                            AnnotationSpec.builder(GeneratedKonverter::class)
-                                .addMember("${GeneratedKonverter::priority.name} = %L", priority)
-                                .build()
-                        )
-                    }
+                if (Configuration.addGeneratedKonverterAnnotation
+                    && this.parameters.size <= 1 // do not add annotation to functions with multiple parameters
+                ) {
+                    addAnnotation(
+                        AnnotationSpec.builder(GeneratedKonverter::class)
+                            .addMember("${GeneratedKonverter::priority.name} = %L", priority)
+                            .build()
+                    )
                 }
             }.build(),
             toType = toType,
