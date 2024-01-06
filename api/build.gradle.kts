@@ -10,7 +10,7 @@ dependencies {
 sourceSets {
     main {
         kotlin {
-            setSrcDirs(listOf("$buildDir/generated/generator/kotlin"))
+            setSrcDirs(listOf("${layout.buildDirectory.get().asFile}/generated/generator/kotlin"))
         }
     }
 }
@@ -35,7 +35,7 @@ kotlin {
                 val generateTask = tasks.create<JavaExec>("generateCode") {
                     classpath = runtimeDependencyFiles + output.allOutputs
                     mainClass.set("GenerateKt")
-                    args = listOf("$buildDir/generated/generator/kotlin")
+                    args = listOf("${layout.buildDirectory.get().asFile}/generated/generator/kotlin")
                 }
 
                 tasks.processResources {
