@@ -27,23 +27,64 @@ object KonverterCodeGenerator {
     }
 
     fun generate(data: KonverterData, resolver: Resolver, logger: KSPLogger) = withIsolatedConfiguration(data.annotationData.options) {
+        withCurrentKonverterInterface(data.mapKSClassDeclaration) {
+            val mapper = CodeGenerator(
+                logger = logger
+            )
 
-        val mapper = CodeGenerator(
-            logger = logger
-        )
+            val codeBuilder = retrieveCodeBuilder(
+                data.mapKSClassDeclaration,
+                data.mapKSClassDeclaration.packageName.asString(),
+                data.mapKSClassDeclaration.asStarProjectedType(),
+                data.mapKSClassDeclaration.simpleName.asString()
+            )
 
-        val codeBuilder = retrieveCodeBuilder(
-            data.mapKSClassDeclaration,
-            data.mapKSClassDeclaration.packageName.asString(),
-            data.mapKSClassDeclaration.asStarProjectedType(),
-            data.mapKSClassDeclaration.simpleName.asString()
-        )
+            data.konvertData.forEach { konvertData ->
+                withIsolatedConfiguration(konvertData.annotationData.options) {
 
-        data.konvertData.forEach { konvertData ->
-            withIsolatedConfiguration(konvertData.annotationData.options) {
-                CurrentInterfaceContext.interfaceKSClassDeclaration = data.mapKSClassDeclaration
+                    if (!konvertData.isAbstract) {
+                        codeBuilder.addFunction(
+                            funBuilder = FunSpec.builder(konvertData.mapFunctionName)
+                                .addModifiers(KModifier.OVERRIDE)
+                                .returns(konvertData.targetTypeReference.toTypeName())
+                                .addParameters(konvertData.mapKSFunctionDeclaration.parameters.map {
+                                    val builder = ParameterSpec.builder(
+                                        name = it.name!!.asString(),
+                                        type = it.type.toTypeName(),
+                                        modifiers = emptyArray()
+                                    )
+                                    if (it.isVararg) {
+                                        builder.addModifiers(KModifier.VARARG)
+                                    }
+                                    builder.build()
+                                })
+                                .addCode(
+                                    "return super.${konvertData.mapFunctionName}(${konvertData.paramName})"
+                                ),
+                            priority = konvertData.priority,
+                            toType = true,
+                            originating = data.mapKSClassDeclaration.containingFile
+                        )
 
-                if (!konvertData.isAbstract) {
+                        return@withIsolatedConfiguration
+                    }
+
+                    if (isAlias(konvertData.sourceTypeReference, konvertData.sourceType)) {
+                        // @Konverter annotated interface used alias for source, so the implementation should also use the same alias
+                        codeBuilder.addImport(konvertData.sourceType, konvertData.sourceTypeReference.toString())
+                    }
+                    val targetClassImportName =
+                        if (isAlias(konvertData.targetTypeReference, konvertData.targetType)) {
+                            // @Konverter annotated interface used alias for target, so the implementation should also use the same alias
+                            val alias = konvertData.targetTypeReference.toString()
+                            codeBuilder.addImport(konvertData.targetType, alias)
+                            alias
+                        } else if (konvertData.sourceTypeReference.toString() == konvertData.targetTypeReference.toString()) {
+                            null
+                        } else {
+                            konvertData.targetClassDeclaration.simpleName.asString()
+                        }
+
                     codeBuilder.addFunction(
                         funBuilder = FunSpec.builder(konvertData.mapFunctionName)
                             .addModifiers(KModifier.OVERRIDE)
@@ -60,65 +101,23 @@ object KonverterCodeGenerator {
                                 builder.build()
                             })
                             .addCode(
-                                "return super.${konvertData.mapFunctionName}(${konvertData.paramName})"
+                                mapper.generateCode(
+                                    konvertData.annotationData.mappings.asIterable()
+                                        .validated(konvertData.mapKSFunctionDeclaration, logger),
+                                    konvertData.annotationData.constructor,
+                                    konvertData.paramName,
+                                    targetClassImportName,
+                                    konvertData.sourceType,
+                                    konvertData.targetType,
+                                    konvertData.mapKSFunctionDeclaration,
+                                    konvertData.additionalParameters
+                                )
                             ),
                         priority = konvertData.priority,
                         toType = true,
                         originating = data.mapKSClassDeclaration.containingFile
                     )
-
-                    return@withIsolatedConfiguration
                 }
-
-                if (isAlias(konvertData.sourceTypeReference, konvertData.sourceType)) {
-                    // @Konverter annotated interface used alias for source, so the implementation should also use the same alias
-                    codeBuilder.addImport(konvertData.sourceType, konvertData.sourceTypeReference.toString())
-                }
-                val targetClassImportName =
-                    if (isAlias(konvertData.targetTypeReference, konvertData.targetType)) {
-                        // @Konverter annotated interface used alias for target, so the implementation should also use the same alias
-                        val alias = konvertData.targetTypeReference.toString()
-                        codeBuilder.addImport(konvertData.targetType, alias)
-                        alias
-                    } else if (konvertData.sourceTypeReference.toString() == konvertData.targetTypeReference.toString()) {
-                        null
-                    } else {
-                        konvertData.targetClassDeclaration.simpleName.asString()
-                    }
-
-                codeBuilder.addFunction(
-                    funBuilder = FunSpec.builder(konvertData.mapFunctionName)
-                        .addModifiers(KModifier.OVERRIDE)
-                        .returns(konvertData.targetTypeReference.toTypeName())
-                        .addParameters(konvertData.mapKSFunctionDeclaration.parameters.map {
-                            val builder = ParameterSpec.builder(
-                                name = it.name!!.asString(),
-                                type = it.type.toTypeName(),
-                                modifiers = emptyArray()
-                            )
-                            if (it.isVararg) {
-                                builder.addModifiers(KModifier.VARARG)
-                            }
-                            builder.build()
-                        })
-                        .addCode(
-                            mapper.generateCode(
-                                konvertData.annotationData.mappings.asIterable().validated(konvertData.mapKSFunctionDeclaration, logger),
-                                konvertData.annotationData.constructor,
-                                konvertData.paramName,
-                                targetClassImportName,
-                                konvertData.sourceType,
-                                konvertData.targetType,
-                                konvertData.mapKSFunctionDeclaration,
-                                konvertData.additionalParameters
-                            )
-                        ),
-                    priority = konvertData.priority,
-                    toType = true,
-                    originating = data.mapKSClassDeclaration.containingFile
-                )
-
-                CurrentInterfaceContext.interfaceKSClassDeclaration = null
             }
         }
     }
