@@ -1091,8 +1091,8 @@ class TargetProperty<E>(val value: E)
                 )
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("ClassMapperKonverter.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("ClassMapperKonverter.kt")
+        println(mapperCode)
 
         assertSourceEquals(
             """
@@ -1106,7 +1106,7 @@ class TargetProperty<E>(val value: E)
                 targetProperty = Konverter.get<PropertyMapper>().toTarget(source = source.sourceProperty)
               )
             }
-        """.trimIndent(), extensionFunctionCode
+        """.trimIndent(), mapperCode
         )
     }
 
@@ -1136,8 +1136,8 @@ interface Mapper {
                 )
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
 
         assertSourceEquals(
             """
@@ -1160,7 +1160,7 @@ interface Mapper {
               override fun toTargetArrayList(source: Iterable<SourceClass>): ArrayList<TargetClass> =
                   source.map { this.toTarget(source = it) }.toCollection(kotlin.collections.ArrayList())
             }
-        """.trimIndent(), extensionFunctionCode
+        """.trimIndent(), mapperCode
         )
     }
 
@@ -1188,8 +1188,8 @@ interface Mapper {
                 )
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
 
         assertSourceEquals(
             """
@@ -1198,7 +1198,7 @@ interface Mapper {
                 property = source.property
               )
             }
-        """.trimIndent(), extensionFunctionCode
+        """.trimIndent(), mapperCode
         )
     }
 
@@ -1226,8 +1226,8 @@ interface Mapper {
                 )
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
 
         assertSourceEquals(
             """
@@ -1236,7 +1236,7 @@ interface Mapper {
                 property = source.property
               )
             }
-        """.trimIndent(), extensionFunctionCode
+        """.trimIndent(), mapperCode
         )
     }
 
@@ -1263,8 +1263,8 @@ interface Mapper {
                 )
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
 
         assertSourceEquals(
             """
@@ -1273,7 +1273,7 @@ interface Mapper {
                 property = source.property
               )
             }
-        """.trimIndent(), extensionFunctionCode
+        """.trimIndent(), mapperCode
         )
     }
 
@@ -1300,10 +1300,10 @@ interface Mapper {
                 )
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("MapperKonverter.kt")
-        println(extensionFunctionCode)
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
 
-        assertFalse { extensionFunctionCode.contains("@GeneratedKonverter") }
+        assertFalse { mapperCode.contains("@GeneratedKonverter") }
 
         assertSourceEquals(
             """
@@ -1320,7 +1320,7 @@ interface Mapper {
                 otherValue = otherValue
               )
             }
-        """.trimIndent(), extensionFunctionCode
+        """.trimIndent(), mapperCode
         )
     }
 
