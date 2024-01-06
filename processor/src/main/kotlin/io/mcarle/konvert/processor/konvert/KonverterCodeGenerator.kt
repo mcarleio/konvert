@@ -2,7 +2,6 @@ package io.mcarle.konvert.processor.konvert
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.squareup.kotlinpoet.FunSpec
@@ -27,16 +26,13 @@ object KonverterCodeGenerator {
     }
 
     fun generate(data: KonverterData, resolver: Resolver, logger: KSPLogger) = withIsolatedConfiguration(data.annotationData.options) {
-        withCurrentKonverterInterface(data.mapKSClassDeclaration) {
+        withCurrentKonverterInterface(data.konverterInterface) {
             val mapper = CodeGenerator(
                 logger = logger
             )
 
             val codeBuilder = retrieveCodeBuilder(
-                data.mapKSClassDeclaration,
-                data.mapKSClassDeclaration.packageName.asString(),
-                data.mapKSClassDeclaration.asStarProjectedType(),
-                data.mapKSClassDeclaration.simpleName.asString()
+                data.konverterInterface
             )
 
             data.konvertData.forEach { konvertData ->
@@ -81,7 +77,7 @@ object KonverterCodeGenerator {
                             },
                         priority = konvertData.priority,
                         toType = true,
-                        originating = data.mapKSClassDeclaration.containingFile
+                        originating = data.konverterInterface.kSClassDeclaration.containingFile
                     )
                 }
             }
@@ -130,21 +126,18 @@ object KonverterCodeGenerator {
     }
 
     private fun retrieveCodeBuilder(
-        mapperInterfaceKSClassDeclaration: KSClassDeclaration,
-        packageName: String,
-        interfaceType: KSType,
-        interfaceName: String
+        konverterInterface: KonverterInterface
     ): CodeBuilder {
-        return CodeBuilder.getOrCreate(packageName, interfaceName) {
+        return CodeBuilder.getOrCreate(konverterInterface.packageName, konverterInterface.simpleName) {
             if (Configuration.konverterGenerateClass) {
-                TypeSpec.classBuilder("${interfaceName}${Konverter.KONVERTER_GENERATED_CLASS_SUFFIX}")
+                TypeSpec.classBuilder("${konverterInterface.simpleName}${Konverter.KONVERTER_GENERATED_CLASS_SUFFIX}")
             } else {
-                TypeSpec.objectBuilder("${interfaceName}${Konverter.KONVERTER_GENERATED_CLASS_SUFFIX}")
+                TypeSpec.objectBuilder("${konverterInterface.simpleName}${Konverter.KONVERTER_GENERATED_CLASS_SUFFIX}")
             }
-                .addSuperinterface(interfaceType.toTypeName())
+                .addSuperinterface(konverterInterface.typeName)
                 .also { typeBuilder ->
                     injectors.forEach {
-                        it.processType(typeBuilder, mapperInterfaceKSClassDeclaration)
+                        it.processType(typeBuilder, konverterInterface.kSClassDeclaration)
                     }
                 }
 
@@ -155,7 +148,15 @@ object KonverterCodeGenerator {
         return data.konvertData
             .filter { it.additionalParameters.isEmpty() } // filter out mappings with more than one parameter
             .map {
-                "${data.mapKSClassDeclaration.qualifiedName?.asString()}${Konverter.KONVERTER_GENERATED_CLASS_SUFFIX}.${it.mapFunctionName}"
+                val packageName = data.konverterInterface.packageName
+                val simpleName = data.konverterInterface.simpleName + Konverter.KONVERTER_GENERATED_CLASS_SUFFIX
+                val functionName = it.mapFunctionName
+
+                if (packageName.isEmpty()) {
+                    "$simpleName.$functionName"
+                } else {
+                    "$packageName.$simpleName.$functionName"
+                }
             }
     }
 

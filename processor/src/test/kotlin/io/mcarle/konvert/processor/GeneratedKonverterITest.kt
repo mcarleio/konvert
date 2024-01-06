@@ -29,7 +29,7 @@ class GeneratedKonverterITest : KonverterITest() {
             assertEquals("SomeTestClass", converter.sourceType.toClassName().simpleName)
             assertEquals("SomeOtherTestClass", converter.targetType.toClassName().simpleName)
             assertEquals("source", converter.paramName)
-            assertEquals("SomeTestMapper", converter.mapKSClassDeclaration.simpleName.asString())
+            assertEquals("SomeTestMapper", converter.konverterInterface.simpleName)
             assertEquals(true, converter.enabledByDefault)
             assertEquals(12, converter.priority)
         }
@@ -38,7 +38,7 @@ class GeneratedKonverterITest : KonverterITest() {
             assertEquals("List<SomeTestClass>", converter.sourceType.toString()) // toClassName() would here result in exception due to Resolver not initialized
             assertEquals("List<SomeOtherTestClass>", converter.targetType.toString())  // toClassName() would here result in exception due to Resolver not initialized
             assertEquals("source", converter.paramName)
-            assertEquals("SomeTestMapper", converter.mapKSClassDeclaration.simpleName.asString())
+            assertEquals("SomeTestMapper", converter.konverterInterface.simpleName)
             assertEquals(true, converter.enabledByDefault)
             assertEquals(333, converter.priority)
         }
@@ -47,7 +47,7 @@ class GeneratedKonverterITest : KonverterITest() {
             assertEquals("SomeOtherTestClass", converter.sourceType.toClassName().simpleName)
             assertEquals("SomeTestClass", converter.targetType.toClassName().simpleName)
             assertEquals("source", converter.paramName)
-            assertEquals("SomeTestMapper", converter.mapKSClassDeclaration.simpleName.asString())
+            assertEquals("SomeTestMapper", converter.konverterInterface.simpleName)
             assertEquals(true, converter.enabledByDefault)
             assertEquals(123, converter.priority)
         }

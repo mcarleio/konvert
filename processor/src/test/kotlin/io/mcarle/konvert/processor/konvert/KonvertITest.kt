@@ -62,7 +62,7 @@ interface Mapper {
         assertEquals("source", converter.paramName)
         assertEquals("SourceClass", converter.sourceType.toClassName().simpleName)
         assertEquals("TargetClass", converter.targetType.toClassName().simpleName)
-        assertEquals("Mapper", converter.mapKSClassDeclaration.simpleName.asString())
+        assertEquals("Mapper", converter.konverterInterface.simpleName)
         assertEquals(true, converter.enabledByDefault)
         assertEquals(DEFAULT_KONVERT_PRIORITY, converter.priority)
     }
@@ -102,7 +102,7 @@ interface Mapper {
         assertEquals("source", converter.paramName)
         assertEquals("SourceClass", converter.sourceType.toClassName().simpleName)
         assertEquals("TargetClass", converter.targetType.toClassName().simpleName)
-        assertEquals("Mapper", converter.mapKSClassDeclaration.simpleName.asString())
+        assertEquals("Mapper", converter.konverterInterface.simpleName)
         assertEquals(true, converter.enabledByDefault)
         assertEquals(DEFAULT_KONVERT_PRIORITY, converter.priority)
     }
@@ -146,7 +146,7 @@ interface Mapper {
         assertEquals("source", converter.paramName)
         assertEquals("SourceClass", converter.sourceType.toClassName().simpleName)
         assertEquals("TargetClass", converter.targetType.toClassName().simpleName)
-        assertEquals("Mapper", converter.mapKSClassDeclaration.simpleName.asString())
+        assertEquals("Mapper", converter.konverterInterface.simpleName)
         assertEquals(true, converter.enabledByDefault)
         assertEquals(DEFAULT_KONVERTER_PRIORITY, converter.priority)
     }

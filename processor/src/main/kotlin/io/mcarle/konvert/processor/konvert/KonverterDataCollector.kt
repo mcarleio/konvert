@@ -35,7 +35,7 @@ object KonverterDataCollector {
                 KonverterData(
                     annotationData = annotation,
                     konvertData = collectKonvertData(ksClassDeclaration, resolver, logger),
-                    ksClassDeclaration
+                    konverterInterface = KonverterInterface(ksClassDeclaration)
                 )
 
             }.toList()

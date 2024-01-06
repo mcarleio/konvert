@@ -13,7 +13,7 @@ import io.mcarle.konvert.processor.from
 class KonverterData(
     val annotationData: AnnotationData,
     val konvertData: List<KonvertData>,
-    val mapKSClassDeclaration: KSClassDeclaration
+    val konverterInterface: KonverterInterface
 ) : AnnotatedConverterData {
 
     override fun toTypeConverters(): List<AnnotatedConverter> {
@@ -25,7 +25,7 @@ class KonverterData(
                 targetType = it.targetType,
                 mapFunctionName = it.mapFunctionName,
                 paramName = it.paramName,
-                mapKSClassDeclaration = mapKSClassDeclaration
+                konverterInterface = konverterInterface
             )
         }
     }

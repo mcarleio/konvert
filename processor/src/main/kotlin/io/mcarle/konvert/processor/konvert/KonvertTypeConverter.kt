@@ -1,6 +1,5 @@
 package io.mcarle.konvert.processor.konvert
 
-import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.ksp.toTypeName
@@ -17,7 +16,7 @@ class KonvertTypeConverter constructor(
     internal val targetType: KSType,
     internal val mapFunctionName: String,
     internal val paramName: String,
-    internal val mapKSClassDeclaration: KSClassDeclaration
+    internal val konverterInterface: KonverterInterface
 ) : AbstractTypeConverter(), AnnotatedConverter {
 
     override val enabledByDefault: Boolean = true
@@ -60,11 +59,11 @@ class KonvertTypeConverter constructor(
 
     override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
         val params = mutableListOf<Any>()
-        val getKonverterCode = if (CurrentInterfaceContext.interfaceKSClassDeclaration == mapKSClassDeclaration) {
+        val getKonverterCode = if (CurrentInterfaceContext.konverterInterface == konverterInterface) {
             "this"
         } else {
             params += Konverter::class
-            params += mapKSClassDeclaration.asStarProjectedType().toTypeName()
+            params += konverterInterface.typeName
             "%T.get<%T>()"
         }
         val mappingCode = if (source.isNullable() && !sourceType.isNullable()) {

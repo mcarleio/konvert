@@ -17,6 +17,7 @@ import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.processor.konvert.KonvertTypeConverter
+import io.mcarle.konvert.processor.konvert.KonverterInterface
 import io.mcarle.konvert.processor.konvertfrom.KonvertFromTypeConverter
 import io.mcarle.konvert.processor.konvertto.KonvertToTypeConverter
 
@@ -70,8 +71,9 @@ class GeneratedKonverterLoader(
                 targetType = data.function.returnType!!.resolve(),
                 mapFunctionName = data.function.simpleName.asString(),
                 paramName = data.function.parameters.first().name!!.asString(),
-                mapKSClassDeclaration = data.function.closestClassDeclaration()?.superTypes?.first()?.resolve()
-                    ?.classDeclaration()!!
+                konverterInterface = KonverterInterface(
+                    data.function.closestClassDeclaration()?.superTypes?.first()?.resolve()?.classDeclaration()!!
+                )
             )
         }
     }
