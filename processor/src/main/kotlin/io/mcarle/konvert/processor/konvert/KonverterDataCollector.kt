@@ -22,8 +22,8 @@ object KonverterDataCollector {
         return resolver.getSymbolsWithAnnotation(Konverter::class.qualifiedName!!)
             .map { ksAnnotated ->
                 val ksClassDeclaration = ksAnnotated as? KSClassDeclaration
-                if (ksClassDeclaration == null || ksClassDeclaration.classKind != ClassKind.INTERFACE) {
-                    throw IllegalStateException("Mapping can only target interfaces")
+                check(ksClassDeclaration != null && ksClassDeclaration.classKind == ClassKind.INTERFACE) {
+                    "Mapping can only target interfaces"
                 }
 
                 val annotation = ksClassDeclaration.annotations.first { annotation ->
@@ -84,8 +84,8 @@ object KonverterDataCollector {
                 }
 
                 if (annotation != null && it.isAbstract) {
-                    if (source == null || target == null) {
-                        throw IllegalStateException("Konvert annotated function must have exactly one parameter and must have a return type: $it")
+                    check(source != null && target != null) {
+                        "Konvert annotated function must have exactly one parameter and must have a return type: $it"
                     }
 
                     KonvertData(

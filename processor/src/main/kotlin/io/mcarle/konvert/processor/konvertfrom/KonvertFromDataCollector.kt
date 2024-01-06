@@ -14,10 +14,11 @@ object KonvertFromDataCollector {
         return resolver.getSymbolsWithAnnotation(KonvertFrom::class.qualifiedName!!)
             .flatMap { ksAnnotated ->
                 val annotatedDeclaration = ksAnnotated as? KSClassDeclaration
-                    ?: throw IllegalStateException("KonvertFrom can only target class declarations or companion objects")
-
-                if (annotatedDeclaration.typeParameters.isNotEmpty()) {
-                    throw IllegalStateException("${KonvertFrom::class.simpleName} not allowed on types with generics: $ksAnnotated")
+                check(annotatedDeclaration != null) {
+                    "${KonvertFrom::class.simpleName} can only target class declarations or companion objects"
+                }
+                check(annotatedDeclaration.typeParameters.isEmpty()) {
+                    "${KonvertFrom::class.simpleName} not allowed on types with generics: $ksAnnotated"
                 }
 
                 val (targetKsClassDeclaration, targetCompanionDeclaration) = determineClassAndCompanion(
