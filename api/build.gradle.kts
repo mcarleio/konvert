@@ -27,7 +27,7 @@ kotlin {
                                 implementation(project(it.path))
                             }
                         }
-                        implementation("org.reflections:reflections:0.10.2")
+                        implementation("org.reflections:reflections:${Versions.orgReflections}")
                         implementation(kotlin("reflect"))
                     }
                 }

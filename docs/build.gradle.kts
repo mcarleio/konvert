@@ -6,7 +6,7 @@ dependencies {
     api(project(":converter"))
 
     // Generate docs...
-    implementation("net.steppschuh.markdowngenerator:markdowngenerator:1.3.1.1")
+    implementation("net.steppschuh.markdowngenerator:markdowngenerator:${Versions.markdownGenerator}")
 }
 
 val generateMarkdownTablesTask = tasks.create<JavaExec>("generateMarkdownTables") {

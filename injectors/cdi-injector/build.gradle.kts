@@ -10,8 +10,8 @@ dependencies {
     api(project(":injectors:cdi-annotations"))
 
     // auto service
-    implementation("com.google.auto.service:auto-service-annotations:1.1.1")
-    ksp("dev.zacsweers.autoservice:auto-service-ksp:1.1.0")
+    implementation(autoServiceAnnotations)
+    ksp(autoServiceKsp)
 
     testImplementation(project(":annotations"))
     testImplementation(project(":converter"))
