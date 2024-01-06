@@ -10,6 +10,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
+import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.konverterGenerateClass
 import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
@@ -134,9 +135,9 @@ object KonverterCodeGenerator {
     ): CodeBuilder {
         return CodeBuilder.getOrCreate(packageName, interfaceName) {
             if (Configuration.konverterGenerateClass) {
-                TypeSpec.classBuilder("${interfaceName}Impl")
+                TypeSpec.classBuilder("${interfaceName}${Konverter.KONVERTER_GENERATED_CLASS_SUFFIX}")
             } else {
-                TypeSpec.objectBuilder("${interfaceName}Impl")
+                TypeSpec.objectBuilder("${interfaceName}${Konverter.KONVERTER_GENERATED_CLASS_SUFFIX}")
             }
                 .addSuperinterface(interfaceType.toTypeName())
                 .also { typeBuilder ->
@@ -152,7 +153,7 @@ object KonverterCodeGenerator {
         return data.konvertData
             .filter { it.additionalParameters.isEmpty() } // filter out mappings with more than one parameter
             .map {
-                "${data.mapKSClassDeclaration.qualifiedName?.asString()}Impl.${it.mapFunctionName}"
+                "${data.mapKSClassDeclaration.qualifiedName?.asString()}${Konverter.KONVERTER_GENERATED_CLASS_SUFFIX}.${it.mapFunctionName}"
             }
     }
 
