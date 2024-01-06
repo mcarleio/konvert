@@ -32,7 +32,9 @@ kotlin {
                     }
                 }
 
-                val generateTask = tasks.create<JavaExec>("generateCode") {
+                val generateTask = tasks.register<JavaExec>("generateApiConstants") {
+                    description = "Generates constants for configurations and converters"
+                    group = LifecycleBasePlugin.BUILD_GROUP
                     classpath = runtimeDependencyFiles + output.allOutputs
                     mainClass.set("GenerateKt")
                     args = listOf("${layout.buildDirectory.get().asFile}/generated/generator/kotlin")

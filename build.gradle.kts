@@ -41,6 +41,9 @@ kover {
  * This is a workaround for later use with maven, as atm during KSP only the JAR itself is searched
  */
 val copySymbolProcessorProvider = tasks.register<Copy>("copySymbolProcessorProvider") {
+    description = "Copies the generated META-INF/services/com.google.devtools.ksp.processing.SymbolProcessorProvider from :processor module"
+    group = LifecycleBasePlugin.BUILD_GROUP
+
     dependsOn(configurations.runtimeClasspath)
     from({ zipTree(project(":processor").tasks.jar.get().archiveFile) }) {
         include("**/*.SymbolProcessorProvider")

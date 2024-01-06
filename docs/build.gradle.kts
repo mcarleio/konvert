@@ -9,7 +9,10 @@ dependencies {
     implementation("net.steppschuh.markdowngenerator:markdowngenerator:${Versions.markdownGenerator}")
 }
 
-val generateMarkdownTablesTask = tasks.create<JavaExec>("generateMarkdownTables") {
+val generateMarkdownTablesTask = tasks.register<JavaExec>("generateMarkdownTables") {
+    description = "Generates the markdown tables for available converters"
+    group = JavaBasePlugin.DOCUMENTATION_GROUP
+
     classpath = sourceSets.main.get().runtimeClasspath
 
     mainClass.set("io.mcarle.konvert.internal.docs.GenerateDocumentationKt")
