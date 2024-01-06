@@ -1,32 +1,38 @@
 package io.mcarle.konvert.processor.konvert
 
-import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSClassDeclaration
 import io.mcarle.konvert.api.Konfig
-import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.konverterGenerateClass
+import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.AnnotatedConverterData
 import io.mcarle.konvert.processor.from
 
-class KonverterData(
+class KonverterData constructor(
     val annotationData: AnnotationData,
     val konvertData: List<KonvertData>,
     val konverterInterface: KonverterInterface
 ) : AnnotatedConverterData {
 
     override fun toTypeConverters(): List<AnnotatedConverter> {
-        return konvertData.map {
-            KonvertTypeConverter(
-                priority = it.priority,
-                alreadyGenerated = false,
-                sourceType = it.sourceType,
-                targetType = it.targetType,
-                mapFunctionName = it.mapFunctionName,
-                paramName = it.paramName,
-                konverterInterface = konverterInterface
-            )
+        return withIsolatedConfiguration(annotationData.options) {
+            konvertData.map {
+                KonvertTypeConverter(
+                    priority = it.priority,
+                    alreadyGenerated = false,
+                    sourceType = it.sourceType,
+                    targetType = it.targetType,
+                    mapFunctionName = it.mapFunctionName,
+                    paramName = it.paramName,
+                    konverterInterface = konverterInterface,
+                    classKind = if (Configuration.konverterGenerateClass)
+                        KonvertTypeConverter.ClassOrObject.CLASS
+                    else
+                        KonvertTypeConverter.ClassOrObject.OBJECT
+                )
+            }
         }
     }
 
@@ -40,12 +46,6 @@ class KonverterData(
                     .filterIsInstance<KSAnnotation>()
                     .map { Konfig.from(it) },
             )
-
-            fun default(resolver: Resolver) = with(Konvert()) {
-                AnnotationData(
-                    options = emptyList()
-                )
-            }
         }
 
     }

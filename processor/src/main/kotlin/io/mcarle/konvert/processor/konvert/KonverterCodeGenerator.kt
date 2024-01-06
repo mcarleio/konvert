@@ -39,8 +39,8 @@ object KonverterCodeGenerator {
                 withIsolatedConfiguration(konvertData.annotationData.options) {
                     if (isAlias(konvertData.sourceTypeReference, konvertData.sourceType)) {
                         // @Konverter annotated interface used alias for source, so the implementation should also use the same alias
-                        codeBuilder.addImport(konvertData.sourceType, konvertData.sourceTypeReference.toString())
-                    }
+                        codeBuilder.addImport(konvertData.sourceType, konvertData.sourceTypeReference.toString())}
+
                     val targetClassImportName =
                         if (isAlias(konvertData.targetTypeReference, konvertData.targetType)) {
                             // @Konverter annotated interface used alias for target, so the implementation should also use the same alias

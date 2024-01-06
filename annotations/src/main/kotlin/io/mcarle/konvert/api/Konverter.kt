@@ -49,6 +49,10 @@ annotation class Konverter(
             this.CLASS_LOADER_LIST += classLoader
         }
 
+        fun removeClassLoader(classLoader: ClassLoader) {
+            this.CLASS_LOADER_LIST -= classLoader
+        }
+
         inline fun <reified T : Any> get(): T = get(T::class)
 
         @Suppress("UNCHECKED_CAST")

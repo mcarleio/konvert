@@ -21,6 +21,14 @@ object ENFORCE_NOT_NULL_OPTION : Option<Boolean>("konvert.enforce-not-null", fal
 object KONVERTER_GENERATE_CLASS_OPTION : Option<Boolean>("konvert.konverter.generate-class", false)
 
 /**
+ * When set to true, Konvert will use reflection to find implementations of @Konverter annotated interfaces at runtime instead of
+ * hard-coding them at ksp generation time.
+ *
+ * Default: false
+ */
+object KONVERTER_USE_REFLECTION_OPTION : Option<Boolean>("konvert.konverter.use-reflection", false)
+
+/**
  * This setting will change the suffix for the generated filename from Konvert.
  *
  * Given the following examples:

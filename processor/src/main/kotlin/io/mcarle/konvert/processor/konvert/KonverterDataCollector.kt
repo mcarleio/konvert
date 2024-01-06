@@ -83,37 +83,45 @@ object KonverterDataCollector {
                     KonvertData.AnnotationData.from(annotation)
                 }
 
-                if (annotation != null && it.isAbstract) {
-                    check(source != null && target != null) {
-                        "Konvert annotated function must have exactly one parameter and must have a return type: $it"
+                when {
+                    annotation != null && it.isAbstract -> {
+                        check(source != null && target != null) {
+                            "Konvert annotated function must have exactly one parameter and must have a return type: $it"
+                        }
+
+                        KonvertData(
+                            annotationData = annotation,
+                            isAbstract = true,
+                            sourceTypeReference = source,
+                            targetTypeReference = target,
+                            mapKSFunctionDeclaration = it,
+                            additionalParameters = determineAdditionalParams(it, sourceValueParameter)
+                        )
                     }
 
-                    KonvertData(
-                        annotationData = annotation,
-                        isAbstract = true,
-                        sourceTypeReference = source,
-                        targetTypeReference = target,
-                        mapKSFunctionDeclaration = it,
-                        additionalParameters = determineAdditionalParams(it, sourceValueParameter)
-                    )
-                } else if (source != null && target != null) {
-                    KonvertData(
-                        annotationData = annotation ?: KonvertData.AnnotationData.default(resolver, it.isAbstract),
-                        isAbstract = it.isAbstract,
-                        sourceTypeReference = source,
-                        targetTypeReference = target,
-                        mapKSFunctionDeclaration = it,
-                        additionalParameters = determineAdditionalParams(it, sourceValueParameter)
-                    )
-                } else if (it.isAbstract) {
-                    throw RuntimeException("Method $it is abstract and does not meet criteria for automatic source and target detection")
-                } else {
-                    if (annotation != null) {
-                        logger.warn("Could not determine source and/or target", it)
-                    } else {
-                        logger.logging("Could not determine source and/or target", it)
+                    source != null && target != null -> {
+                        KonvertData(
+                            annotationData = annotation ?: KonvertData.AnnotationData.default(resolver, it.isAbstract),
+                            isAbstract = it.isAbstract,
+                            sourceTypeReference = source,
+                            targetTypeReference = target,
+                            mapKSFunctionDeclaration = it,
+                            additionalParameters = determineAdditionalParams(it, sourceValueParameter)
+                        )
                     }
-                    null
+
+                    it.isAbstract -> {
+                        throw RuntimeException("Method $it is abstract and does not meet criteria for automatic source and target detection")
+                    }
+
+                    else -> {
+                        if (annotation != null) {
+                            logger.warn("Could not determine source and/or target", it)
+                        } else {
+                            logger.logging("Could not determine source and/or target", it)
+                        }
+                        null
+                    }
                 }
             }.toList()
     }

@@ -10,4 +10,3 @@ data class KonverterInterface constructor(
     val packageName = kSClassDeclaration.packageName.asString()
     val typeName = kSClassDeclaration.asStarProjectedType().toTypeName()
 }
-
