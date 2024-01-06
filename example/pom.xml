@@ -70,6 +70,7 @@
                         <plugin>ksp</plugin>
                     </compilerPlugins>
                     <pluginOptions>
+                        <!-- This is how you globally define options to Konvert -->
                         <option>ksp:apoption=konvert.konverter.generate-class=true</option>
                     </pluginOptions>
                 </configuration>

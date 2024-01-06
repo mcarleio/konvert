@@ -11,6 +11,7 @@ import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
 import io.mcarle.konvert.converter.api.config.KONVERTER_GENERATE_CLASS_OPTION
+import io.mcarle.konvert.converter.api.config.KONVERTER_USE_REFLECTION_OPTION
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.junit.jupiter.api.Test
@@ -20,6 +21,7 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 
 class KonvertITest : KonverterITest() {
@@ -189,7 +191,49 @@ interface OtherMapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        assertContains(mapperCode, "Konverter.get<OtherMapper>().toTarget(")
+        assertContains(mapperCode, "OtherMapperImpl.toTarget(")
+    }
+
+    @Test
+    fun useOtherMapperInstance() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            options = mapOf(KONVERTER_GENERATE_CLASS_OPTION.key to "true"),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(
+    val sourceProperty: SourceProperty
+)
+class TargetClass(
+    val targetProperty: TargetProperty
+)
+
+@Konverter
+interface Mapper {
+    @Konvert(mappings = [Mapping(source="sourceProperty",target="targetProperty")])
+    fun toTarget(source: SourceClass): TargetClass
+}
+
+data class SourceProperty(val value: String)
+data class TargetProperty(val value: String)
+
+@Konverter
+interface OtherMapper {
+    fun toTarget(source: SourceProperty): TargetProperty
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "OtherMapperImpl().toTarget(")
     }
 
     @Test
@@ -383,7 +427,7 @@ interface OtherMapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        assertContains(mapperCode, "Konverter.get<OtherMapper>().toInt(")
+        assertContains(mapperCode, "OtherMapperImpl.toInt(")
         assertContains(mapperCode, "source.property?.let {")
     }
 
@@ -427,8 +471,8 @@ interface OtherMapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        assertContains(mapperCode, "Konverter.get<OtherMapper>().toListOfInts(")
-        assertContains(mapperCode, "Konverter.get<OtherMapper>().optionalToListOfInts(")
+        assertContains(mapperCode, "OtherMapperImpl.toListOfInts(")
+        assertContains(mapperCode, "OtherMapperImpl.optionalToListOfInts(")
     }
 
     @Test
@@ -483,9 +527,13 @@ interface SomeConverter {
             """.trimIndent(),
             mapperCode
         )
-        Konverter.addClassLoader(result.classLoader)
-        val instance = Konverter.get(result.classLoader.loadClass("SomeConverter").kotlin)
-        assertNotNull(instance)
+
+        // Verify that the generated class is not an object
+        assertNull(result.classLoader.loadClass("SomeConverterImpl").kotlin.objectInstance)
+        assertNotNull(result.classLoader.loadClass("SomeConverterImpl").constructors.first().newInstance())
+
+        // Verify that the generated class can be loaded correctly via reflection
+        assertNotNull(Konverter.getWithClassLoader("SomeConverter", result.classLoader))
     }
 
     @Test
@@ -1098,12 +1146,11 @@ class TargetProperty<E>(val value: E)
             """
             package a
 
-            import b.PropertyMapper
-            import io.mcarle.konvert.api.Konverter
+            import b.PropertyMapperImpl
 
             public object ClassMapperImpl : ClassMapper {
               override fun toTarget(source: SourceClass): TargetClass = TargetClass(
-                targetProperty = Konverter.get<PropertyMapper>().toTarget(source = source.sourceProperty)
+                targetProperty = PropertyMapperImpl.toTarget(source = source.sourceProperty)
               )
             }
         """.trimIndent(), mapperCode
@@ -1375,4 +1422,47 @@ interface Mapper {
         )
     }
 
+    @Test
+    fun useOtherMapperViaReflection() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            options = mapOf(KONVERTER_USE_REFLECTION_OPTION.key to "true"),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: SourceProperty)
+class TargetClass(val property: TargetProperty)
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceClass): TargetClass
+}
+
+data class SourceProperty(val value: String)
+data class TargetProperty(val value: String)
+
+@Konverter
+interface OtherMapper {
+    fun toTarget(source: SourceProperty): TargetProperty
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "Konverter.get<OtherMapper>().toTarget(")
+    }
+}
+
+private fun Konverter.Companion.getWithClassLoader(classFQN: String, classLoader: ClassLoader): Any {
+    try {
+        addClassLoader(classLoader)
+        return get(classLoader.loadClass(classFQN).kotlin)
+    } finally {
+        removeClassLoader(classLoader)
+    }
 }

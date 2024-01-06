@@ -2,3 +2,4 @@ thisLineShouldBeIgnoredAsNoFunctionExistsWithThisName
 io.mcarle.konvert.processor.SomeTestMapperImpl.toSomeOtherTestClass
 io.mcarle.konvert.processor.SomeTestMapperImpl.toSomeOtherTestClasses
 io.mcarle.konvert.processor.SomeTestMapperImpl.fromSomeOtherTestClass
+io.mcarle.konvert.processor.SomeSecondTestMapperImpl.fromSomeOtherTestClasses

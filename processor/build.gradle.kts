@@ -24,6 +24,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:${Versions.jUnit}")
     testImplementation("org.junit.jupiter:junit-jupiter-params:${Versions.jUnit}")
     testImplementation(kotlinTest)
+    testImplementation(kotlinReflect)
     testFixturesApi(kotlinCompileTesting)
     testFixturesApi(kotlinCompileTestingKsp)
     testFixturesApi(kotlinCompilerEmbeddable)

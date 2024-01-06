@@ -1,23 +1,34 @@
 package io.mcarle.konvert.processor.konvert
 
 import com.google.devtools.ksp.symbol.KSType
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
+import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.konverterUseReflection
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
 
 class KonvertTypeConverter constructor(
     override val priority: Priority,
     override val alreadyGenerated: Boolean,
+    /**
+     * indicates if the converter was (alreadyGenerated = true) or will be generated as a class or object
+     */
+    internal val classKind: ClassOrObject,
     internal val sourceType: KSType,
     internal val targetType: KSType,
     internal val mapFunctionName: String,
     internal val paramName: String,
     internal val konverterInterface: KonverterInterface
 ) : AbstractTypeConverter(), AnnotatedConverter {
+
+    enum class ClassOrObject {
+        CLASS,
+        OBJECT;
+    }
 
     override val enabledByDefault: Boolean = true
 
@@ -60,16 +71,29 @@ class KonvertTypeConverter constructor(
     override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
         val params = mutableListOf<Any>()
         val getKonverterCode = if (CurrentInterfaceContext.konverterInterface == konverterInterface) {
-            "this"
+            CodeBlock.of("this")
         } else {
-            params += Konverter::class
-            params += konverterInterface.typeName
-            "%T.get<%T>()"
+            if (Configuration.konverterUseReflection) {
+                CodeBlock.of(
+                    format = "%T.get<%T>()",
+                    Konverter::class,
+                    konverterInterface.typeName
+                )
+            } else {
+                CodeBlock.of(
+                    format = if (classKind == ClassOrObject.CLASS) "%T()" else "%T",
+                    ClassName(
+                        konverterInterface.packageName,
+                        konverterInterface.simpleName + Konverter.KONVERTER_GENERATED_CLASS_SUFFIX
+                    )
+                )
+            }
         }
+        params += getKonverterCode
         val mappingCode = if (source.isNullable() && !sourceType.isNullable()) {
-            "$fieldName?.let·{ $getKonverterCode.$mapFunctionName($paramName·=·it) }"
+            "$fieldName?.let·{ %L.$mapFunctionName($paramName·=·it) }"
         } else {
-            "$getKonverterCode.$mapFunctionName($paramName·=·$fieldName)"
+            "%L.$mapFunctionName($paramName·=·$fieldName)"
         }
         return CodeBlock.of(mappingCode + appendNotNullAssertionOperatorIfNeeded(source, target), *params.toTypedArray())
     }
