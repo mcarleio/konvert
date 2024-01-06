@@ -5,6 +5,7 @@ import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.processor.KonvertProcessorProvider
+import org.jetbrains.kotlin.config.JvmTarget
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -101,6 +102,7 @@ interface FooMapper {
             workingDir = temporaryFolder
             inheritClassPath = true
             symbolProcessorProviders = listOf(KonvertProcessorProvider())
+            jvmTarget = JvmTarget.JVM_17.description
             sources = sourceFiles
             verbose = false
         }
