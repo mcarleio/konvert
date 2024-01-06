@@ -730,6 +730,67 @@ interface SomeConverter {
         )
     }
 
+
+    @Test
+    fun handleSameClassNameInDifferentPackagesWithImportAliasOnSelfImplementedMappingFunctions() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/SomeClass.kt",
+                    contents =
+                    """
+package a
+
+class SomeClass(val property: String)
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/SomeClass.kt",
+                    contents =
+                    """
+package b
+
+class SomeClass {
+    var property: String = ""
+}
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "SomeConverter.kt",
+                    contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import a.SomeClass
+import b.SomeClass as B
+
+@Konverter
+interface SomeConverter {
+    fun toB(source: SomeClass): B = B().also { someClass ->
+        someClass.property = source.property
+    }
+}
+                    """.trimIndent()
+                )
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
+        println(mapperCode)
+
+        assertSourceEquals(
+            """
+            import a.SomeClass
+            import b.SomeClass as B
+
+            public object SomeConverterImpl : SomeConverter {
+              override fun toB(source: SomeClass): B = super.toB(source)
+            }
+            """.trimIndent(),
+            mapperCode
+        )
+    }
+
     @Test
     fun handleSameClassNameInDifferentPackagesWithImportAliasWithNullable() {
         val (compilation) = compileWith(

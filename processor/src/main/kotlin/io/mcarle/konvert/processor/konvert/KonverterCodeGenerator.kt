@@ -41,34 +41,6 @@ object KonverterCodeGenerator {
 
             data.konvertData.forEach { konvertData ->
                 withIsolatedConfiguration(konvertData.annotationData.options) {
-
-                    if (!konvertData.isAbstract) {
-                        codeBuilder.addFunction(
-                            funBuilder = FunSpec.builder(konvertData.mapFunctionName)
-                                .addModifiers(KModifier.OVERRIDE)
-                                .returns(konvertData.targetTypeReference.toTypeName())
-                                .addParameters(konvertData.mapKSFunctionDeclaration.parameters.map {
-                                    val builder = ParameterSpec.builder(
-                                        name = it.name!!.asString(),
-                                        type = it.type.toTypeName(),
-                                        modifiers = emptyArray()
-                                    )
-                                    if (it.isVararg) {
-                                        builder.addModifiers(KModifier.VARARG)
-                                    }
-                                    builder.build()
-                                })
-                                .addCode(
-                                    "return super.${konvertData.mapFunctionName}(${konvertData.paramName})"
-                                ),
-                            priority = konvertData.priority,
-                            toType = true,
-                            originating = data.mapKSClassDeclaration.containingFile
-                        )
-
-                        return@withIsolatedConfiguration
-                    }
-
                     if (isAlias(konvertData.sourceTypeReference, konvertData.sourceType)) {
                         // @Konverter annotated interface used alias for source, so the implementation should also use the same alias
                         codeBuilder.addImport(konvertData.sourceType, konvertData.sourceTypeReference.toString())
@@ -100,19 +72,13 @@ object KonverterCodeGenerator {
                                 }
                                 builder.build()
                             })
-                            .addCode(
-                                mapper.generateCode(
-                                    konvertData.annotationData.mappings.asIterable()
-                                        .validated(konvertData.mapKSFunctionDeclaration, logger),
-                                    konvertData.annotationData.constructor,
-                                    konvertData.paramName,
-                                    targetClassImportName,
-                                    konvertData.sourceType,
-                                    konvertData.targetType,
-                                    konvertData.mapKSFunctionDeclaration,
-                                    konvertData.additionalParameters
-                                )
-                            ),
+                            .apply {
+                                if (!konvertData.isAbstract) {
+                                    generateSuperCall(konvertData)
+                                } else {
+                                    generateMappingCode(mapper, konvertData, targetClassImportName, logger)
+                                }
+                            },
                         priority = konvertData.priority,
                         toType = true,
                         originating = data.mapKSClassDeclaration.containingFile
@@ -120,6 +86,33 @@ object KonverterCodeGenerator {
                 }
             }
         }
+    }
+
+    private fun FunSpec.Builder.generateSuperCall(konvertData: KonvertData): FunSpec.Builder {
+        return addCode(
+            "return super.${konvertData.mapFunctionName}(${konvertData.paramName})"
+        )
+    }
+
+    private fun FunSpec.Builder.generateMappingCode(
+        mapper: CodeGenerator,
+        konvertData: KonvertData,
+        targetClassImportName: String?,
+        logger: KSPLogger
+    ): FunSpec.Builder {
+        return addCode(
+            mapper.generateCode(
+                konvertData.annotationData.mappings.asIterable()
+                    .validated(konvertData.mapKSFunctionDeclaration, logger),
+                konvertData.annotationData.constructor,
+                konvertData.paramName,
+                targetClassImportName,
+                konvertData.sourceType,
+                konvertData.targetType,
+                konvertData.mapKSFunctionDeclaration,
+                konvertData.additionalParameters
+            )
+        )
     }
 
     private fun isAlias(typeReference: KSTypeReference, type: KSType): Boolean {
