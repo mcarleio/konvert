@@ -18,6 +18,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 
 
@@ -1278,7 +1279,7 @@ interface Mapper {
 
     @Test
     fun allowMultipleFunctionParametersIfOneIsAnnotatedWithSource() {
-        addGeneratedKonverterAnnotation = true
+        addGeneratedKonverterAnnotation = true // enable to verify, that no annotation is generated
         val (compilation) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
             code = arrayOf(
@@ -1302,6 +1303,8 @@ interface Mapper {
         val extensionFunctionCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(extensionFunctionCode)
 
+        assertFalse { extensionFunctionCode.contains("@GeneratedKonverter") }
+
         assertSourceEquals(
             """
             import kotlin.Int
@@ -1318,6 +1321,57 @@ interface Mapper {
               )
             }
         """.trimIndent(), extensionFunctionCode
+        )
+    }
+
+    @Test
+    fun allowMultipleFunctionParametersIfOneIsAnnotatedWithSourceInSelfImplementedMappingFunctions() {
+        addGeneratedKonverterAnnotation = true // enable to verify, that no annotation is generated
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String, val otherValue: Int)
+
+@Konverter
+interface Mapper {
+    fun toTarget(@Konverter.Source source: SourceClass, otherValue: Int, vararg furtherParams: String): TargetClass = TargetClass(
+      property = source.property,
+      otherValue = otherValue
+    )
+}
+                    """.trimIndent(),
+                    name = "TestCode.kt"
+                )
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertFalse { mapperCode.contains("@GeneratedKonverter") }
+
+        assertSourceEquals(
+            """
+            import kotlin.Int
+            import kotlin.String
+
+            public object MapperImpl : Mapper {
+              override fun toTarget(
+                source: SourceClass,
+                otherValue: Int,
+                vararg furtherParams: String,
+              ): TargetClass = super.toTarget(
+                  source = source,
+                  otherValue = otherValue,
+                  furtherParams = furtherParams
+              )
+            }
+        """.trimIndent(), mapperCode
         )
     }
 

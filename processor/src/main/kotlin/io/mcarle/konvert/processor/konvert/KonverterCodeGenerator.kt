@@ -89,9 +89,19 @@ object KonverterCodeGenerator {
     }
 
     private fun FunSpec.Builder.generateSuperCall(konvertData: KonvertData): FunSpec.Builder {
-        return addCode(
-            "return super.${konvertData.mapFunctionName}(${konvertData.paramName})"
-        )
+        return if (konvertData.additionalParameters.isEmpty()) {
+            addCode(
+                "return·super.${konvertData.mapFunctionName}(${konvertData.paramName})"
+            )
+        } else {
+            addCode(
+                "return·super.${konvertData.mapFunctionName}(«\n${konvertData.paramName}·=·${konvertData.paramName},\n"
+                    + konvertData.additionalParameters.joinToString(separator = ",\n") {
+                    val paramName = it.name?.asString()!!
+                    "$paramName·=·$paramName"
+                } + "»\n)"
+            )
+        }
     }
 
     private fun FunSpec.Builder.generateMappingCode(
