@@ -25,8 +25,7 @@ object KonverterCodeGenerator {
         ServiceLoader.load(KonverterInjector::class.java, this::class.java.classLoader).toList()
     }
 
-    fun generate(data: KonverterData, resolver: Resolver, logger: KSPLogger) {
-        Configuration.CURRENT += data.annotationData.options.map { it.key to it.value }
+    fun generate(data: KonverterData, resolver: Resolver, logger: KSPLogger) = withIsolatedConfiguration(data.annotationData.options) {
 
         val mapper = CodeGenerator(
             logger = logger
@@ -40,7 +39,7 @@ object KonverterCodeGenerator {
         )
 
         data.konvertData.forEach { konvertData ->
-            withIsolatedConfiguration {
+            withIsolatedConfiguration(konvertData.annotationData.options) {
                 CurrentInterfaceContext.interfaceKSClassDeclaration = data.mapKSClassDeclaration
 
                 if (!konvertData.isAbstract) {
@@ -69,8 +68,6 @@ object KonverterCodeGenerator {
 
                     return@withIsolatedConfiguration
                 }
-
-                Configuration.CURRENT += konvertData.annotationData.options.map { it.key to it.value }
 
                 if (isAlias(konvertData.sourceTypeReference, konvertData.sourceType)) {
                     // @Konverter annotated interface used alias for source, so the implementation should also use the same alias

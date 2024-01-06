@@ -65,12 +65,10 @@ class KonvertProcessor(
 
     private fun generateMappingCode(resolver: Resolver, converterData: List<AnnotatedConverterData>) {
         converterData.forEach {
-            withIsolatedConfiguration {
-                when (it) {
-                    is KonvertToData -> KonvertToCodeGenerator.generate(it, resolver, logger)
-                    is KonvertFromData -> KonvertFromCodeGenerator.generate(it, resolver, logger)
-                    is KonverterData -> KonverterCodeGenerator.generate(it, resolver, logger)
-                }
+            when (it) {
+                is KonvertToData -> KonvertToCodeGenerator.generate(it, resolver, logger)
+                is KonvertFromData -> KonvertFromCodeGenerator.generate(it, resolver, logger)
+                is KonverterData -> KonverterCodeGenerator.generate(it, resolver, logger)
             }
         }
     }
