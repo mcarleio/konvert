@@ -52,7 +52,7 @@ fun generateBasicTypeConverterTable(outputDir: Path, typeConverters: List<TypeCo
         )
     }
 
-    Files.writeString(outputDir.resolve("basic.md"), builder.build().toString() + "\n{: .fixed-first-column-120 }")
+    Files.writeString(outputDir.resolve("basic.md"), builder.build().toString() + fixedFirstColumn(120))
 
     return basicClasses
 }
@@ -112,7 +112,7 @@ fun generateTemporalTypeConverterTable(outputDir: Path, typeConverters: List<Typ
 
     }
 
-    Files.writeString(outputDir.resolve("to_temporal.md"), builder.build().toString() + "\n{: .fixed-first-column-140 }")
+    Files.writeString(outputDir.resolve("to_temporal.md"), builder.build().toString() + fixedFirstColumn(140))
 
     val fromWithoutBasic = from.filterNot { it.clazz in basicTypesList }
     val toOnlyBasic = to.filter { it.clazz in basicTypesList }
@@ -138,7 +138,7 @@ fun generateTemporalTypeConverterTable(outputDir: Path, typeConverters: List<Typ
 
     Files.writeString(
         outputDir.resolve("from_temporal.md"),
-        builder2.build().toString() + "\n{: .fixed-first-column-140 }"
+        builder2.build().toString() + fixedFirstColumn(140)
     )
 }
 
@@ -162,8 +162,9 @@ fun generateIterablesTypeConverterTable(outputDir: Path, typeConverters: List<Ty
         )
     }
 
-    Files.writeString(outputDir.resolve("iterable.md"), builder.build().toString() + "\n{: .fixed-first-column-160 }")
+    Files.writeString(outputDir.resolve("iterable.md"), builder.build().toString() + fixedFirstColumn(160))
 }
+
 fun generateMapTypeConverterTable(outputDir: Path, typeConverters: List<TypeConverter>) {
     val mapToMapConverter = typeConverters
         .filterIsInstance<MapToMapConverter>()
@@ -184,7 +185,7 @@ fun generateMapTypeConverterTable(outputDir: Path, typeConverters: List<TypeConv
         )
     }
 
-    Files.writeString(outputDir.resolve("map.md"), builder.build().toString() + "\n{: .fixed-first-column-140 }")
+    Files.writeString(outputDir.resolve("map.md"), builder.build().toString() + fixedFirstColumn(140))
 }
 
 fun generateEnumTypeConverterTable(outputDir: Path, typeConverters: List<TypeConverter>, basicTypesList: List<KClass<*>>) {
@@ -193,10 +194,12 @@ fun generateEnumTypeConverterTable(outputDir: Path, typeConverters: List<TypeCon
         map.getOrPut(DescriptiveClass.from(it, Enum::class)) { mutableMapOf() }[DescriptiveClass.to(it, Enum::class)] = it.enabledByDefault
     }
     typeConverters.filterIsInstance<EnumToXConverter>().forEach {
-        map.getOrPut(DescriptiveClass.from(it, Enum::class)) { mutableMapOf() }[DescriptiveClass.to(it, it.targetClass)] = it.enabledByDefault
+        map.getOrPut(DescriptiveClass.from(it, Enum::class)) { mutableMapOf() }[DescriptiveClass.to(it, it.targetClass)] =
+            it.enabledByDefault
     }
     typeConverters.filterIsInstance<XToEnumConverter>().forEach {
-        map.getOrPut(DescriptiveClass.from(it, it.sourceClass)) { mutableMapOf() }[DescriptiveClass.to(it, Enum::class)] = it.enabledByDefault
+        map.getOrPut(DescriptiveClass.from(it, it.sourceClass)) { mutableMapOf() }[DescriptiveClass.to(it, Enum::class)] =
+            it.enabledByDefault
     }
 
     val from = map.keys.sortedWith(compareBy({ it.clazz.simpleName }, { it.description }))
@@ -221,7 +224,7 @@ fun generateEnumTypeConverterTable(outputDir: Path, typeConverters: List<TypeCon
         )
     }
 
-    Files.writeString(outputDir.resolve("to_enum.md"), builder.build().toString() + "\n{: .fixed-first-column-120 }")
+    Files.writeString(outputDir.resolve("to_enum.md"), builder.build().toString() + fixedFirstColumn(120))
 
     val fromWithoutBasic = from.filterNot { it.clazz in basicTypesList }
     val toWithoutEnum = to.filter { it.clazz != Enum::class }
@@ -243,7 +246,7 @@ fun generateEnumTypeConverterTable(outputDir: Path, typeConverters: List<TypeCon
         )
     }
 
-    Files.writeString(outputDir.resolve("from_enum.md"), builder2.build().toString() + "\n{: .fixed-first-column-120 }")
+    Files.writeString(outputDir.resolve("from_enum.md"), builder2.build().toString() + fixedFirstColumn(120))
 
 }
 
@@ -252,10 +255,10 @@ data class DescriptiveClass(val description: String?, val clazz: KClass<*>) {
     companion object {
         fun from(converter: Any, sourceClass: KClass<*>) = DescriptiveClass(
             when (converter) {
-                is LongEpochMillisToDateConverter -> "epoch ms"
-                is LongEpochMillisToInstantConverter -> "epoch ms"
-                is LongEpochSecondsToDateConverter -> "epoch s"
-                is LongEpochSecondsToInstantConverter -> "epoch s"
+                is LongEpochMillisToDateConverter -> epochMillis
+                is LongEpochMillisToInstantConverter -> epochMillis
+                is LongEpochSecondsToDateConverter -> epochSeconds
+                is LongEpochSecondsToInstantConverter -> epochSeconds
                 else -> null
             },
             sourceClass
@@ -263,14 +266,14 @@ data class DescriptiveClass(val description: String?, val clazz: KClass<*>) {
 
         fun to(converter: Any, targetClazz: KClass<*>) = DescriptiveClass(
             when (converter) {
-                is DateToLongEpochMillisConverter -> "epoch ms"
-                is InstantToLongEpochMillisConverter -> "epoch ms"
-                is OffsetDateTimeToLongEpochMillisConverter -> "epoch ms"
-                is ZonedDateTimeToLongEpochMillisConverter -> "epoch ms"
-                is DateToLongEpochSecondsConverter -> "epoch s"
-                is InstantToLongEpochSecondsConverter -> "epoch s"
-                is OffsetDateTimeToLongEpochSecondsConverter -> "epoch s"
-                is ZonedDateTimeToLongEpochSecondsConverter -> "epoch s"
+                is DateToLongEpochMillisConverter -> epochMillis
+                is InstantToLongEpochMillisConverter -> epochMillis
+                is OffsetDateTimeToLongEpochMillisConverter -> epochMillis
+                is ZonedDateTimeToLongEpochMillisConverter -> epochMillis
+                is DateToLongEpochSecondsConverter -> epochSeconds
+                is InstantToLongEpochSecondsConverter -> epochSeconds
+                is OffsetDateTimeToLongEpochSecondsConverter -> epochSeconds
+                is ZonedDateTimeToLongEpochSecondsConverter -> epochSeconds
                 else -> null
             },
             targetClazz
@@ -281,3 +284,7 @@ data class DescriptiveClass(val description: String?, val clazz: KClass<*>) {
         return clazz.simpleName + if (description != null) " ($description)" else ""
     }
 }
+
+fun fixedFirstColumn(column: Int) = "\n{: .fixed-first-column-$column }"
+const val epochMillis = "epoch ms"
+const val epochSeconds = "epoch s"
