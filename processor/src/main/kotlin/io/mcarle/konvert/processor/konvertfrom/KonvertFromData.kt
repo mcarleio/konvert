@@ -53,7 +53,7 @@ class KonvertFromData(
                 mappings = (annotation.arguments.first { it.name?.asString() == KonvertFrom::mappings.name }.value as List<*>)
                     .filterIsInstance<KSAnnotation>()
                     .map { Mapping.from(it) },
-                constructor = (annotation.arguments.first { it.name?.asString() == KonvertFrom::constructor.name }.value as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() },
+                constructor = (annotation.arguments.first { it.name?.asString() == KonvertFrom::constructorArgs.name }.value as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() },
                 mapFunctionName = annotation.arguments.first { it.name?.asString() == KonvertFrom::mapFunctionName.name }.value as String,
                 priority = annotation.arguments.first { it.name?.asString() == KonvertFrom::priority.name }.value as Priority,
                 options = (annotation.arguments.first { it.name?.asString() == KonvertFrom::options.name }.value as List<*>)

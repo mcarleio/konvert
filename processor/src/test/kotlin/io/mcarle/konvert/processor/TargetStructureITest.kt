@@ -431,7 +431,7 @@ class TargetClass {
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
-@KonvertTo(TargetClass::class, constructor = [MyInt::class], mappings=[
+@KonvertTo(TargetClass::class, constructorArgs = [MyInt::class], mappings=[
     Mapping(target="property1", source = "property1")
 ])
 class SourceClass(
@@ -480,7 +480,7 @@ typealias MyInt = Int
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
-@KonvertTo(TargetClass::class, constructor = [])
+@KonvertTo(TargetClass::class, constructorArgs = [])
 class SourceClass(
     val property1: String,
     val property2: Int,
@@ -522,7 +522,7 @@ class TargetClass(
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
-@KonvertTo(TargetClass::class, constructor = [Int::class], mappings=[
+@KonvertTo(TargetClass::class, constructorArgs = [Int::class], mappings=[
     Mapping(target="property1", source = "property1")
 ])
 class SourceClass(
@@ -684,7 +684,7 @@ class TargetClass {
                 """
 import io.mcarle.konvert.api.KonvertTo
 
-@KonvertTo(TargetClass::class, constructor = [String::class, Long::class])
+@KonvertTo(TargetClass::class, constructorArgs = [String::class, Long::class])
 class SourceClass(
     val property1: String,
     val property2: Int,

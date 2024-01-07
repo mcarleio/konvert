@@ -46,7 +46,7 @@ class KonvertData constructor(
                 mappings = (annotation.arguments.first { it.name?.asString() == Konvert::mappings.name }.value as List<*>)
                     .filterIsInstance<KSAnnotation>()
                     .map { Mapping.from(it) },
-                constructor = (annotation.arguments.first { it.name?.asString() == Konvert::constructor.name }.value as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() },
+                constructor = (annotation.arguments.first { it.name?.asString() == Konvert::constructorArgs.name }.value as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() },
                 priority = annotation.arguments.first { it.name?.asString() == Konvert::priority.name }.value as Priority,
                 options = (annotation.arguments.first { it.name?.asString() == Konvert::options.name }.value as List<*>)
                     .filterIsInstance<KSAnnotation>()
@@ -56,7 +56,7 @@ class KonvertData constructor(
             fun default(resolver: Resolver, isAbstract: Boolean) = with(Konvert()) {
                 AnnotationData(
                     mappings = this.mappings.toList(),
-                    constructor = this.constructor.mapNotNull { resolver.getClassDeclarationByName(it.qualifiedName!!) },
+                    constructor = this.constructorArgs.mapNotNull { resolver.getClassDeclarationByName(it.qualifiedName!!) },
                     priority = if (isAbstract) this.priority else DEFAULT_KONVERTER_PRIORITY,
                     options = emptyList()
                 )
