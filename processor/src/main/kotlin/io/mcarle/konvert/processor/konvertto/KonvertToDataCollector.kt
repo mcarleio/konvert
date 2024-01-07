@@ -15,10 +15,10 @@ object KonvertToDataCollector {
             .flatMap { ksAnnotated ->
                 val ksClassDeclaration = ksAnnotated as? KSClassDeclaration
                 check(ksClassDeclaration != null && ksClassDeclaration.classKind == ClassKind.CLASS) {
-                    "${KonvertTo::class.simpleName} can only target classes and companion objects"
+                    "@${KonvertTo::class.simpleName} can only target classes, but $ksAnnotated is not a class"
                 }
                 check(ksClassDeclaration.typeParameters.isEmpty()) {
-                    "${KonvertTo::class.simpleName} not allowed on types with generics: $ksAnnotated"
+                    "@${KonvertTo::class.simpleName} not allowed on types with generics: ${ksAnnotated.qualifiedName?.asString() ?: ksAnnotated}"
                 }
 
                 ksClassDeclaration.annotations

@@ -14,16 +14,13 @@ object KonvertFromDataCollector {
         return resolver.getSymbolsWithAnnotation(KonvertFrom::class.qualifiedName!!)
             .flatMap { ksAnnotated ->
                 val annotatedDeclaration = ksAnnotated as? KSClassDeclaration
-                check(annotatedDeclaration != null) {
-                    "${KonvertFrom::class.simpleName} can only target class declarations or companion objects"
-                }
-                check(annotatedDeclaration.typeParameters.isEmpty()) {
-                    "${KonvertFrom::class.simpleName} not allowed on types with generics: $ksAnnotated"
-                }
-
                 val (targetKsClassDeclaration, targetCompanionDeclaration) = determineClassAndCompanion(
                     annotatedDeclaration = annotatedDeclaration
                 )
+
+                check(targetKsClassDeclaration.typeParameters.isEmpty()) {
+                    "@${KonvertFrom::class.simpleName} not allowed on classes with generics: ${targetKsClassDeclaration.qualifiedName?.asString() ?: targetKsClassDeclaration}"
+                }
 
                 ksAnnotated.annotations
                     .filter { (it.annotationType.toTypeName() as? ClassName)?.canonicalName == KonvertFrom::class.qualifiedName }
@@ -43,24 +40,22 @@ object KonvertFromDataCollector {
             }.toList()
     }
 
-    private fun determineClassAndCompanion(annotatedDeclaration: KSClassDeclaration): Pair<KSClassDeclaration, KSClassDeclaration> {
-        return if (annotatedDeclaration.isCompanionObject) {
+    private fun determineClassAndCompanion(annotatedDeclaration: KSClassDeclaration?): Pair<KSClassDeclaration, KSClassDeclaration> {
+        return if (annotatedDeclaration?.isCompanionObject == true) {
             val targetKsClassDeclaration = annotatedDeclaration.parentDeclaration as? KSClassDeclaration
-                ?: throw RuntimeException("Parent of $annotatedDeclaration is no class declaration")
-            if (targetKsClassDeclaration.classKind != ClassKind.CLASS) {
-                throw RuntimeException("Parent of $annotatedDeclaration is not ${ClassKind.CLASS} but is ${targetKsClassDeclaration.classKind}")
+            check(targetKsClassDeclaration != null && targetKsClassDeclaration.classKind == ClassKind.CLASS) {
+                "Parent of ${annotatedDeclaration.qualifiedName?.asString() ?: annotatedDeclaration} " +
+                    "is not a class: ${targetKsClassDeclaration?.qualifiedName?.asString() ?: targetKsClassDeclaration}"
             }
-            val targetCompanionDeclaration = annotatedDeclaration
-            targetKsClassDeclaration to targetCompanionDeclaration
-        } else if (annotatedDeclaration.classKind == ClassKind.CLASS) {
+            targetKsClassDeclaration to annotatedDeclaration
+        } else if (annotatedDeclaration?.classKind == ClassKind.CLASS) {
             val targetCompanionDeclaration =
                 annotatedDeclaration.declarations
                     .firstOrNull { (it as? KSClassDeclaration)?.isCompanionObject ?: false } as? KSClassDeclaration
-                    ?: throw RuntimeException("Missing Companion for $annotatedDeclaration")
-            val targetKsClassDeclaration = annotatedDeclaration
-            targetKsClassDeclaration to targetCompanionDeclaration
+                    ?: error("Missing companion in ${annotatedDeclaration.qualifiedName?.asString() ?: annotatedDeclaration}")
+            annotatedDeclaration to targetCompanionDeclaration
         } else {
-            throw RuntimeException("KonvertFrom only allowed on compantion objects or class declarations with a companion")
+            error("@${KonvertFrom::class.simpleName} only allowed on companion objects or class declarations with a companion, but ${annotatedDeclaration?.qualifiedName?.asString() ?: annotatedDeclaration} is neither")
         }
     }
 
