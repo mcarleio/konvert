@@ -1,6 +1,7 @@
 package io.mcarle.konvert.processor.konvert
 
 import com.squareup.kotlinpoet.ksp.toClassName
+import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
 import io.mcarle.konvert.api.DEFAULT_KONVERT_PRIORITY
@@ -13,6 +14,7 @@ import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
 import io.mcarle.konvert.converter.api.config.KONVERTER_GENERATE_CLASS_OPTION
 import io.mcarle.konvert.converter.api.config.KONVERTER_USE_REFLECTION_OPTION
 import io.mcarle.konvert.processor.KonverterITest
+import io.mcarle.konvert.processor.exceptions.AmbiguousConstructorException
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -1321,6 +1323,68 @@ interface Mapper {
               )
             }
         """.trimIndent(), mapperCode
+        )
+    }
+
+    @Test
+    fun failOnAbstractFunctionsAboutMultipleFunctionParametersIfNoneIsAnnotatedWithSource() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String, val otherValue: Int)
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceClass, otherValue: Int): TargetClass
+}
+                    """.trimIndent(),
+                    name = "TestCode.kt"
+                )
+            )
+        )
+
+        assertContains(
+            compilationResult.messages,
+            "Konvert annotated function must have exactly one source parameter (either single parameter or annotated with @Konverter.Source) and must have a return type: Mapper.toTarget"
+        )
+    }
+
+    @Test
+    fun complainOnImplementedAnnotatedFunctionsIfSourceAndOrTargetCouldNotBeDetermined() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.OK, // should compile, but with warning
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+
+class SourceClass(val property: String)
+class TargetClass(val property: String, val otherValue: Int)
+
+@Konverter
+interface Mapper {
+    @Konvert
+    fun toTarget(source: SourceClass, otherValue: Int): TargetClass = TargetClass(source.property, otherValue)
+}
+                    """.trimIndent(),
+                    name = "TestCode.kt"
+                )
+            )
+        )
+
+        assertContains(
+            compilationResult.messages,
+            "Ignoring annotated implemented function as source and/or target could not be determined"
         )
     }
 

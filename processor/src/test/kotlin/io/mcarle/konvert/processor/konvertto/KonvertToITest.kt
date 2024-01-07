@@ -1,5 +1,6 @@
 package io.mcarle.konvert.processor.konvertto
 
+import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERT_TO_PRIORITY
 import io.mcarle.konvert.converter.IterableToIterableConverter
@@ -51,6 +52,58 @@ class TargetClass(
         assertEquals("TargetClass", converter.targetClassDeclaration.simpleName.asString())
         assertEquals(true, converter.enabledByDefault)
         assertEquals(DEFAULT_KONVERT_TO_PRIORITY, converter.priority)
+    }
+
+    @Test
+    fun failOnAnnotationOnClassWithGenerics() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(TargetClass::class, mappings=[Mapping(source="sourceProperty", target="targetProperty")])
+class SourceClass<T>(
+    val sourceProperty: T
+)
+class TargetClass(
+    val targetProperty: String
+)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(result.messages, "@KonvertTo not allowed on types with generics: SourceClass")
+    }
+
+    @Test
+    fun failOnAnnotatingAnObject() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(TargetClass::class, mappings=[Mapping(source="sourceProperty", target="targetProperty")])
+object SourceClass {
+    val sourceProperty: String
+}
+class TargetClass(
+    val targetProperty: String
+)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(result.messages, "@KonvertTo can only target classes, but SourceClass is not a class")
     }
 
     @Test

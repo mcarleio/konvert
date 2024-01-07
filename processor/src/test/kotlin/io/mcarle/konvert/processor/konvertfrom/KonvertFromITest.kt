@@ -1,7 +1,9 @@
 package io.mcarle.konvert.processor.konvertfrom
 
+import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERT_FROM_PRIORITY
+import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.converter.IterableToIterableConverter
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
@@ -93,6 +95,142 @@ class TargetClass(
         assertEquals("TargetClass", converter.targetClassDeclaration.simpleName.asString())
         assertEquals(true, converter.enabledByDefault)
         assertEquals(DEFAULT_KONVERT_FROM_PRIORITY, converter.priority)
+    }
+
+    @Test
+    fun failOnAnnotationOnClassWithGenerics() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertFrom
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(
+    val sourceProperty: String
+)
+@KonvertFrom(SourceClass::class, mappings=[Mapping(source="sourceProperty", target="targetProperty")])
+class TargetClass<T>(
+    val targetProperty: T
+) {
+    companion object
+}
+                """.trimIndent()
+            )
+        )
+
+        assertContains(result.messages, "@KonvertFrom not allowed on classes with generics: TargetClass")
+    }
+
+    @Test
+    fun failOnAnnotationOnClassWithoutCompanion() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertFrom
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(
+    val sourceProperty: String
+)
+@KonvertFrom(SourceClass::class, mappings=[Mapping(source="sourceProperty", target="targetProperty")])
+class TargetClass(
+    val targetProperty: String
+)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(result.messages, "Missing companion in TargetClass")
+    }
+
+    @Test
+    fun failOnAnnotationOnCompanionOfAnnotationClass() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertFrom
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(
+    val sourceProperty: String
+)
+annotation class TargetClass(
+    val targetProperty: String
+) {
+    @KonvertFrom(SourceClass::class, mappings=[Mapping(source="sourceProperty", target="targetProperty")])
+    companion object
+}
+                """.trimIndent()
+            )
+        )
+
+        assertContains(result.messages, "Parent of TargetClass.Companion is not a class: TargetClass")
+    }
+
+    @Test
+    fun failOnAnnotationOnCompanionOfClassWithGenerics() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertFrom
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(
+    val sourceProperty: String
+)
+class TargetClass<T>(
+    val targetProperty: T
+) {
+    @KonvertFrom(SourceClass::class, mappings=[Mapping(source="sourceProperty", target="targetProperty")])
+    companion object
+}
+                """.trimIndent()
+            )
+        )
+
+        assertContains(result.messages, "@KonvertFrom not allowed on classes with generics: TargetClass")
+    }
+
+    @Test
+    fun failOnAnnotatingAnObject() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertFrom
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(
+    val sourceProperty: String
+)
+@KonvertFrom(SourceClass::class, mappings=[Mapping(source="sourceProperty", target="targetProperty")])
+object TargetClass {
+    val targetProperty: String
+}
+                """.trimIndent()
+            )
+        )
+
+        assertContains(result.messages, "@KonvertFrom only allowed on companion objects or class declarations with a companion, but TargetClass is neither")
     }
 
     @Test
