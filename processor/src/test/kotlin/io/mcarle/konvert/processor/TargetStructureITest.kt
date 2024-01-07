@@ -8,12 +8,14 @@ import io.mcarle.konvert.converter.api.config.ENABLE_CONVERTERS_OPTION
 import io.mcarle.konvert.processor.exceptions.AmbiguousConstructorException
 import io.mcarle.konvert.processor.exceptions.NoMatchingConstructorException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
 
 @Suppress("RedundantVisibilityModifier")
+@OptIn(ExperimentalCompilerApi::class)
 class TargetStructureITest : KonverterITest() {
 
     @Test

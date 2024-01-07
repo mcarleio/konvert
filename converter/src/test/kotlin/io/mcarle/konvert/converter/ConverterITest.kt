@@ -4,9 +4,12 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.processor.KonverterITest
+import io.mcarle.konvert.processor.generatedSourceFor
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 
+@OptIn(ExperimentalCompilerApi::class)
 abstract class ConverterITest : KonverterITest() {
 
     private val sourceClassName: String = "Xxx"

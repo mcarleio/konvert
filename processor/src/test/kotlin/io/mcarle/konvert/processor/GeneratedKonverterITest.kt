@@ -10,9 +10,11 @@ import io.mcarle.konvert.converter.api.config.ADD_GENERATED_KONVERTER_ANNOTATION
 import io.mcarle.konvert.processor.konvert.KonvertTypeConverter
 import io.mcarle.konvert.processor.konvertfrom.KonvertFromTypeConverter
 import io.mcarle.konvert.processor.konvertto.KonvertToTypeConverter
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
+@OptIn(ExperimentalCompilerApi::class)
 class GeneratedKonverterITest : KonverterITest() {
 
     override var addGeneratedKonverterAnnotation = true

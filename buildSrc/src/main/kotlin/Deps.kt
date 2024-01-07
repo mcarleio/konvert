@@ -8,8 +8,8 @@ val DependencyHandler.kotlinReflect get() = kotlin("reflect")
 val DependencyHandler.kotlinStdlib get() = kotlin("stdlib-jdk8")
 val DependencyHandler.kotlinCompilerEmbeddable get() = kotlin("compiler-embeddable")
 
-val DependencyHandler.kotlinCompileTesting get() = "com.github.tschuchortdev:kotlin-compile-testing:${Versions.kotlinCompileTesting}"
-val DependencyHandler.kotlinCompileTestingKsp get() = "com.github.tschuchortdev:kotlin-compile-testing-ksp:${Versions.kotlinCompileTesting}"
+val DependencyHandler.kotlinCompileTesting get() = "dev.zacsweers.kctfork:core:${Versions.kotlinCompileTesting}"
+val DependencyHandler.kotlinCompileTestingKsp get() = "dev.zacsweers.kctfork:ksp:${Versions.kotlinCompileTesting}"
 val DependencyHandler.symbolProcessing get() = "com.google.devtools.ksp:symbol-processing:${Versions.kotlin}-${Versions.ksp}"
 val DependencyHandler.symbolProcessingApi get() = "com.google.devtools.ksp:symbol-processing-api:${Versions.kotlin}-${Versions.ksp}"
 
@@ -50,10 +50,7 @@ object Versions {
      */
     const val markdownGenerator = "1.3.1.1"
 
-    // once increased from to >1.5.0, check if
-    //  processor/src/testFixtures/kotlin/io/mcarle/konvert/processor/removeOnceNotNeeded.kt
-    // is still needed
-    const val kotlinCompileTesting = "1.5.0"
+    const val kotlinCompileTesting = "0.4.0"
 
     const val kotlinPoet = "1.14.2"
     const val jUnit = "5.10.0"

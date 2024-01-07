@@ -14,8 +14,8 @@ import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
 import io.mcarle.konvert.converter.api.config.KONVERTER_GENERATE_CLASS_OPTION
 import io.mcarle.konvert.converter.api.config.KONVERTER_USE_REFLECTION_OPTION
 import io.mcarle.konvert.processor.KonverterITest
-import io.mcarle.konvert.processor.exceptions.AmbiguousConstructorException
 import io.mcarle.konvert.processor.generatedSourceFor
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -25,7 +25,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-
+@OptIn(ExperimentalCompilerApi::class)
 class KonvertITest : KonverterITest() {
 
     @Test

@@ -1,16 +1,20 @@
 package io.mcarle.konvert.converter
 
+import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.processor.KonvertProcessorProvider
+import io.mcarle.konvert.processor.generatedSourceFor
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.JvmTarget
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import kotlin.test.assertEquals
 
+@OptIn(ExperimentalCompilerApi::class)
 class ExampleTest {
     @TempDir
     lateinit var temporaryFolder: File
@@ -88,7 +92,7 @@ interface FooMapper {
         return compilation
     }
 
-    private fun checkIfGeneratedMapperCompiles(compilation: KotlinCompilation, code: String): KotlinCompilation.Result {
+    private fun checkIfGeneratedMapperCompiles(compilation: KotlinCompilation, code: String): JvmCompilationResult {
         compilation.symbolProcessorProviders = emptyList()
         compilation.sources += SourceFile.kotlin("FooMapperKonverter.kt", code)
 

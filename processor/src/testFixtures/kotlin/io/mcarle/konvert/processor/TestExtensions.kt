@@ -1,8 +1,10 @@
 package io.mcarle.konvert.processor
 
 import com.tschuchort.compiletesting.KotlinCompilation
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import java.io.File
 
+@OptIn(ExperimentalCompilerApi::class)
 fun KotlinCompilation.generatedSourceFor(fileName: String): String {
     return kspSourcesDir.walkTopDown()
         .firstOrNull { it.name == fileName }
@@ -14,8 +16,10 @@ fun KotlinCompilation.generatedSourceFor(fileName: String): String {
         )
 }
 
+@OptIn(ExperimentalCompilerApi::class)
 val KotlinCompilation.kspWorkingDir: File
     get() = workingDir.resolve("ksp")
 
+@OptIn(ExperimentalCompilerApi::class)
 val KotlinCompilation.kspSourcesDir: File
     get() = kspWorkingDir.resolve("sources")

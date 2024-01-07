@@ -3,14 +3,13 @@ package io.mcarle.konvert.processor.konvertfrom
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERT_FROM_PRIORITY
-import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.converter.IterableToIterableConverter
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
-import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -18,7 +17,7 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-
+@OptIn(ExperimentalCompilerApi::class)
 class KonvertFromITest : KonverterITest() {
 
     @Test
@@ -230,7 +229,10 @@ object TargetClass {
             )
         )
 
-        assertContains(result.messages, "@KonvertFrom only allowed on companion objects or class declarations with a companion, but TargetClass is neither")
+        assertContains(
+            result.messages,
+            "@KonvertFrom only allowed on companion objects or class declarations with a companion, but TargetClass is neither"
+        )
     }
 
     @Test
@@ -461,7 +463,6 @@ data class SourceClass(val property: String)
             extensionFunctionCode
         )
     }
-
 
 
     @Test

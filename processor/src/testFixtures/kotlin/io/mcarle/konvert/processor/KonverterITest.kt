@@ -1,5 +1,6 @@
 package io.mcarle.konvert.processor
 
+import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.kspArgs
@@ -9,11 +10,13 @@ import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.ADD_GENERATED_KONVERTER_ANNOTATION_OPTION
 import org.intellij.lang.annotations.Language
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.JvmTarget
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
+@OptIn(ExperimentalCompilerApi::class)
 abstract class KonverterITest {
     @TempDir
     protected lateinit var temporaryFolder: File
@@ -26,7 +29,7 @@ abstract class KonverterITest {
         expectResultCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
         options: Map<String, String> = emptyMap(),
         code: SourceFile
-    ): Pair<KotlinCompilation, KotlinCompilation.Result> {
+    ): Pair<KotlinCompilation, JvmCompilationResult> {
         return compileWith(
             enabledConverters = enabledConverters,
             otherConverters = otherConverters,
@@ -42,7 +45,7 @@ abstract class KonverterITest {
         expectResultCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
         options: Map<String, String> = emptyMap(),
         code: Array<SourceFile>
-    ): Pair<KotlinCompilation, KotlinCompilation.Result> {
+    ): Pair<KotlinCompilation, JvmCompilationResult> {
         TypeConverterRegistry.reinitConverterList(*enabled(*enabledConverters.toTypedArray()), *otherConverters.toTypedArray())
 
         return compile(expectResultCode, options, *code)
@@ -60,7 +63,7 @@ abstract class KonverterITest {
         expectResultCode: KotlinCompilation.ExitCode,
         options: Map<String, String>,
         vararg sourceFiles: SourceFile
-    ): Pair<KotlinCompilation, KotlinCompilation.Result> {
+    ): Pair<KotlinCompilation, JvmCompilationResult> {
         val compilation = prepareCompilation(options, sourceFiles.toList())
 
         val result = compilation.compile()
@@ -89,6 +92,7 @@ abstract class KonverterITest {
             generatedCode.trimIndent()
         )
     }
+
     protected fun assertContentEquals(expected: String, generatedCode: String) {
         assertEquals(
             expected.trimIndent(),

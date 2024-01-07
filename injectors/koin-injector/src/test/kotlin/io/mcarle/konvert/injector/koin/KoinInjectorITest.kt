@@ -6,9 +6,11 @@ import io.mcarle.konvert.injector.koin.config.DEFAULT_INJECTION_METHOD_OPTION
 import io.mcarle.konvert.injector.koin.config.DEFAULT_SCOPE_OPTION
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 
+@OptIn(ExperimentalCompilerApi::class)
 class KoinInjectorITest : KonverterITest() {
 
     @Test
