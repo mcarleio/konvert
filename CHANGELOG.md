@@ -13,7 +13,7 @@ Update to Kotlin 1.9.22 and KSP 1.0.16
   due to future plans to support KMP [[#12](https://github.com/mcarleio/konvert/discussions/12), [#24](https://github.com/mcarleio/konvert/issues/24)], which lists `constructor` as a reserved word
 
 ### Bug fixes
-* Replace function call in `Konverter` during runtime, as it is not implemented for Android (thanks to [@mkowol-n ](https://github.com/mkowol-n) [#32](https://github.com/mcarleio/konvert/pull/32))
+* Replace function call in `Konverter` during runtime, as it is not implemented for Android (thanks to [@mkowol-n](https://github.com/mkowol-n) [#32](https://github.com/mcarleio/konvert/pull/32))
 * Handle additional parameters (introduced with [2.4.0](#2.4.0)) when implementation is given and the super call is generated
 * Use same aliases as the `@Konverter` annotated interface when implementation is given (function with super call)
 
