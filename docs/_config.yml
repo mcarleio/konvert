@@ -28,4 +28,4 @@ asciidoctor:
     - source-highlighter=rouge
     - showtitle=@
     - github=https://github.com/mcarleio/konvert
-    - konvertVersion=2.4.0
+    - konvertVersion=3.0.0
