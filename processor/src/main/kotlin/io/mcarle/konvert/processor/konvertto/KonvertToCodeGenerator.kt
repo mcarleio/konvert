@@ -22,13 +22,6 @@ object KonvertToCodeGenerator {
             data.sourceClassDeclaration.simpleName.asString(),
         )
 
-        val targetClassImportName =
-            if (data.sourceClassDeclaration.simpleName.asString() != data.targetClassDeclaration.simpleName.asString()) {
-                data.targetClassDeclaration.simpleName.asString()
-            } else {
-                null
-            }
-
         fileSpecBuilder.addFunction(
             funBuilder = FunSpec.builder(data.mapFunctionName)
                 .returns(data.targetClassDeclaration.asStarProjectedType().toTypeName())
@@ -38,7 +31,7 @@ object KonvertToCodeGenerator {
                         data.annotationData.mappings.validated(data.sourceClassDeclaration, logger),
                         data.annotationData.constructor,
                         null,
-                        targetClassImportName,
+                        null,
                         data.sourceClassDeclaration.asStarProjectedType(),
                         data.targetClassDeclaration.asStarProjectedType(),
                         data.sourceClassDeclaration,

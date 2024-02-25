@@ -32,7 +32,7 @@ object KonvertFromCodeGenerator {
                         data.annotationData.mappings.validated(data.sourceClassDeclaration, logger),
                         data.annotationData.constructor,
                         data.paramName,
-                        data.targetClassDeclaration.simpleName.asString(),
+                        null,
                         data.sourceClassDeclaration.asStarProjectedType(),
                         data.targetClassDeclaration.asStarProjectedType(),
                         data.targetCompanionDeclaration,

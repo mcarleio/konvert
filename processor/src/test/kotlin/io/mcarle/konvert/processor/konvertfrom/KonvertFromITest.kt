@@ -498,4 +498,81 @@ class TargetClass(val children: List<TargetClass>) {
         )
     }
 
+    @Test
+    fun nestedClass() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.OK,
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/Person.kt",
+                    contents =
+                    """
+package a
+
+import io.mcarle.konvert.api.KonvertFrom
+import b.PersonDto
+
+data class Person(val firstName: String, val lastName: String, val age: Int, val address: Address) {
+    data class Address(val address1: String, val address2: String) {
+        @KonvertFrom(PersonDto.AddressDto::class)
+        companion object
+    }
+}
+                """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/PersonDto.kt",
+                    contents =
+                    """
+package b
+
+import io.mcarle.konvert.api.KonvertFrom
+import a.Person.Address as AddressDomain
+
+data class PersonDto(val firstName: String, val lastName: String, val age: Int, val address: AddressDto) {
+    data class AddressDto(val address1: String, val address2: String) {
+        @KonvertFrom(AddressDomain::class)
+        companion object
+    }
+}
+                """.trimIndent()
+                )
+            )
+        )
+        val addressExtensionFunctionCode = compilation.generatedSourceFor("AddressKonverter.kt")
+        println(addressExtensionFunctionCode)
+        val addressDtoExtensionFunctionCode = compilation.generatedSourceFor("AddressDtoKonverter.kt")
+        println(addressDtoExtensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            package a
+
+            import b.PersonDto
+
+            public fun Person.Address.Companion.fromAddressDto(addressDto: PersonDto.AddressDto): Person.Address
+                = Person.Address(
+              address1 = addressDto.address1,
+              address2 = addressDto.address2
+            )
+            """.trimIndent(),
+            addressExtensionFunctionCode
+        )
+        assertSourceEquals(
+            """
+            package b
+
+            import a.Person
+
+            public fun PersonDto.AddressDto.Companion.fromAddress(address: Person.Address): PersonDto.AddressDto
+                = PersonDto.AddressDto(
+              address1 = address.address1,
+              address2 = address.address2
+            )
+            """.trimIndent(),
+            addressDtoExtensionFunctionCode
+        )
+    }
+
 }

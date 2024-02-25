@@ -426,4 +426,75 @@ class TargetClass(val children: List<TargetClass>)
         )
     }
 
+    @Test
+    fun nestedClass() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.OK,
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/Person.kt",
+                    contents =
+                    """
+package a
+
+import io.mcarle.konvert.api.KonvertTo
+import b.PersonDto
+
+data class Person(val firstName: String, val lastName: String, val age: Int, val address: Address) {
+    @KonvertTo(PersonDto.AddressDto::class)
+    data class Address(val address1: String, val address2: String)
+}
+                """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/PersonDto.kt",
+                    contents =
+                    """
+package b
+
+import io.mcarle.konvert.api.KonvertTo
+import a.Person.Address as AddressDomain
+
+data class PersonDto(val firstName: String, val lastName: String, val age: Int, val address: AddressDto) {
+    @KonvertTo(AddressDomain::class)
+    data class AddressDto(val address1: String, val address2: String)
+}
+                """.trimIndent()
+                )
+            )
+        )
+        val addressExtensionFunctionCode = compilation.generatedSourceFor("AddressKonverter.kt")
+        println(addressExtensionFunctionCode)
+        val addressDtoExtensionFunctionCode = compilation.generatedSourceFor("AddressDtoKonverter.kt")
+        println(addressDtoExtensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            package a
+
+            import b.PersonDto
+
+            public fun Person.Address.toAddressDto(): PersonDto.AddressDto = PersonDto.AddressDto(
+              address1 = address1,
+              address2 = address2
+            )
+            """.trimIndent(),
+            addressExtensionFunctionCode
+        )
+        assertSourceEquals(
+            """
+            package b
+
+            import a.Person
+
+            public fun PersonDto.AddressDto.toAddress(): Person.Address = Person.Address(
+              address1 = address1,
+              address2 = address2
+            )
+            """.trimIndent(),
+            addressDtoExtensionFunctionCode
+        )
+    }
+
 }

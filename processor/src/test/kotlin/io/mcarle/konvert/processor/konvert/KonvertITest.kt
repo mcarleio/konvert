@@ -651,7 +651,7 @@ interface SomeConverter {
             import b.SomeClass as BSomeClass
 
             public object SomeConverterImpl : SomeConverter {
-              override fun toSomeClass(source: ASomeClass): BSomeClass = b.SomeClass().also { someClass ->
+              override fun toSomeClass(source: ASomeClass): BSomeClass = BSomeClass().also { someClass ->
                 someClass.property = source.property
               }
             }
@@ -711,7 +711,7 @@ interface SomeConverter {
             import b.SomeClass as BSomeClass
 
             public object SomeConverterImpl : SomeConverter {
-              override fun toSomeClass(source: ASomeClass): BSomeClass? = b.SomeClass().also { someClass ->
+              override fun toSomeClass(source: ASomeClass): BSomeClass? = BSomeClass().also { someClass ->
                 someClass.property = source.property
               }
             }
@@ -1519,6 +1519,125 @@ interface OtherMapper {
         println(mapperCode)
 
         assertContains(mapperCode, "Konverter.get<OtherMapper>().toTarget(")
+    }
+
+    @Test
+    fun nestedClass() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.OK,
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/Person.kt",
+                    contents =
+                    """
+package a
+
+data class Person(val firstName: String, val lastName: String, val age: Int, val address: Address) {
+    data class Address(val address1: String, val address2: String)
+}
+                """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/PersonDto.kt",
+                    contents =
+                    """
+package b
+
+data class PersonDto(val firstName: String, val lastName: String, val age: Int, val address: AddressDto) {
+    data class AddressDto(val address1: String, val address2: String)
+}
+                """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "c/DomainMapper.kt",
+                    contents =
+                    """
+package c
+
+import io.mcarle.konvert.api.Konverter
+import a.Person
+import b.PersonDto
+
+@Konverter
+interface DomainMapper {
+    fun toAddressDto(address: Person.Address): PersonDto.AddressDto
+}
+                """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "d/DtoMapper.kt",
+                    contents =
+                    """
+package d
+
+import io.mcarle.konvert.api.Konverter
+import a.Person.Address as AddressDomain
+import b.PersonDto
+
+@Konverter
+interface DtoMapper {
+    fun toAddress(address: PersonDto.AddressDto): AddressDomain
+}
+                """.trimIndent()
+                ),
+            )
+        )
+        val domainMapperCode = compilation.generatedSourceFor("DomainMapperKonverter.kt")
+        println(domainMapperCode)
+        val dtoMapperCode = compilation.generatedSourceFor("DtoMapperKonverter.kt")
+        println(dtoMapperCode)
+
+        assertSourceEquals(
+            """
+            package c
+
+            import a.Person
+            import b.PersonDto
+
+            public object DomainMapperImpl : DomainMapper {
+              override fun toAddressDto(address: Person.Address): PersonDto.AddressDto = PersonDto.AddressDto(
+                address1 = address.address1,
+                address2 = address.address2
+              )
+            }
+            """.trimIndent(),
+            domainMapperCode
+        )
+        assertSourceEquals(
+            """
+            package d
+
+            import a.Person
+            import b.PersonDto
+            import a.Person.Address as AddressDomain
+
+            public object DtoMapperImpl : DtoMapper {
+              override fun toAddress(address: PersonDto.AddressDto): a.Person.Address = AddressDomain(
+                address1 = address.address1,
+                address2 = address.address2
+              )
+            }
+            """.trimIndent(),
+            dtoMapperCode
+        )
+        // TODO: After https://github.com/square/kotlinpoet/issues/1838 is fixed, the following assertion should succeed
+//        assertSourceEquals(
+//            """
+//            package d
+//
+//            import b.PersonDto
+//            import a.Person.Address as AddressDomain
+//
+//            public object DtoMapperImpl : DtoMapper {
+//              override fun toAddress(address: PersonDto.AddressDto): AddressDomain = AddressDomain(
+//                address1 = address.address1,
+//                address2 = address.address2
+//              )
+//            }
+//            """.trimIndent(),
+//            dtoMapperCode
+//        )
     }
 }
 
