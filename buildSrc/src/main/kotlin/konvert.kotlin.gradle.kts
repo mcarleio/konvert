@@ -7,6 +7,7 @@ plugins {
 
 dependencies {
     implementation(kotlinStdlib)
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
 }
 
 repositories {

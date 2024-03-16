@@ -10,6 +10,7 @@ import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.converter.api.isNullable
+import kotlinx.collections.immutable.ImmutableList
 
 @AutoService(TypeConverter::class)
 class IterableToIterableConverter : AbstractTypeConverter() {
@@ -26,6 +27,7 @@ class IterableToIterableConverter : AbstractTypeConverter() {
         private val MUTABLESET = "kotlin.collections.MutableSet"
         private val HASHSET = "java.util.HashSet"
         private val LINKEDHASHSET = "java.util.LinkedHashSet"
+        private val IMMUTABLELIST = "kotlinx.collections.immutable.ImmutableList"
         fun supported() = listOf(
             ITERABLE,
             MUTABLEITERABLE,
@@ -38,6 +40,7 @@ class IterableToIterableConverter : AbstractTypeConverter() {
             MUTABLESET,
             HASHSET,
             LINKEDHASHSET,
+            IMMUTABLELIST,
         )
     }
 
@@ -99,24 +102,32 @@ class IterableToIterableConverter : AbstractTypeConverter() {
             }
         }
 
-        val mapSourceContainerCode = when {
-            target.isExactly(ITERABLE) -> ""
-            target.isExactly(MUTABLEITERABLE) -> if (!listTypeChanged && source.isInstanceOf(MUTABLEITERABLE)) "" else "$nc.toMutableList()"
-            target.isExactly(COLLECTION) -> if (listTypeChanged || source.isInstanceOf(COLLECTION)) "" else "$nc.toList()"
-            target.isExactly(MUTABLECOLLECTION) -> if (!listTypeChanged && source.isInstanceOf(MUTABLECOLLECTION)) "" else "$nc.toMutableList()"
-            target.isExactly(LIST) -> if (listTypeChanged || source.isInstanceOf(LIST)) "" else "$nc.toList()"
-            target.isExactly(MUTABLELIST) -> if (!listTypeChanged && source.isInstanceOf(MUTABLELIST)) "" else "$nc.toMutableList()"
-            target.isExactly(ARRAYLIST) -> if (!listTypeChanged && source.isInstanceOf(ARRAYLIST)) "" else "$nc.toCollection(kotlin.collections.ArrayList())"
-            target.isExactly(SET) -> if (!listTypeChanged && source.isInstanceOf(SET)) "" else "$nc.toSet()"
-            target.isExactly(MUTABLESET) -> if (!listTypeChanged && source.isInstanceOf(MUTABLESET)) "" else "$nc.toMutableSet()"
-            target.isExactly(HASHSET) -> if (!listTypeChanged && source.isInstanceOf(HASHSET)) "" else "$nc.toCollection(kotlin.collections.HashSet())"
-            target.isExactly(LINKEDHASHSET) -> if (!listTypeChanged && source.isInstanceOf(LINKEDHASHSET)) "" else "$nc.toCollection(kotlin.collections.LinkedHashSet())"
+        val code = if(!target.isExactly(IMMUTABLELIST)) {
+            val mapSourceContainerCode = when {
+                target.isExactly(ITERABLE) -> ""
+                target.isExactly(MUTABLEITERABLE) -> if (!listTypeChanged && source.isInstanceOf(MUTABLEITERABLE)) "" else "$nc.toMutableList()"
+                target.isExactly(COLLECTION) -> if (listTypeChanged || source.isInstanceOf(COLLECTION)) "" else "$nc.toList()"
+                target.isExactly(MUTABLECOLLECTION) -> if (!listTypeChanged && source.isInstanceOf(MUTABLECOLLECTION)) "" else "$nc.toMutableList()"
+                target.isExactly(LIST) -> if (listTypeChanged || source.isInstanceOf(LIST)) "" else "$nc.toList()"
+                target.isExactly(MUTABLELIST) -> if (!listTypeChanged && source.isInstanceOf(MUTABLELIST)) "" else "$nc.toMutableList()"
+                target.isExactly(ARRAYLIST) -> if (!listTypeChanged && source.isInstanceOf(ARRAYLIST)) "" else "$nc.toCollection(kotlin.collections.ArrayList())"
+                target.isExactly(SET) -> if (!listTypeChanged && source.isInstanceOf(SET)) "" else "$nc.toSet()"
+                target.isExactly(MUTABLESET) -> if (!listTypeChanged && source.isInstanceOf(MUTABLESET)) "" else "$nc.toMutableSet()"
+                target.isExactly(HASHSET) -> if (!listTypeChanged && source.isInstanceOf(HASHSET)) "" else "$nc.toCollection(kotlin.collections.HashSet())"
+                target.isExactly(LINKEDHASHSET) -> if (!listTypeChanged && source.isInstanceOf(LINKEDHASHSET)) "" else "$nc.toCollection(kotlin.collections.LinkedHashSet())"
 
-            else -> throw UnsupportedTargetIterableException(target)
+                else -> throw UnsupportedTargetIterableException(target)
+            }
+
+
+            mapSourceContentCode + mapSourceContainerCode + appendNotNullAssertionOperatorIfNeeded(source, target)
+        } else {
+            if(source.isNullable()) {
+                "null"
+            } else {
+                "kotlinx.collections.immutable.adapters.ImmutableListAdapter(${mapSourceContentCode + appendNotNullAssertionOperatorIfNeeded(source, target)})"
+            }
         }
-
-
-        val code = mapSourceContentCode + mapSourceContainerCode + appendNotNullAssertionOperatorIfNeeded(source, target)
 
         return CodeBlock.of(
             if (castNeeded) {

@@ -2,6 +2,8 @@ package io.mcarle.konvert.converter
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.api.TypeConverter
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -28,7 +30,8 @@ class IterableToIterableConverterITest : ConverterITest() {
             "kotlin.collections.Set",
             "kotlin.collections.MutableSet",
             "java.util.HashSet",
-            "java.util.LinkedHashSet"
+            "java.util.LinkedHashSet",
+            "kotlinx.collections.immutable.ImmutableList",
         )
             .flatMap { listOf(it, "$it?") }
             .let { Generator.cartesianProduct(it, it) }
@@ -47,6 +50,9 @@ class IterableToIterableConverterITest : ConverterITest() {
                     arguments(it[0], "Collection<MyString>", it[1], "MutableIterable<MyString?>"), // special case: typealias
                     arguments(it[0], "Collection<String>", it[1], "MutableIterable<String?>?"),
                     arguments(it[0], "Collection<String>?", it[1], "MutableIterable<String?>?"),
+                    arguments(it[0], "Collection<MyString>", it[1], "ImmutableList<MyString?>"), // special case: typealias
+                    arguments(it[0], "Collection<String>", it[1], "ImmutableList<String?>?"),
+                    arguments(it[0], "Collection<String>?", it[1], "ImmutableList<String?>?"),
                 )
             }
 
@@ -126,6 +132,7 @@ typealias MyInt = ReallyMyInt
                 sourceTypeName.startsWith("kotlin.collections.MutableSet") -> mutableSetOf(collectionValue)
                 sourceTypeName.startsWith("java.util.HashSet") -> HashSet(setOf(collectionValue))
                 sourceTypeName.startsWith("java.util.LinkedHashSet") -> LinkedHashSet(setOf(collectionValue))
+                sourceTypeName.startsWith("kotlinx.collections.immutable.ImmutableList") -> persistentListOf(collectionValue)
                 else -> null
             }
         )
