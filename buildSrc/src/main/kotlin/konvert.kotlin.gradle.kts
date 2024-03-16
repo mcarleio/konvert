@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
     implementation(kotlinStdlib)
-    implementation(kotlinxCollectionsImmutable)
+    testImplementation(kotlinxCollectionsImmutable)
 }
 
 repositories {
