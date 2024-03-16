@@ -26,7 +26,10 @@ class IterableToIterableConverter : AbstractTypeConverter() {
         private val MUTABLESET = "kotlin.collections.MutableSet"
         private val HASHSET = "java.util.HashSet"
         private val LINKEDHASHSET = "java.util.LinkedHashSet"
+        val IMMUTABLEPACKAGE = "kotlinx.collections.immutable"
         private val IMMUTABLELIST = "kotlinx.collections.immutable.ImmutableList"
+        private val IMMUTABLECOLLECTION = "kotlinx.collections.immutable.ImmutableCollection"
+        private val IMMUTABLESET = "kotlinx.collections.immutable.ImmutableSet"
         fun supported() = listOf(
             ITERABLE,
             MUTABLEITERABLE,
@@ -40,6 +43,8 @@ class IterableToIterableConverter : AbstractTypeConverter() {
             HASHSET,
             LINKEDHASHSET,
             IMMUTABLELIST,
+            IMMUTABLECOLLECTION,
+            IMMUTABLESET,
         )
     }
 
@@ -101,7 +106,7 @@ class IterableToIterableConverter : AbstractTypeConverter() {
             }
         }
 
-        val code = if(!target.isExactly(IMMUTABLELIST)) {
+        val code = if(target.classDeclaration()?.packageName?.asString()?.contains(IMMUTABLEPACKAGE) == false) {
             val mapSourceContainerCode = when {
                 target.isExactly(ITERABLE) -> ""
                 target.isExactly(MUTABLEITERABLE) -> if (!listTypeChanged && source.isInstanceOf(MUTABLEITERABLE)) "" else "$nc.toMutableList()"
@@ -118,13 +123,17 @@ class IterableToIterableConverter : AbstractTypeConverter() {
                 else -> throw UnsupportedTargetIterableException(target)
             }
 
-
             mapSourceContentCode + mapSourceContainerCode + appendNotNullAssertionOperatorIfNeeded(source, target)
         } else {
             if(source.isNullable()) {
                 "null"
             } else {
-                "kotlinx.collections.immutable.adapters.ImmutableListAdapter(${mapSourceContentCode + appendNotNullAssertionOperatorIfNeeded(source, target)})"
+                when {
+                    target.isExactly(IMMUTABLELIST)-> "kotlinx.collections.immutable.adapters.ImmutableListAdapter(${mapSourceContentCode + appendNotNullAssertionOperatorIfNeeded(source, target)})"
+                    target.isExactly(IMMUTABLESET)-> "kotlinx.collections.immutable.adapters.ImmutableSetAdapter(${mapSourceContentCode + appendNotNullAssertionOperatorIfNeeded(source, target)})"
+                    target.isExactly(IMMUTABLECOLLECTION)-> "kotlinx.collections.immutable.adapters.ImmutableCollectionAdapter(${mapSourceContentCode + appendNotNullAssertionOperatorIfNeeded(source, target)})"
+                    else -> throw UnsupportedTargetIterableException(target)
+                }
             }
         }
 

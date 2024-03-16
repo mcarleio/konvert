@@ -21,12 +21,14 @@ class MapToMapConverter : AbstractTypeConverter() {
         private val HASHMAP = "java.util.HashMap" // not "kotlin.collections.HashMap"
 
         private val LINKEDHASHMAP = "java.util.LinkedHashMap" // not "kotlin.collections.LinkedHashMap"
+        private val IMMUTABLEMAP = "kotlinx.collections.immutable.ImmutableMap"
 
         fun supported() = listOf(
             MAP,
             MUTABLEMAP,
             HASHMAP,
-            LINKEDHASHMAP
+            LINKEDHASHMAP,
+            IMMUTABLEMAP,
         )
     }
 
@@ -230,16 +232,25 @@ newKey·to·newValue
             }
         }
 
-        val mapSourceContainerCode = when {
-            target.isExactly(MAP) -> if (mappedToListOfPairs) "$nc.toMap()" else ""
-            target.isExactly(MUTABLEMAP) -> if (!mapTypeChanged && source.isInstanceOf(MUTABLEMAP)) "" else if (mappedToListOfPairs) "$nc.toMap(kotlin.collections.LinkedHashMap())" else "$nc.toMutableMap()"
-            target.isExactly(HASHMAP) -> if (!mapTypeChanged && source.isInstanceOf(HASHMAP)) "" else "$nc.toMap(kotlin.collections.HashMap())"
-            target.isExactly(LINKEDHASHMAP) -> if (!mapTypeChanged && source.isInstanceOf(LINKEDHASHMAP)) "" else "$nc.toMap(kotlin.collections.LinkedHashMap())"
-
-            else -> throw UnsupportedTargetMapException(target)
+        val code = if(target.classDeclaration()?.packageName?.asString()?.contains(IterableToIterableConverter.IMMUTABLEPACKAGE) == false) {
+            val mapSourceContainerCode = when {
+                target.isExactly(MAP) -> if (mappedToListOfPairs) "$nc.toMap()" else ""
+                target.isExactly(MUTABLEMAP) -> if (!mapTypeChanged && source.isInstanceOf(MUTABLEMAP)) "" else if (mappedToListOfPairs) "$nc.toMap(kotlin.collections.LinkedHashMap())" else "$nc.toMutableMap()"
+                target.isExactly(HASHMAP) -> if (!mapTypeChanged && source.isInstanceOf(HASHMAP)) "" else "$nc.toMap(kotlin.collections.HashMap())"
+                target.isExactly(LINKEDHASHMAP) -> if (!mapTypeChanged && source.isInstanceOf(LINKEDHASHMAP)) "" else "$nc.toMap(kotlin.collections.LinkedHashMap())"
+                else -> throw UnsupportedTargetMapException(target)
+            }
+            mapSourceContentCode + mapSourceContainerCode + appendNotNullAssertionOperatorIfNeeded(source, target)
+        } else {
+            if(source.isNullable()) {
+                "null"
+            } else {
+                when {
+                    target.isExactly(IMMUTABLEMAP)-> "kotlinx.collections.immutable.adapters.ImmutableMapAdapter(${mapSourceContentCode + appendNotNullAssertionOperatorIfNeeded(source, target)})"
+                    else -> throw UnsupportedTargetIterableException(target)
+                }
+            }
         }
-
-        val code = mapSourceContentCode + mapSourceContainerCode + appendNotNullAssertionOperatorIfNeeded(source, target)
 
         return CodeBlock.of(
             if (castNeeded) {
