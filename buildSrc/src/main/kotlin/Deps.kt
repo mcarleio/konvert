@@ -20,6 +20,7 @@ val DependencyHandler.orgReflections get() = "org.reflections:reflections:${Vers
 
 val DependencyHandler.kotlinPoet get() = "com.squareup:kotlinpoet:${Versions.kotlinPoet}"
 val DependencyHandler.kotlinPoetKsp get() = "com.squareup:kotlinpoet-ksp:${Versions.kotlinPoet}"
+val DependencyHandler.kotlinxCollectionsImmutable get() = "org.jetbrains.kotlinx:kotlinx-collections-immutable:${Versions.kotlinxCollectionsImmutable}"
 
 object Versions {
     const val kotlin = "1.9.22" // has to match buildSrc/gradle.properties
@@ -54,4 +55,5 @@ object Versions {
 
     const val kotlinPoet = "1.16.0"
     const val jUnit = "5.10.1"
+    const val kotlinxCollectionsImmutable = "0.3.7"
 }

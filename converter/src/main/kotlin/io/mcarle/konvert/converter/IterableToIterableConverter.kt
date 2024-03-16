@@ -10,7 +10,6 @@ import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.converter.api.isNullable
-import kotlinx.collections.immutable.ImmutableList
 
 @AutoService(TypeConverter::class)
 class IterableToIterableConverter : AbstractTypeConverter() {
