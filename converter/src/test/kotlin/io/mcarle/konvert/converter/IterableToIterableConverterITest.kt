@@ -2,7 +2,6 @@ package io.mcarle.konvert.converter
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.api.TypeConverter
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
