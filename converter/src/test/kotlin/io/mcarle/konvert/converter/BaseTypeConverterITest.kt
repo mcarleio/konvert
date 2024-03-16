@@ -1,6 +1,8 @@
 package io.mcarle.konvert.converter
 
-import io.mcarle.konvert.converter.api.TypeConverter
+import io.mcarle.konvert.converter.utils.ConverterITest
+import io.mcarle.konvert.converter.utils.VerificationData
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -9,9 +11,8 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.reflections.Reflections
 import java.math.BigDecimal
 import java.math.BigInteger
-import kotlin.reflect.KCallable
-import kotlin.reflect.KClass
 
+@OptIn(ExperimentalCompilerApi::class)
 class BaseTypeConverterITest : ConverterITest() {
 
     companion object {
@@ -272,32 +273,25 @@ class BaseTypeConverterITest : ConverterITest() {
     @ParameterizedTest
     @MethodSource("converterList")
     fun converterTest(simpleConverterName: String, sourceTypeName: String, targetTypeName: String) {
-        super.converterTest(
-            baseTypeConverterClasses.newConverterInstance(simpleConverterName),
+        executeTest(
             sourceTypeName,
-            targetTypeName
+            targetTypeName,
+            baseTypeConverterClasses.newConverterInstance(simpleConverterName)
         )
     }
 
     @Test
     fun simple() {
-        super.converterTest(
-            IntToStringConverter(),
-            "kotlin.Int",
-            "kotlin.String"
+        executeTest(
+            sourceTypeName = "kotlin.Int",
+            targetTypeName = "kotlin.String",
+            converter = IntToStringConverter(),
         )
     }
 
-    override fun verifyMapper(
-        converter: TypeConverter,
-        sourceTypeName: String,
-        targetTypeName: String,
-        mapperInstance: Any,
-        mapperFunction: KCallable<*>,
-        sourceKClass: KClass<*>,
-        targetKClass: KClass<*>
-    ) {
-        val sourceInstance = sourceKClass.constructors.first().call(
+    override fun verify(verificationData: VerificationData) {
+        val sourceValues = verificationData.sourceVariables.map { sourceVariable ->
+            val sourceTypeName = sourceVariable.second
             when {
                 sourceTypeName.startsWith("java.math.BigInteger") -> BigInteger.ONE
                 sourceTypeName.startsWith("java.math.BigDecimal") -> BigDecimal.ONE
@@ -317,30 +311,35 @@ class BaseTypeConverterITest : ConverterITest() {
                 sourceTypeName.startsWith("kotlin.Double") -> 1337.1337
                 else -> null
             }
-        )
+        }
+        val sourceInstance = verificationData.sourceKClass.constructors.first().call(*sourceValues.toTypedArray())
 
-        val targetInstance = mapperFunction.call(mapperInstance, sourceInstance)
+        val targetInstance = verificationData.mapperFunction.call(verificationData.mapperInstance, sourceInstance)
 
-        assertDoesNotThrow {
-            val targetValue = targetKClass.members.first { it.name == "test" }.call(targetInstance)
-            when {
-                targetTypeName.startsWith("kotlin.String") -> targetValue as String
-                targetTypeName.startsWith("kotlin.Int") -> targetValue as Int
-                targetTypeName.startsWith("kotlin.UInt") -> targetValue as UInt
-                targetTypeName.startsWith("kotlin.Long") -> targetValue as Long
-                targetTypeName.startsWith("kotlin.ULong") -> targetValue as ULong
-                targetTypeName.startsWith("kotlin.Short") -> targetValue as Short
-                targetTypeName.startsWith("kotlin.UShort") -> targetValue as UShort
-                targetTypeName.startsWith("kotlin.Number") -> targetValue as Number
-                targetTypeName.startsWith("kotlin.Byte") -> targetValue as Byte
-                targetTypeName.startsWith("kotlin.UByte") -> targetValue as UByte
-                targetTypeName.startsWith("kotlin.Char") -> targetValue as Char
-                targetTypeName.startsWith("kotlin.Boolean") -> targetValue as Boolean
-                targetTypeName.startsWith("kotlin.Float") -> targetValue as Float
-                targetTypeName.startsWith("kotlin.Double") -> targetValue as Double
-                targetTypeName.startsWith("java.math.BigInteger") -> targetValue as BigInteger
-                targetTypeName.startsWith("java.math.BigDecimal") -> targetValue as BigDecimal
-                else -> null
+        verificationData.targetVariables.forEach { targetVariable ->
+            val targetVariableName = targetVariable.first
+            val targetTypeName = targetVariable.second
+            assertDoesNotThrow {
+                val targetValue = verificationData.targetKClass.members.first { it.name == targetVariableName }.call(targetInstance)
+                when {
+                    targetTypeName.startsWith("kotlin.String") -> targetValue as String
+                    targetTypeName.startsWith("kotlin.Int") -> targetValue as Int
+                    targetTypeName.startsWith("kotlin.UInt") -> targetValue as UInt
+                    targetTypeName.startsWith("kotlin.Long") -> targetValue as Long
+                    targetTypeName.startsWith("kotlin.ULong") -> targetValue as ULong
+                    targetTypeName.startsWith("kotlin.Short") -> targetValue as Short
+                    targetTypeName.startsWith("kotlin.UShort") -> targetValue as UShort
+                    targetTypeName.startsWith("kotlin.Number") -> targetValue as Number
+                    targetTypeName.startsWith("kotlin.Byte") -> targetValue as Byte
+                    targetTypeName.startsWith("kotlin.UByte") -> targetValue as UByte
+                    targetTypeName.startsWith("kotlin.Char") -> targetValue as Char
+                    targetTypeName.startsWith("kotlin.Boolean") -> targetValue as Boolean
+                    targetTypeName.startsWith("kotlin.Float") -> targetValue as Float
+                    targetTypeName.startsWith("kotlin.Double") -> targetValue as Double
+                    targetTypeName.startsWith("java.math.BigInteger") -> targetValue as BigInteger
+                    targetTypeName.startsWith("java.math.BigDecimal") -> targetValue as BigDecimal
+                    else -> null
+                }
             }
         }
     }

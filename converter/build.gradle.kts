@@ -8,6 +8,8 @@ dependencies {
     api(project(":annotations"))
     api(project(":converter-api"))
     api(symbolProcessingApi)
+    implementation(kotlinPoetKsp)
+
 
     // auto service
     implementation(autoServiceAnnotations)

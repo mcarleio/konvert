@@ -2,31 +2,40 @@ package io.mcarle.konvert.converter
 
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Variance
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.converter.api.isNullable
 
-@AutoService(TypeConverter::class)
-class MapToMapConverter : AbstractTypeConverter() {
+internal const val KOTLIN_COLLECTIONS_PACKAGE = "kotlin.collections"
+
+internal const val MAP = "$KOTLIN_COLLECTIONS_PACKAGE.Map"
+internal const val MUTABLEMAP = "$KOTLIN_COLLECTIONS_PACKAGE.MutableMap"
+internal const val JAVA_HASHMAP = "java.util.HashMap" // not "kotlin.collections.HashMap"
+internal const val JAVA_LINKEDHASHMAP = "java.util.LinkedHashMap" // not "kotlin.collections.LinkedHashMap"
+internal const val HASHMAP = "$KOTLIN_COLLECTIONS_PACKAGE.HashMap"
+internal const val LINKEDHASHMAP = "$KOTLIN_COLLECTIONS_PACKAGE.LinkedHashMap"
+
+abstract class MapToXConverter(
+    private val targetFQN: String,
+    private val alternativeFQN: String? = null
+) : AbstractTypeConverter() {
 
     companion object {
-        private val MAP = "kotlin.collections.Map"
-        private val MUTABLEMAP = "kotlin.collections.MutableMap"
-
-        private val HASHMAP = "java.util.HashMap" // not "kotlin.collections.HashMap"
-
-        private val LINKEDHASHMAP = "java.util.LinkedHashMap" // not "kotlin.collections.LinkedHashMap"
-
-        fun supported() = listOf(
+        internal fun supported() = listOf(
             MAP,
             MUTABLEMAP,
+            JAVA_HASHMAP,
+            JAVA_LINKEDHASHMAP,
             HASHMAP,
-            LINKEDHASHMAP
+            LINKEDHASHMAP,
         )
     }
 
@@ -34,12 +43,20 @@ class MapToMapConverter : AbstractTypeConverter() {
         resolver.getClassDeclarationByName<Map<*, *>>()!!.asStarProjectedType()
     }
 
+    private val targetClassDeclaration: KSClassDeclaration by lazy {
+        resolver.getClassDeclarationByName(targetFQN)
+            ?: alternativeFQN?.let { resolver.getClassDeclarationByName(it) }
+            ?: throw IllegalStateException("No class declaration found for $targetFQN or $alternativeFQN")
+    }
+
+    private val targetType: KSType by lazy { targetClassDeclaration.asStarProjectedType() }
+
     override val enabledByDefault: Boolean = true
 
     override fun matches(source: KSType, target: KSType): Boolean {
         return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
             mapType.isAssignableFrom(sourceNotNullable)
-                && mapType.isAssignableFrom(targetNotNullable)
+                && targetType.isAssignableFrom(targetNotNullable) && targetNotNullable.isExactlyTarget()
         } && TypeConverterRegistry.any {
             it.matches(
                 source = source.arguments[0].type!!.resolve(),
@@ -87,9 +104,10 @@ class MapToMapConverter : AbstractTypeConverter() {
         }!!
         val nc = if (source.isNullable()) "?" else ""
 
+        val args = mutableListOf<Any>()
+
         var mapTypeChanged = false
-        var mappedToListOfPairs = false
-        var castNeeded = false
+        var changedTypes = false
 
         val mapSourceContentCode = when {
             genericSourceKeyType == genericTargetKeyType -> when {
@@ -101,7 +119,7 @@ class MapToMapConverter : AbstractTypeConverter() {
 
                 genericSourceValueType == genericTargetValueType.makeNotNullable() -> {
                     if (genericTargetValueVariance == Variance.INVARIANT) {
-                        castNeeded = true
+                        changedTypes = true
                     }
                     fieldName
                 }
@@ -126,13 +144,12 @@ class MapToMapConverter : AbstractTypeConverter() {
 
                 needsNotNullAssertionOperator(genericSourceValueType, genericTargetValueType) -> {
                     mapTypeChanged = true
-                    mappedToListOfPairs = true
-                    "$fieldName$nc.map·{·it.key!!·to·it.value!!·}"
+                    "$fieldName$nc.map·{·it.key!!·to·it.value!!·}$nc.toMap()"
                 }
 
                 genericSourceValueType == genericTargetValueType.makeNotNullable() -> {
                     if (genericTargetValueVariance == Variance.INVARIANT) {
-                        castNeeded = true
+                        changedTypes = true
                     }
                     mapTypeChanged = true
                     "$fieldName$nc.mapKeys·{·it.key!!·}"
@@ -140,20 +157,19 @@ class MapToMapConverter : AbstractTypeConverter() {
 
                 else -> {
                     mapTypeChanged = true
-                    mappedToListOfPairs = true
                     """
 $fieldName$nc.map·{·(key,·value)·->
 ⇥val·newKey·=·key!!
 val·newValue·=·${valueTypeConverter.convert("value", genericSourceValueType, genericTargetValueType)}
 newKey·to·newValue
-⇤}
+⇤}$nc.toMap()
                     """.trimIndent()
                 }
             }
 
             genericSourceKeyType == genericTargetKeyType.makeNotNullable() -> {
                 if (genericTargetKeyVariance == Variance.INVARIANT) {
-                    castNeeded = true
+                    changedTypes = true
                 }
                 when {
                     genericSourceValueType == genericTargetValueType -> fieldName
@@ -164,7 +180,7 @@ newKey·to·newValue
 
                     genericSourceValueType == genericTargetValueType.makeNotNullable() -> {
                         if (genericTargetValueVariance == Variance.INVARIANT) {
-                            castNeeded = true
+                            changedTypes = true
                         }
                         fieldName
                     }
@@ -196,19 +212,18 @@ newKey·to·newValue
 
                 needsNotNullAssertionOperator(genericSourceValueType, genericTargetValueType) -> {
                     mapTypeChanged = true
-                    mappedToListOfPairs = true
                     """
 $fieldName$nc.map·{·(key,·value)·->
 ⇥val·newKey·=·${keyTypeConverter.convert("key", genericSourceKeyType, genericTargetKeyType)}
 val·newValue·=·value!!
 newKey·to·newValue
-⇤}
+⇤}$nc.toMap()
                     """.trimIndent()
                 }
 
                 genericSourceValueType == genericTargetValueType.makeNotNullable() -> {
                     if (genericTargetValueVariance == Variance.INVARIANT) {
-                        castNeeded = true
+                        changedTypes = true
                     }
                     mapTypeChanged = true
                     "$fieldName$nc.mapKeys·{·(it,·_)·-> ${
@@ -218,50 +233,75 @@ newKey·to·newValue
 
                 else -> {
                     mapTypeChanged = true
-                    mappedToListOfPairs = true
                     """
 $fieldName$nc.map·{·(key,·value)·->
 ⇥val·newKey·=·${keyTypeConverter.convert("key", genericSourceKeyType, genericTargetKeyType)}
 val·newValue·=·${valueTypeConverter.convert("value", genericSourceValueType, genericTargetValueType)}
 newKey·to·newValue
-⇤}
+⇤}$nc.toMap()
                     """.trimIndent()
                 }
             }
         }
 
-        val mapSourceContainerCode = when {
-            target.isExactly(MAP) -> if (mappedToListOfPairs) "$nc.toMap()" else ""
-            target.isExactly(MUTABLEMAP) -> if (!mapTypeChanged && source.isInstanceOf(MUTABLEMAP)) "" else if (mappedToListOfPairs) "$nc.toMap(kotlin.collections.LinkedHashMap())" else "$nc.toMutableMap()"
-            target.isExactly(HASHMAP) -> if (!mapTypeChanged && source.isInstanceOf(HASHMAP)) "" else "$nc.toMap(kotlin.collections.HashMap())"
-            target.isExactly(LINKEDHASHMAP) -> if (!mapTypeChanged && source.isInstanceOf(LINKEDHASHMAP)) "" else "$nc.toMap(kotlin.collections.LinkedHashMap())"
-
-            else -> throw UnsupportedTargetMapException(target)
+        val mapSourceContainerCode = if (matchesTarget(mapTypeChanged, source)) {
+            CodeBlock.of("")
+        } else {
+            this.convertMap(nc)
         }
+        args += mapSourceContainerCode
 
-        val code = mapSourceContentCode + mapSourceContainerCode + appendNotNullAssertionOperatorIfNeeded(source, target)
+        val code = mapSourceContentCode + "%L" + appendNotNullAssertionOperatorIfNeeded(source, target)
 
         return CodeBlock.of(
-            if (castNeeded) {
-                "($code·as·$target)" // encapsulate with braces
+            if (changedTypes || castNeeded(genericSourceKeyType, genericTargetKeyType)) {
+                args += target.toTypeName()
+                "($code·as·%T)" // encapsulate with braces
             } else {
                 code
-            }
+            },
+            *args.toTypedArray()
         )
     }
 
-
-    private fun KSType.isExactly(qualifiedName: String): Boolean {
-        return this.classDeclaration() == resolver.getClassDeclarationByName(qualifiedName)
+    private fun KSType.isExactlyTarget(): Boolean {
+        return this.classDeclaration() == targetClassDeclaration
     }
 
-    private fun KSType.isInstanceOf(qualifiedName: String): Boolean {
-        return resolver.getClassDeclarationByName(qualifiedName)!!.asStarProjectedType()
-            .isAssignableFrom(this.starProjection().makeNotNullable())
+    protected fun KSType.isInstanceOfTarget(): Boolean {
+        return targetType.isAssignableFrom(this.starProjection().makeNotNullable())
+    }
+
+    open fun castNeeded(keySource: KSType, keyTarget: KSType): Boolean = false
+
+    abstract fun convertMap(nc: String): CodeBlock
+
+    open fun matchesTarget(mapTypeChanged: Boolean, source: KSType): Boolean {
+        return !mapTypeChanged && source.isInstanceOfTarget()
     }
 
 }
 
-class UnsupportedTargetMapException(type: KSType) : RuntimeException(
-    "Maps of $type are not supported as target by ${MapToMapConverter::class.simpleName}"
-)
+@AutoService(TypeConverter::class)
+class MapToMapConverter : MapToXConverter(MAP) {
+    override fun convertMap(nc: String): CodeBlock = CodeBlock.of("")
+}
+
+@AutoService(TypeConverter::class)
+class MapToMutableMapConverter : MapToXConverter(MUTABLEMAP) {
+    override fun convertMap(nc: String): CodeBlock = CodeBlock.of("$nc.toMutableMap()")
+}
+
+@AutoService(TypeConverter::class)
+class MapToHashMapConverter : MapToXConverter(HASHMAP, JAVA_HASHMAP) {
+    override fun convertMap(nc: String): CodeBlock {
+        return CodeBlock.of("$nc.toMap(%T())", ClassName(KOTLIN_COLLECTIONS_PACKAGE, "HashMap"))
+    }
+}
+
+@AutoService(TypeConverter::class)
+class MapToLinkedHashMapConverter : MapToXConverter(LINKEDHASHMAP, JAVA_LINKEDHASHMAP) {
+    override fun convertMap(nc: String): CodeBlock {
+        return CodeBlock.of("$nc.toMap(%T())", ClassName(KOTLIN_COLLECTIONS_PACKAGE, "LinkedHashMap"))
+    }
+}

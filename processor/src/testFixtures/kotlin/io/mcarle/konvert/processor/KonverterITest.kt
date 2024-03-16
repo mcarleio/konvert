@@ -51,7 +51,7 @@ abstract class KonverterITest {
         return compile(expectResultCode, options, *code)
     }
 
-    private fun enabled(vararg converter: TypeConverter): Array<out TypeConverter> {
+    protected fun enabled(vararg converter: TypeConverter): Array<out TypeConverter> {
         return converter.map {
             object : TypeConverter by it {
                 override val enabledByDefault: Boolean = true

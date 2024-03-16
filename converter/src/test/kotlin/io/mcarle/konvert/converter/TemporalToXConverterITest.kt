@@ -1,6 +1,8 @@
 package io.mcarle.konvert.converter
 
-import io.mcarle.konvert.converter.api.TypeConverter
+import io.mcarle.konvert.converter.utils.ConverterITest
+import io.mcarle.konvert.converter.utils.VerificationData
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -9,10 +11,9 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.reflections.Reflections
 import java.time.Instant
 import java.time.ZoneOffset
-import kotlin.reflect.KCallable
-import kotlin.reflect.KClass
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalCompilerApi::class)
 class TemporalToXConverterITest : ConverterITest() {
 
     companion object {
@@ -42,24 +43,17 @@ class TemporalToXConverterITest : ConverterITest() {
     @ParameterizedTest
     @MethodSource("converterList")
     fun converterTest(simpleConverterName: String, sourceTypeName: String, targetTypeName: String) {
-        super.converterTest(
-            temporalToXConverterClasses.newConverterInstance(simpleConverterName),
-            sourceTypeName,
-            targetTypeName
+        executeTest(
+            sourceTypeName = sourceTypeName,
+            targetTypeName = targetTypeName,
+            converter = temporalToXConverterClasses.newConverterInstance(simpleConverterName)
         )
     }
 
-    override fun verifyMapper(
-        converter: TypeConverter,
-        sourceTypeName: String,
-        targetTypeName: String,
-        mapperInstance: Any,
-        mapperFunction: KCallable<*>,
-        sourceKClass: KClass<*>,
-        targetKClass: KClass<*>
-    ) {
+    override fun verify(verificationData: VerificationData) {
         val instant = Instant.now()
-        val sourceInstance = sourceKClass.constructors.first().call(
+        val sourceValues = verificationData.sourceVariables.map { sourceVariable ->
+            val sourceTypeName = sourceVariable.second
             when {
                 sourceTypeName.startsWith("java.time.Instant") -> instant
                 sourceTypeName.startsWith("java.time.ZonedDateTime") -> instant.atOffset(ZoneOffset.UTC).toZonedDateTime()
@@ -70,29 +64,35 @@ class TemporalToXConverterITest : ConverterITest() {
                 sourceTypeName.startsWith("java.time.LocalTime") -> instant.atOffset(ZoneOffset.UTC).toLocalTime()
                 else -> null
             }
-        )
-
-        val targetInstance = mapperFunction.call(mapperInstance, sourceInstance)
-
-        val targetValue = assertDoesNotThrow {
-            targetKClass.members.first { it.name == "test" }.call(targetInstance)
         }
-        when {
-            targetTypeName.startsWith("kotlin.String") -> {
-                targetValue as String
-                assertTrue(instant.toString().contains(targetValue))
+        val sourceInstance = verificationData.sourceKClass.constructors.first().call(*sourceValues.toTypedArray())
+
+        val targetInstance = verificationData.mapperFunction.call(verificationData.mapperInstance, sourceInstance)
+
+        verificationData.targetVariables.forEach { targetVariable ->
+            val targetName = targetVariable.first
+            val targetTypeName = targetVariable.second
+
+            val targetValue = assertDoesNotThrow {
+                verificationData.targetKClass.members.first { it.name == targetName }.call(targetInstance)
             }
+            when {
+                targetTypeName.startsWith("kotlin.String") -> {
+                    targetValue as String
+                    assertTrue(instant.toString().contains(targetValue))
+                }
 
-            targetTypeName.startsWith("kotlin.Long") -> {
-                targetValue as Long
-                when (converter) {
-                    is InstantToLongEpochMillisConverter,
-                    is ZonedDateTimeToLongEpochMillisConverter,
-                    is OffsetDateTimeToLongEpochMillisConverter -> Assertions.assertEquals(instant.toEpochMilli(), targetValue)
+                targetTypeName.startsWith("kotlin.Long") -> {
+                    targetValue as Long
+                    when (verificationData.converter) {
+                        is InstantToLongEpochMillisConverter,
+                        is ZonedDateTimeToLongEpochMillisConverter,
+                        is OffsetDateTimeToLongEpochMillisConverter -> Assertions.assertEquals(instant.toEpochMilli(), targetValue)
 
-                    is InstantToLongEpochSecondsConverter,
-                    is ZonedDateTimeToLongEpochSecondsConverter,
-                    is OffsetDateTimeToLongEpochSecondsConverter -> Assertions.assertEquals(instant.toEpochMilli() / 1000, targetValue)
+                        is InstantToLongEpochSecondsConverter,
+                        is ZonedDateTimeToLongEpochSecondsConverter,
+                        is OffsetDateTimeToLongEpochSecondsConverter -> Assertions.assertEquals(instant.toEpochMilli() / 1000, targetValue)
+                    }
                 }
             }
         }

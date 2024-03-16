@@ -1,6 +1,8 @@
 package io.mcarle.konvert.converter
 
-import io.mcarle.konvert.converter.api.TypeConverter
+import io.mcarle.konvert.converter.utils.ConverterITest
+import io.mcarle.konvert.converter.utils.VerificationData
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -10,10 +12,9 @@ import org.reflections.Reflections
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.Date
-import kotlin.reflect.KCallable
-import kotlin.reflect.KClass
 import kotlin.test.assertIs
 
+@OptIn(ExperimentalCompilerApi::class)
 class TemporalToDateConverterITest : ConverterITest() {
 
     companion object {
@@ -26,46 +27,44 @@ class TemporalToDateConverterITest : ConverterITest() {
             it.sourceClass.qualifiedName to "java.util.Date"
         }
 
-        private val temporalToDateConverterClasses: Set<Class<out TemporalToDateConverter>> = Reflections(TemporalToDateConverter::class.java)
-            .getSubTypesOf(TemporalToDateConverter::class.java)
+        private val temporalToDateConverterClasses: Set<Class<out TemporalToDateConverter>> =
+            Reflections(TemporalToDateConverter::class.java)
+                .getSubTypesOf(TemporalToDateConverter::class.java)
     }
 
     @ParameterizedTest
     @MethodSource("converterList")
     fun converterTest(simpleConverterName: String, sourceTypeName: String, targetTypeName: String) {
-        super.converterTest(
-            temporalToDateConverterClasses.newConverterInstance(simpleConverterName),
-            sourceTypeName,
-            targetTypeName
+        executeTest(
+            sourceTypeName = sourceTypeName,
+            targetTypeName = targetTypeName,
+            converter = temporalToDateConverterClasses.newConverterInstance(simpleConverterName)
         )
     }
 
-    override fun verifyMapper(
-        converter: TypeConverter,
-        sourceTypeName: String,
-        targetTypeName: String,
-        mapperInstance: Any,
-        mapperFunction: KCallable<*>,
-        sourceKClass: KClass<*>,
-        targetKClass: KClass<*>
-    ) {
+    override fun verify(verificationData: VerificationData) {
         val instant = Instant.now()
-        val sourceInstance = sourceKClass.constructors.first().call(
+        val sourceValues = verificationData.sourceVariables.map { sourceVariable ->
+            val sourceTypeName = sourceVariable.second
             when {
                 sourceTypeName.startsWith("java.time.Instant") -> instant
                 sourceTypeName.startsWith("java.time.ZonedDateTime") -> instant.atOffset(ZoneOffset.UTC).toZonedDateTime()
                 sourceTypeName.startsWith("java.time.OffsetDateTime") -> instant.atOffset(ZoneOffset.UTC)
                 else -> null
             }
-        )
-
-        val targetInstance = mapperFunction.call(mapperInstance, sourceInstance)
-
-        val targetValue = assertDoesNotThrow {
-            targetKClass.members.first { it.name == "test" }.call(targetInstance)
         }
-        assertIs<Date>(targetValue)
-        Assertions.assertEquals(Date.from(instant), targetValue)
+        val sourceInstance = verificationData.sourceKClass.constructors.first().call(*sourceValues.toTypedArray())
+
+        val targetInstance = verificationData.mapperFunction.call(verificationData.mapperInstance, sourceInstance)
+
+        verificationData.targetVariables.forEach { targetVariable ->
+            val targetName = targetVariable.first
+            val targetValue = assertDoesNotThrow {
+                verificationData.targetKClass.members.first { it.name == targetName }.call(targetInstance)
+            }
+            assertIs<Date>(targetValue)
+            Assertions.assertEquals(Date.from(instant), targetValue)
+        }
     }
 
 }
