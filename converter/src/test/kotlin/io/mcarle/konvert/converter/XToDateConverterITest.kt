@@ -1,6 +1,8 @@
 package io.mcarle.konvert.converter
 
-import io.mcarle.konvert.converter.api.TypeConverter
+import io.mcarle.konvert.converter.utils.ConverterITest
+import io.mcarle.konvert.converter.utils.VerificationData
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -9,10 +11,9 @@ import org.reflections.Reflections
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
-import kotlin.reflect.KCallable
-import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 
+@OptIn(ExperimentalCompilerApi::class)
 class XToDateConverterITest : ConverterITest() {
 
     companion object {
@@ -32,23 +33,20 @@ class XToDateConverterITest : ConverterITest() {
     @ParameterizedTest
     @MethodSource("converterList")
     fun converterTest(simpleConverterName: String, sourceTypeName: String, targetTypeName: String) {
-        super.converterTest(xToDateConverterClasses.newConverterInstance(simpleConverterName), sourceTypeName, targetTypeName)
+        executeTest(
+            sourceTypeName = sourceTypeName,
+            targetTypeName = targetTypeName,
+            converter = xToDateConverterClasses.newConverterInstance(simpleConverterName)
+        )
     }
 
-    override fun verifyMapper(
-        converter: TypeConverter,
-        sourceTypeName: String,
-        targetTypeName: String,
-        mapperInstance: Any,
-        mapperFunction: KCallable<*>,
-        sourceKClass: KClass<*>,
-        targetKClass: KClass<*>
-    ) {
+    override fun verify(verificationData: VerificationData) {
         val instant = Instant.now().truncatedTo(ChronoUnit.SECONDS)
-        val sourceInstance = sourceKClass.constructors.first().call(
+        val sourceValues = verificationData.sourceVariables.map { sourceVariable ->
+            val sourceTypeName = sourceVariable.second
             when {
                 sourceTypeName.startsWith("kotlin.String") -> instant.toString()
-                sourceTypeName.startsWith("kotlin.Long") -> when (converter) {
+                sourceTypeName.startsWith("kotlin.Long") -> when (verificationData.converter) {
                     is LongEpochMillisToDateConverter -> instant.toEpochMilli()
                     is LongEpochSecondsToDateConverter -> instant.toEpochMilli() / 1000
                     else -> null
@@ -56,14 +54,18 @@ class XToDateConverterITest : ConverterITest() {
 
                 else -> null
             }
-        )
-
-        val targetInstance = mapperFunction.call(mapperInstance, sourceInstance)
-
-        val targetValue = assertDoesNotThrow {
-            targetKClass.members.first { it.name == "test" }.call(targetInstance)
         }
-        assertEquals(Date(instant.toEpochMilli()), targetValue)
+        val sourceInstance = verificationData.sourceKClass.constructors.first().call(*sourceValues.toTypedArray())
+
+        val targetInstance = verificationData.mapperFunction.call(verificationData.mapperInstance, sourceInstance)
+
+        verificationData.targetVariables.forEach { targetVariable ->
+            val targetName = targetVariable.first
+            val targetValue = assertDoesNotThrow {
+                verificationData.targetKClass.members.first { it.name == targetName }.call(targetInstance)
+            }
+            assertEquals(Date(instant.toEpochMilli()), targetValue)
+        }
     }
 
 }

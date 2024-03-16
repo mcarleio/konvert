@@ -2,7 +2,8 @@ package io.mcarle.konvert.converter
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import io.mcarle.konvert.converter.api.TypeConverter
+import io.mcarle.konvert.converter.utils.ConverterITest
+import io.mcarle.konvert.converter.utils.VerificationData
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -10,9 +11,9 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 
+@OptIn(ExperimentalCompilerApi::class)
 class EnumToEnumConverterITest : ConverterITest() {
 
     companion object {
@@ -26,23 +27,37 @@ class EnumToEnumConverterITest : ConverterITest() {
     @ParameterizedTest
     @MethodSource("types")
     fun converterTest(sourceTypeName: String, targetTypeName: String) {
-        super.converterTest(EnumToEnumConverter(), sourceTypeName, targetTypeName)
+        executeTest(
+            sourceTypeName = sourceTypeName,
+            targetTypeName = targetTypeName,
+            converter = EnumToEnumConverter(),
+            additionalCode = this.generateAdditionalCode()
+        )
     }
 
     @ParameterizedTest
     @MethodSource("types")
-    @OptIn(ExperimentalCompilerApi::class)
     fun missingEnumValues(sourceTypeName: String, targetTypeName: String) {
-        expectedResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR
-        super.converterTest(EnumToEnumConverter(), targetTypeName, sourceTypeName)
+        executeTest(
+            sourceTypeName = targetTypeName,
+            targetTypeName = sourceTypeName,
+            converter = EnumToEnumConverter(),
+            expectedResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            additionalCode = this.generateAdditionalCode()
+        )
     }
 
     @Test
     fun enumsInDifferentPackages() {
-        super.converterTest(EnumToEnumConverter(), "a.OtherEnum", "b.OtherEnum")
+        executeTest(
+            sourceTypeName = "a.OtherEnum",
+            targetTypeName = "b.OtherEnum",
+            converter = EnumToEnumConverter(),
+            additionalCode = this.generateAdditionalCode()
+        )
     }
 
-    override fun generateAdditionalCode(): List<SourceFile> = listOf(
+    private fun generateAdditionalCode(): List<SourceFile> = listOf(
         SourceFile.kotlin(
             name = "MyEnums.kt",
             contents =
@@ -87,27 +102,23 @@ enum class OtherEnum {
         )
     )
 
-    override fun verifyMapper(
-        converter: TypeConverter,
-        sourceTypeName: String,
-        targetTypeName: String,
-        mapperInstance: Any,
-        mapperFunction: KCallable<*>,
-        sourceKClass: KClass<*>,
-        targetKClass: KClass<*>
-    ) {
-        val enumValue =
-            (sourceKClass.members.first { it.name == "test" }.returnType.classifier as KClass<*>).java.enumConstants.random() as Enum<*>
-        val sourceInstance = sourceKClass.constructors.first().call(
-            enumValue
-        )
-
-        val targetInstance = mapperFunction.call(mapperInstance, sourceInstance)
-
-        val targetValue = assertDoesNotThrow {
-            targetKClass.members.first { it.name == "test" }.call(targetInstance)
+    override fun verify(verificationData: VerificationData) {
+        val sourceValues = verificationData.sourceVariables.map { sourceVariable ->
+            val sourceVariableName = sourceVariable.first
+            (verificationData.sourceKClass.members.first { it.name == sourceVariableName }.returnType.classifier as KClass<*>).java
+                .enumConstants.random() as Enum<*>
         }
-        assertEquals(enumValue.toString(), targetValue.toString())
+        val sourceInstance = verificationData.sourceKClass.constructors.first().call(*sourceValues.toTypedArray())
+
+        val targetInstance = verificationData.mapperFunction.call(verificationData.mapperInstance, sourceInstance)
+
+        verificationData.targetVariables.forEachIndexed { index, targetVariable ->
+            val targetVariableName = targetVariable.first
+            val targetValue = assertDoesNotThrow {
+                verificationData.targetKClass.members.first { it.name == targetVariableName }.call(targetInstance)
+            }
+            assertEquals(sourceValues[index].toString(), targetValue.toString())
+        }
     }
 
 }

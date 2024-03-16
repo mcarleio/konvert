@@ -1,6 +1,8 @@
 package io.mcarle.konvert.converter
 
-import io.mcarle.konvert.converter.api.TypeConverter
+import io.mcarle.konvert.converter.utils.ConverterITest
+import io.mcarle.konvert.converter.utils.VerificationData
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -9,9 +11,8 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.reflections.Reflections
 import java.time.Instant
 import java.util.Date
-import kotlin.reflect.KCallable
-import kotlin.reflect.KClass
 
+@OptIn(ExperimentalCompilerApi::class)
 class DateToTemporalConverterITest : ConverterITest() {
 
     companion object {
@@ -30,32 +31,24 @@ class DateToTemporalConverterITest : ConverterITest() {
     @ParameterizedTest
     @MethodSource("converterList")
     fun converterTest(simpleConverterName: String, sourceTypeName: String, targetTypeName: String) {
-        super.converterTest(
-            converter = dateToTemporalConverterClasses.newConverterInstance(simpleConverterName),
+        executeTest(
             sourceTypeName = sourceTypeName,
-            targetTypeName = targetTypeName
+            targetTypeName = targetTypeName,
+            converter = dateToTemporalConverterClasses.newConverterInstance(simpleConverterName),
         )
     }
 
-    override fun verifyMapper(
-        converter: TypeConverter,
-        sourceTypeName: String,
-        targetTypeName: String,
-        mapperInstance: Any,
-        mapperFunction: KCallable<*>,
-        sourceKClass: KClass<*>,
-        targetKClass: KClass<*>
-    ) {
+    override fun verify(verificationData: VerificationData) {
         val epochMillis = 1674060174913
-        val sourceInstance = sourceKClass.constructors.first().call(Date(epochMillis))
+        val sourceInstance = verificationData.sourceKClass.constructors.first().call(Date(epochMillis))
 
-        val targetInstance = mapperFunction.call(mapperInstance, sourceInstance)
+        val targetInstance = verificationData.mapperFunction.call(verificationData.mapperInstance, sourceInstance)
 
         val targetValue = assertDoesNotThrow {
-            targetKClass.members.first { it.name == "test" }.call(targetInstance)
+            verificationData.targetKClass.members.first { it.name == "test0" }.call(targetInstance)
         }
         when {
-            targetTypeName.startsWith("java.time.Instant") -> {
+            verificationData.targetVariables[0].second.startsWith("java.time.Instant") -> {
                 targetValue as Instant
                 assertEquals(epochMillis, targetValue.toEpochMilli())
             }
