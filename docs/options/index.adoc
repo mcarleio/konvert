@@ -156,6 +156,48 @@ class PersonDto(val age: Int, val birthday: LocalDate)
 ----
 ====
 
+a|`*konvert.konverter.use-reflection*`
+a|`true`/`false`
+a|`false`
+a|When set to `true` (deprecated), Konvert will generate code that uses reflection during runtime to determine the actual implementation of a `@Konverter` annotated interface. As Konvert aims to support KMP, reflection is not an option there anymore.
+
+Otherwise, it will generate code that uses the generated implementation directly.
+
+4+a|
+[.pl-6]
+.Example
+[%collapsible]
+====
+[source,kotlin]
+----
+@Konverter
+interface PersonMapper {
+    fun toDto(person: Person): PersonDto
+}
+
+class Person(val age: String)
+class PersonDto(val age: String)
+
+@KonvertTo(GroupDto::class, mapFunctionName="toGroupWithReflection", options=[
+    Konfig(key="konvert.konverter.use-reflection", value="true")
+])
+@KonvertTo(GroupDto::class, mapFunctionName="toGroupWithoutReflection")
+class Group(val members: List<Person>)
+class GroupDto(val members: List<PersonDto>)
+----
+Will generate the following extension functions for `Group`:
+[source,kotlin]
+----
+fun Group.toGroupWithReflection() = GroupDto(
+  members = members.map { Konverter.get<PersonMapper>().toDto(it) }
+)
+
+fun Group.toGroupWithoutReflection() = GroupDto(
+  members = members.map { PersonMapperImpl.toDto(it) }
+)
+----
+====
+
 |===
 
 === `@Konverter` Options

@@ -28,7 +28,6 @@ fun buildConfigsCode(): String {
                 .uppercase(Locale.getDefault())
                 .replace("[^A-Z0-9]".toRegex(), "_")
                 .replace("__+".toRegex(), "_")
-//            val constName = clazz.simpleName.removeSuffix("_OPTION")
             """
                 /**
                  * @see ${clazz.canonicalName}

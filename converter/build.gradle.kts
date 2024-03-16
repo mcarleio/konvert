@@ -10,16 +10,16 @@ dependencies {
     api(symbolProcessingApi)
 
     // auto service
-    implementation("com.google.auto.service:auto-service-annotations:1.1.1")
-    ksp("dev.zacsweers.autoservice:auto-service-ksp:1.1.0")
+    implementation(autoServiceAnnotations)
+    ksp(autoServiceKsp)
 
     testImplementation(project(":processor"))
     testImplementation(testFixtures(project(":processor")))
     testImplementation(kotlinTest)
     testImplementation(kotlinReflect)
-    testImplementation("com.github.dpaukov:combinatoricslib3:3.3.3")
+    testImplementation("com.github.dpaukov:combinatoricslib3:${Versions.combinatoricslib3}")
     testImplementation("org.junit.jupiter:junit-jupiter-params:${Versions.jUnit}")
-    testImplementation("org.reflections:reflections:0.10.2")
+    testImplementation("org.reflections:reflections:${Versions.orgReflections}")
 }
 
 ksp {

@@ -10,7 +10,7 @@ dependencies {
 sourceSets {
     main {
         kotlin {
-            setSrcDirs(listOf("$buildDir/generated/generator/kotlin"))
+            setSrcDirs(listOf("${layout.buildDirectory.get().asFile}/generated/generator/kotlin"))
         }
     }
 }
@@ -27,15 +27,17 @@ kotlin {
                                 implementation(project(it.path))
                             }
                         }
-                        implementation("org.reflections:reflections:0.10.2")
+                        implementation("org.reflections:reflections:${Versions.orgReflections}")
                         implementation(kotlin("reflect"))
                     }
                 }
 
-                val generateTask = tasks.create<JavaExec>("generateCode") {
+                val generateTask = tasks.register<JavaExec>("generateApiConstants") {
+                    description = "Generates constants for configurations and converters"
+                    group = LifecycleBasePlugin.BUILD_GROUP
                     classpath = runtimeDependencyFiles + output.allOutputs
                     mainClass.set("GenerateKt")
-                    args = listOf("$buildDir/generated/generator/kotlin")
+                    args = listOf("${layout.buildDirectory.get().asFile}/generated/generator/kotlin")
                 }
 
                 tasks.processResources {

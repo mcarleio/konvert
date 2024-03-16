@@ -3,6 +3,7 @@ package io.mcarle.konvert.converter
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.api.TypeConverter
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -30,6 +31,7 @@ class EnumToEnumConverterITest : ConverterITest() {
 
     @ParameterizedTest
     @MethodSource("types")
+    @OptIn(ExperimentalCompilerApi::class)
     fun missingEnumValues(sourceTypeName: String, targetTypeName: String) {
         expectedResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR
         super.converterTest(EnumToEnumConverter(), targetTypeName, sourceTypeName)

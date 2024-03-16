@@ -10,9 +10,11 @@ import io.mcarle.konvert.converter.api.config.ADD_GENERATED_KONVERTER_ANNOTATION
 import io.mcarle.konvert.processor.konvert.KonvertTypeConverter
 import io.mcarle.konvert.processor.konvertfrom.KonvertFromTypeConverter
 import io.mcarle.konvert.processor.konvertto.KonvertToTypeConverter
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
+@OptIn(ExperimentalCompilerApi::class)
 class GeneratedKonverterITest : KonverterITest() {
 
     override var addGeneratedKonverterAnnotation = true
@@ -23,33 +25,52 @@ class GeneratedKonverterITest : KonverterITest() {
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertTypeConverter>()
             .filter { it.alreadyGenerated }
-        assertEquals(3, alreadyGeneratedKonverterList.size, "missing generated konverter")
+        assertEquals(4, alreadyGeneratedKonverterList.size, "missing generated konverter")
         alreadyGeneratedKonverterList[0].let { converter ->
-            assertEquals("toSomeOtherTestClass", converter.mapFunctionName)
             assertEquals("SomeTestClass", converter.sourceType.toClassName().simpleName)
             assertEquals("SomeOtherTestClass", converter.targetType.toClassName().simpleName)
+
+            assertEquals("toSomeOtherTestClass", converter.mapFunctionName)
             assertEquals("source", converter.paramName)
-            assertEquals("SomeTestMapper", converter.mapKSClassDeclaration.simpleName.asString())
+            assertEquals("SomeTestMapper", converter.konverterInterface.simpleName)
             assertEquals(true, converter.enabledByDefault)
             assertEquals(12, converter.priority)
-        }
-        alreadyGeneratedKonverterList[2].let { converter ->
-            assertEquals("toSomeOtherTestClasses", converter.mapFunctionName)
-            assertEquals("List<SomeTestClass>", converter.sourceType.toString()) // toClassName() would here result in exception due to Resolver not initialized
-            assertEquals("List<SomeOtherTestClass>", converter.targetType.toString())  // toClassName() would here result in exception due to Resolver not initialized
-            assertEquals("source", converter.paramName)
-            assertEquals("SomeTestMapper", converter.mapKSClassDeclaration.simpleName.asString())
-            assertEquals(true, converter.enabledByDefault)
-            assertEquals(333, converter.priority)
+            assertEquals(KonvertTypeConverter.ClassOrObject.OBJECT, converter.classKind)
         }
         alreadyGeneratedKonverterList[1].let { converter ->
-            assertEquals("fromSomeOtherTestClass", converter.mapFunctionName)
             assertEquals("SomeOtherTestClass", converter.sourceType.toClassName().simpleName)
             assertEquals("SomeTestClass", converter.targetType.toClassName().simpleName)
+
+            assertEquals("fromSomeOtherTestClass", converter.mapFunctionName)
             assertEquals("source", converter.paramName)
-            assertEquals("SomeTestMapper", converter.mapKSClassDeclaration.simpleName.asString())
+            assertEquals("SomeTestMapper", converter.konverterInterface.simpleName)
             assertEquals(true, converter.enabledByDefault)
             assertEquals(123, converter.priority)
+            assertEquals(KonvertTypeConverter.ClassOrObject.OBJECT, converter.classKind)
+        }
+        alreadyGeneratedKonverterList[2].let { converter ->
+            // toClassName() would result in exception due to Resolver not initialized
+            assertEquals("List<SomeTestClass>",converter.sourceType.toString())
+            assertEquals("List<SomeOtherTestClass>",converter.targetType.toString())
+
+            assertEquals("toSomeOtherTestClasses", converter.mapFunctionName)
+            assertEquals("source", converter.paramName)
+            assertEquals("SomeTestMapper", converter.konverterInterface.simpleName)
+            assertEquals(true, converter.enabledByDefault)
+            assertEquals(333, converter.priority)
+            assertEquals(KonvertTypeConverter.ClassOrObject.OBJECT, converter.classKind)
+        }
+        alreadyGeneratedKonverterList[3].let { converter ->
+            // toClassName() would result in exception due to Resolver not initialized
+            assertEquals("List<SomeOtherTestClass>",converter.sourceType.toString())
+            assertEquals("List<SomeTestClass>",converter.targetType.toString())
+
+            assertEquals("fromSomeOtherTestClasses", converter.mapFunctionName)
+            assertEquals("source", converter.paramName)
+            assertEquals("SomeSecondTestMapper", converter.konverterInterface.simpleName)
+            assertEquals(true, converter.enabledByDefault)
+            assertEquals(999, converter.priority)
+            assertEquals(KonvertTypeConverter.ClassOrObject.CLASS, converter.classKind)
         }
     }
 
@@ -144,12 +165,46 @@ class TargetClass(val property: List<SomeOtherTestClass>)
         assertSourceEquals(
             """
             import io.mcarle.konvert.api.GeneratedKonverter
-            import io.mcarle.konvert.api.Konverter
-            import io.mcarle.konvert.processor.SomeTestMapper
+            import io.mcarle.konvert.processor.SomeTestMapperImpl
 
             @GeneratedKonverter(priority = 3_000)
             public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
-              property = Konverter.get<SomeTestMapper>().toSomeOtherTestClasses(source = property)
+              property = SomeTestMapperImpl.toSomeOtherTestClasses(source = property)
+            )
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
+    @Test
+    fun useGeneratedKonverterInstanceInsteadOfIterableToIterableConverter() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(IterableToIterableConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.processor.SomeTestClass
+import io.mcarle.konvert.processor.SomeOtherTestClass
+
+@KonvertTo(TargetClass::class)
+class SourceClass(val property: List<SomeOtherTestClass>)
+class TargetClass(val property: List<SomeTestClass>)
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            import io.mcarle.konvert.api.GeneratedKonverter
+            import io.mcarle.konvert.processor.SomeSecondTestMapperImpl
+
+            @GeneratedKonverter(priority = 3_000)
+            public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
+              property = SomeSecondTestMapperImpl().fromSomeOtherTestClasses(source = property)
             )
             """.trimIndent(),
             extensionFunctionCode
@@ -451,6 +506,10 @@ interface SomeTestMapper {
     fun fromSomeOtherTestClass(source: SomeOtherTestClass): SomeTestClass = SomeTestClass(source.s.toString())
 }
 
+interface SomeSecondTestMapper {
+    fun fromSomeOtherTestClasses(source: List<SomeOtherTestClass>): List<SomeTestClass>
+}
+
 /**
  * Is referenced by META-INF/konvert/io.mcarle.konvert.api.KonvertTo
  */
@@ -465,6 +524,9 @@ fun SomeOtherTestClass.Companion.fromSomeTestClass(source: SomeTestClass) = Some
     source.s.toInt()
 )
 
+/**
+ * Used to test, that a generated konverter as OBJECT can be loaded and used by Konvert
+ */
 object SomeTestMapperImpl : SomeTestMapper {
     /**
      * Is referenced by META-INF/konvert/io.mcarle.konvert.api.Konvert
@@ -488,6 +550,20 @@ object SomeTestMapperImpl : SomeTestMapper {
     @GeneratedKonverter(priority = 333)
     override fun toSomeOtherTestClasses(source: List<SomeTestClass>): List<SomeOtherTestClass> {
         return source.map { toSomeOtherTestClass(it) }
+    }
+}
+
+/**
+ * Used to test, that a generated konverter as CLASS can be loaded and used by Konvert
+ */
+class SomeSecondTestMapperImpl : SomeSecondTestMapper {
+
+    /**
+     * Is referenced by META-INF/konvert/io.mcarle.konvert.api.Konvert
+     */
+    @GeneratedKonverter(priority = 999)
+    override fun fromSomeOtherTestClasses(source: List<SomeOtherTestClass>): List<SomeTestClass> {
+        return source.map { SomeTestMapperImpl.fromSomeOtherTestClass(it) }
     }
 }
 

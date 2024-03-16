@@ -36,7 +36,7 @@ annotation class KonvertFrom(
     /**
      * Define the parameter types of a specific constructor of the target class which should be used.
      */
-    val constructor: Array<KClass<*>> = [Unit::class],
+    val constructorArgs: Array<KClass<*>> = [Unit::class],
     /**
      * If not set, defaults to `from${value.simpleName}`
      */

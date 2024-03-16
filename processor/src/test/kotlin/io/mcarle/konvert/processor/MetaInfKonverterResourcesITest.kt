@@ -2,11 +2,13 @@ package io.mcarle.konvert.processor
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.SameTypeConverter
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
+@OptIn(ExperimentalCompilerApi::class)
 class MetaInfKonverterResourcesITest : KonverterITest() {
 
     override var addGeneratedKonverterAnnotation = true

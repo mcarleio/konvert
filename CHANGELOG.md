@@ -4,7 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [2.4.0]
+## [3.0.0]
+
+Update to Kotlin 1.9.22 and KSP 1.0.16
+
+### Breaking Changes
+* rename annotation parameter `constructor` to `constructorArgs` (in `@KonvertTo`, `@KonvertFrom` and `@Konvert`)
+  due to future plans to support KMP [[#12](https://github.com/mcarleio/konvert/discussions/12), [#24](https://github.com/mcarleio/konvert/issues/24)], which lists `constructor` as a reserved word
+
+### Bug fixes
+* Replace function call in `Konverter` during runtime, as it is not implemented for Android (thanks to [@mkowol-n](https://github.com/mkowol-n) [#32](https://github.com/mcarleio/konvert/pull/32))
+* Handle additional parameters (introduced with [2.4.0](#2.4.0)) when implementation is given and the super call is generated
+* Use same aliases as the `@Konverter` annotated interface when implementation is given (function with super call)
+
+### New features
+* Remove necessity for reflection at runtime by directly using the generated `@Konverter` annotated interface implementation [#33](https://github.com/mcarleio/konvert/pull/33)
+
+  This also increases the performance and enables future support for KMP (see above), as reflection is not available on all platforms.
+
+  Old functionality is still available by defining the new option `konvert.konverter.use-reflection` to `true` (default is `false`)
+
+
+## [2.4.0]<a id='2.4.0'></a>
 
 ### New features
 * allow functions with multiple parameters in `@Konverter` annotated interfaces if one is defined as source with `@Konverter.Source` [#28](https://github.com/mcarleio/konvert/issues/28)
@@ -215,7 +236,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v2.4.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v3.0.0...HEAD
+
+[3.0.0]: https://github.com/mcarleio/konvert/compare/v2.4.0...v3.0.0
 
 [2.4.0]: https://github.com/mcarleio/konvert/compare/v2.3.1...v2.4.0
 

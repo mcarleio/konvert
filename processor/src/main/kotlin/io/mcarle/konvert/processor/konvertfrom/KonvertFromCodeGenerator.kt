@@ -4,15 +4,14 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
-import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.validated
 
 object KonvertFromCodeGenerator {
 
-    fun generate(data: KonvertFromData, resolver: Resolver, logger: KSPLogger) {
-        Configuration.CURRENT += data.annotationData.options.map { it.key to it.value }
+    fun generate(data: KonvertFromData, resolver: Resolver, logger: KSPLogger) = withIsolatedConfiguration(data.annotationData.options) {
 
         val mapper = CodeGenerator(
             logger = logger
@@ -33,7 +32,7 @@ object KonvertFromCodeGenerator {
                         data.annotationData.mappings.validated(data.sourceClassDeclaration, logger),
                         data.annotationData.constructor,
                         data.paramName,
-                        data.targetClassDeclaration.simpleName.asString(),
+                        null,
                         data.sourceClassDeclaration.asStarProjectedType(),
                         data.targetClassDeclaration.asStarProjectedType(),
                         data.targetCompanionDeclaration,

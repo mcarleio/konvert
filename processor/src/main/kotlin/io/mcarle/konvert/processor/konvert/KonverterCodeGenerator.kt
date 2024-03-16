@@ -2,7 +2,6 @@ package io.mcarle.konvert.processor.konvert
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.squareup.kotlinpoet.FunSpec
@@ -10,6 +9,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
+import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.konverterGenerateClass
 import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
@@ -25,25 +25,33 @@ object KonverterCodeGenerator {
         ServiceLoader.load(KonverterInjector::class.java, this::class.java.classLoader).toList()
     }
 
-    fun generate(data: KonverterData, resolver: Resolver, logger: KSPLogger) {
-        Configuration.CURRENT += data.annotationData.options.map { it.key to it.value }
+    fun generate(data: KonverterData, resolver: Resolver, logger: KSPLogger) = withIsolatedConfiguration(data.annotationData.options) {
+        withCurrentKonverterInterface(data.konverterInterface) {
+            val mapper = CodeGenerator(
+                logger = logger
+            )
 
-        val mapper = CodeGenerator(
-            logger = logger
-        )
+            val codeBuilder = retrieveCodeBuilder(
+                data.konverterInterface
+            )
 
-        val codeBuilder = retrieveCodeBuilder(
-            data.mapKSClassDeclaration,
-            data.mapKSClassDeclaration.packageName.asString(),
-            data.mapKSClassDeclaration.asStarProjectedType(),
-            data.mapKSClassDeclaration.simpleName.asString()
-        )
+            data.konvertData.forEach { konvertData ->
+                withIsolatedConfiguration(konvertData.annotationData.options) {
+                    if (isAlias(konvertData.sourceTypeReference, konvertData.sourceType)) {
+                        // @Konverter annotated interface used alias for source, so the implementation should also use the same alias
+                        codeBuilder.addImport(konvertData.sourceType, konvertData.sourceTypeReference.toString())
+                    }
 
-        data.konvertData.forEach { konvertData ->
-            withIsolatedConfiguration {
-                CurrentInterfaceContext.interfaceKSClassDeclaration = data.mapKSClassDeclaration
+                    val targetClassImportName =
+                        if (isAlias(konvertData.targetTypeReference, konvertData.targetType)) {
+                            // @Konverter annotated interface used alias for target, so the implementation should also use the same alias
+                            val alias = konvertData.targetTypeReference.toString()
+                            codeBuilder.addImport(konvertData.targetType, alias)
+                            alias
+                        } else {
+                            null
+                        }
 
-                if (!konvertData.isAbstract) {
                     codeBuilder.addFunction(
                         funBuilder = FunSpec.builder(konvertData.mapFunctionName)
                             .addModifiers(KModifier.OVERRIDE)
@@ -59,70 +67,57 @@ object KonverterCodeGenerator {
                                 }
                                 builder.build()
                             })
-                            .addCode(
-                                "return super.${konvertData.mapFunctionName}(${konvertData.paramName})"
-                            ),
+                            .apply {
+                                if (!konvertData.isAbstract) {
+                                    generateSuperCall(konvertData)
+                                } else {
+                                    generateMappingCode(mapper, konvertData, targetClassImportName, logger)
+                                }
+                            },
                         priority = konvertData.priority,
                         toType = true,
-                        originating = data.mapKSClassDeclaration.containingFile
+                        originating = data.konverterInterface.kSClassDeclaration.containingFile
                     )
-
-                    return@withIsolatedConfiguration
                 }
-
-                Configuration.CURRENT += konvertData.annotationData.options.map { it.key to it.value }
-
-                if (isAlias(konvertData.sourceTypeReference, konvertData.sourceType)) {
-                    // @Konverter annotated interface used alias for source, so the implementation should also use the same alias
-                    codeBuilder.addImport(konvertData.sourceType, konvertData.sourceTypeReference.toString())
-                }
-                val targetClassImportName =
-                    if (isAlias(konvertData.targetTypeReference, konvertData.targetType)) {
-                        // @Konverter annotated interface used alias for target, so the implementation should also use the same alias
-                        val alias = konvertData.targetTypeReference.toString()
-                        codeBuilder.addImport(konvertData.targetType, alias)
-                        alias
-                    } else if (konvertData.sourceTypeReference.toString() == konvertData.targetTypeReference.toString()) {
-                        null
-                    } else {
-                        konvertData.targetClassDeclaration.simpleName.asString()
-                    }
-
-                codeBuilder.addFunction(
-                    funBuilder = FunSpec.builder(konvertData.mapFunctionName)
-                        .addModifiers(KModifier.OVERRIDE)
-                        .returns(konvertData.targetTypeReference.toTypeName())
-                        .addParameters(konvertData.mapKSFunctionDeclaration.parameters.map {
-                            val builder = ParameterSpec.builder(
-                                name = it.name!!.asString(),
-                                type = it.type.toTypeName(),
-                                modifiers = emptyArray()
-                            )
-                            if (it.isVararg) {
-                                builder.addModifiers(KModifier.VARARG)
-                            }
-                            builder.build()
-                        })
-                        .addCode(
-                            mapper.generateCode(
-                                konvertData.annotationData.mappings.asIterable().validated(konvertData.mapKSFunctionDeclaration, logger),
-                                konvertData.annotationData.constructor,
-                                konvertData.paramName,
-                                targetClassImportName,
-                                konvertData.sourceType,
-                                konvertData.targetType,
-                                konvertData.mapKSFunctionDeclaration,
-                                konvertData.additionalParameters
-                            )
-                        ),
-                    priority = konvertData.priority,
-                    toType = true,
-                    originating = data.mapKSClassDeclaration.containingFile
-                )
-
-                CurrentInterfaceContext.interfaceKSClassDeclaration = null
             }
         }
+    }
+
+    private fun FunSpec.Builder.generateSuperCall(konvertData: KonvertData): FunSpec.Builder {
+        return if (konvertData.additionalParameters.isEmpty()) {
+            addCode(
+                "return·super.${konvertData.mapFunctionName}(${konvertData.paramName})"
+            )
+        } else {
+            addCode(
+                "return·super.${konvertData.mapFunctionName}(«\n${konvertData.paramName}·=·${konvertData.paramName},\n"
+                    + konvertData.additionalParameters.joinToString(separator = ",\n") {
+                    val paramName = it.name?.asString()!!
+                    "$paramName·=·$paramName"
+                } + "»\n)"
+            )
+        }
+    }
+
+    private fun FunSpec.Builder.generateMappingCode(
+        mapper: CodeGenerator,
+        konvertData: KonvertData,
+        targetClassImportName: String?,
+        logger: KSPLogger
+    ): FunSpec.Builder {
+        return addCode(
+            mapper.generateCode(
+                konvertData.annotationData.mappings.asIterable()
+                    .validated(konvertData.mapKSFunctionDeclaration, logger),
+                konvertData.annotationData.constructor,
+                konvertData.paramName,
+                targetClassImportName,
+                konvertData.sourceType,
+                konvertData.targetType,
+                konvertData.mapKSFunctionDeclaration,
+                konvertData.additionalParameters
+            )
+        )
     }
 
     private fun isAlias(typeReference: KSTypeReference, type: KSType): Boolean {
@@ -130,21 +125,18 @@ object KonverterCodeGenerator {
     }
 
     private fun retrieveCodeBuilder(
-        mapperInterfaceKSClassDeclaration: KSClassDeclaration,
-        packageName: String,
-        interfaceType: KSType,
-        interfaceName: String
+        konverterInterface: KonverterInterface
     ): CodeBuilder {
-        return CodeBuilder.getOrCreate(packageName, interfaceName) {
+        return CodeBuilder.getOrCreate(konverterInterface.packageName, konverterInterface.simpleName) {
             if (Configuration.konverterGenerateClass) {
-                TypeSpec.classBuilder("${interfaceName}Impl")
+                TypeSpec.classBuilder("${konverterInterface.simpleName}${Konverter.KONVERTER_GENERATED_CLASS_SUFFIX}")
             } else {
-                TypeSpec.objectBuilder("${interfaceName}Impl")
+                TypeSpec.objectBuilder("${konverterInterface.simpleName}${Konverter.KONVERTER_GENERATED_CLASS_SUFFIX}")
             }
-                .addSuperinterface(interfaceType.toTypeName())
+                .addSuperinterface(konverterInterface.typeName)
                 .also { typeBuilder ->
                     injectors.forEach {
-                        it.processType(typeBuilder, mapperInterfaceKSClassDeclaration)
+                        it.processType(typeBuilder, konverterInterface.kSClassDeclaration)
                     }
                 }
 
@@ -155,7 +147,15 @@ object KonverterCodeGenerator {
         return data.konvertData
             .filter { it.additionalParameters.isEmpty() } // filter out mappings with more than one parameter
             .map {
-                "${data.mapKSClassDeclaration.qualifiedName?.asString()}Impl.${it.mapFunctionName}"
+                val packageName = data.konverterInterface.packageName
+                val simpleName = data.konverterInterface.simpleName + Konverter.KONVERTER_GENERATED_CLASS_SUFFIX
+                val functionName = it.mapFunctionName
+
+                if (packageName.isEmpty()) {
+                    "$simpleName.$functionName"
+                } else {
+                    "$packageName.$simpleName.$functionName"
+                }
             }
     }
 

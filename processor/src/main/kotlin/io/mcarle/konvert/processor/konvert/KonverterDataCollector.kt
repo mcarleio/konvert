@@ -22,8 +22,8 @@ object KonverterDataCollector {
         return resolver.getSymbolsWithAnnotation(Konverter::class.qualifiedName!!)
             .map { ksAnnotated ->
                 val ksClassDeclaration = ksAnnotated as? KSClassDeclaration
-                if (ksClassDeclaration == null || ksClassDeclaration.classKind != ClassKind.INTERFACE) {
-                    throw IllegalStateException("Mapping can only target interfaces")
+                check(ksClassDeclaration != null && ksClassDeclaration.classKind == ClassKind.INTERFACE) {
+                    "Mapping can only target interfaces"
                 }
 
                 val annotation = ksClassDeclaration.annotations.first { annotation ->
@@ -35,7 +35,7 @@ object KonverterDataCollector {
                 KonverterData(
                     annotationData = annotation,
                     konvertData = collectKonvertData(ksClassDeclaration, resolver, logger),
-                    ksClassDeclaration
+                    konverterInterface = KonverterInterface(ksClassDeclaration)
                 )
 
             }.toList()
@@ -83,20 +83,16 @@ object KonverterDataCollector {
                     KonvertData.AnnotationData.from(annotation)
                 }
 
-                if (annotation != null && it.isAbstract) {
-                    if (source == null || target == null) {
-                        throw IllegalStateException("Konvert annotated function must have exactly one parameter and must have a return type: $it")
+                if (it.isAbstract) {
+                    // abstract functions must have a defined source and target type
+                    check(source != null && target != null) {
+                        "${Konvert::class.simpleName} annotated function must have exactly one source parameter (either single " +
+                            "parameter or annotated with @${Konverter::class.simpleName}.${Konverter.Source::class.simpleName}) " +
+                            "and must have a return type: ${it.qualifiedName?.asString() ?: it}"
                     }
+                }
 
-                    KonvertData(
-                        annotationData = annotation,
-                        isAbstract = true,
-                        sourceTypeReference = source,
-                        targetTypeReference = target,
-                        mapKSFunctionDeclaration = it,
-                        additionalParameters = determineAdditionalParams(it, sourceValueParameter)
-                    )
-                } else if (source != null && target != null) {
+                if (source != null && target != null) {
                     KonvertData(
                         annotationData = annotation ?: KonvertData.AnnotationData.default(resolver, it.isAbstract),
                         isAbstract = it.isAbstract,
@@ -105,13 +101,11 @@ object KonverterDataCollector {
                         mapKSFunctionDeclaration = it,
                         additionalParameters = determineAdditionalParams(it, sourceValueParameter)
                     )
-                } else if (it.isAbstract) {
-                    throw RuntimeException("Method $it is abstract and does not meet criteria for automatic source and target detection")
                 } else {
                     if (annotation != null) {
-                        logger.warn("Could not determine source and/or target", it)
+                        logger.warn("Ignoring annotated implemented function as source and/or target could not be determined", it)
                     } else {
-                        logger.logging("Could not determine source and/or target", it)
+                        logger.logging("Ignoring implemented function as source and/or target could not be determined", it)
                     }
                     null
                 }

@@ -7,6 +7,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getFunctionDeclarationsByName
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import io.mcarle.konvert.api.GeneratedKonverter
 import io.mcarle.konvert.api.Konvert
@@ -17,6 +18,7 @@ import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.processor.konvert.KonvertTypeConverter
+import io.mcarle.konvert.processor.konvert.KonverterInterface
 import io.mcarle.konvert.processor.konvertfrom.KonvertFromTypeConverter
 import io.mcarle.konvert.processor.konvertto.KonvertToTypeConverter
 
@@ -63,6 +65,8 @@ class GeneratedKonverterLoader(
 
     private fun loadKonvertTypeConverter(): List<KonvertTypeConverter> {
         return loadByClasses("META-INF/konvert/io.mcarle.konvert.api.${Konvert::class.simpleName}") { data ->
+            val closestClassDeclaration = data.function.closestClassDeclaration()
+                ?: throw RuntimeException("Could not find class declaration for ${data.function.qualifiedName?.asString()}")
             KonvertTypeConverter(
                 priority = data.priority,
                 alreadyGenerated = true,
@@ -70,8 +74,11 @@ class GeneratedKonverterLoader(
                 targetType = data.function.returnType!!.resolve(),
                 mapFunctionName = data.function.simpleName.asString(),
                 paramName = data.function.parameters.first().name!!.asString(),
-                mapKSClassDeclaration = data.function.closestClassDeclaration()?.superTypes?.first()?.resolve()
-                    ?.classDeclaration()!!
+                konverterInterface = KonverterInterface(closestClassDeclaration.superTypes.first().resolve().classDeclaration()!!),
+                classKind = if (closestClassDeclaration.classKind == ClassKind.CLASS)
+                    KonvertTypeConverter.ClassOrObject.CLASS
+                else
+                    KonvertTypeConverter.ClassOrObject.OBJECT,
             )
         }
     }

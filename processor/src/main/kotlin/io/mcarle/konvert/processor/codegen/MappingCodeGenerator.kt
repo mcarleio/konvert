@@ -1,5 +1,6 @@
 package io.mcarle.konvert.processor.codegen
 
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
@@ -8,6 +9,7 @@ import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Origin
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.joinToCode
+import com.squareup.kotlinpoet.ksp.toClassName
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enableConverters
@@ -29,14 +31,18 @@ class MappingCodeGenerator {
         targetClassImportName: String?,
         targetProperties: List<KSPropertyDeclaration>
     ): CodeBlock {
-        val typeName = targetClassImportName ?: constructor.parentDeclaration?.qualifiedName!!.asString()
         val className = constructor.parentDeclaration!!.simpleName.asString()
-        val constructorCode = constructorCode(typeName, constructor, sourceProperties)
+        val constructorCode = constructorCode(
+            className = targetClassImportName,
+            classDeclaration = constructor.parentDeclaration as? KSClassDeclaration,
+            constructor = constructor,
+            sourceProperties = sourceProperties
+        )
         val propertyCode = propertyCode(
-            className,
-            functionParamName,
-            sourceProperties,
-            targetProperties
+            className = className,
+            functionParamName = functionParamName,
+            sourceProperties = sourceProperties,
+            targetProperties = targetProperties
         )
         return if (source.isNullable()) {
             // source can only be nullable in case of @Konverter/@Konvert which require a functionParamName
@@ -56,10 +62,25 @@ class MappingCodeGenerator {
     }
 
     private fun constructorCode(
-        className: String,
+        className: String?,
+        classDeclaration: KSClassDeclaration?,
         constructor: KSFunctionDeclaration,
         sourceProperties: List<PropertyMappingInfo>
     ): CodeBlock {
+        if (className == null) {
+            return if (constructor.parameters.isEmpty()) {
+                CodeBlock.of("%T()", classDeclaration?.toClassName())
+            } else {
+                CodeBlock.of(
+                    """
+%T(${"⇥\n%L"}
+⇤)
+                    """.trimIndent(),
+                    classDeclaration?.toClassName(),
+                    constructorParamsCode(constructor = constructor, sourceProperties = sourceProperties)
+                )
+            }
+        }
         return if (constructor.parameters.isEmpty()) {
             CodeBlock.of("$className()")
         } else {
@@ -67,7 +88,8 @@ class MappingCodeGenerator {
                 """
 $className(${"⇥\n%L"}
 ⇤)
-            """.trimIndent(), constructorParamsCode(constructor = constructor, sourceProperties = sourceProperties)
+                """.trimIndent(),
+                constructorParamsCode(constructor = constructor, sourceProperties = sourceProperties)
             )
         }
     }

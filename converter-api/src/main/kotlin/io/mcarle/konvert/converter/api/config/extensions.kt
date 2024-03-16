@@ -15,6 +15,12 @@ val Configuration.Companion.konverterGenerateClass: Boolean
     get() = KONVERTER_GENERATE_CLASS_OPTION.get(CURRENT, String::toBoolean)
 
 /**
+ * @see KONVERTER_USE_REFLECTION_OPTION
+ */
+val Configuration.Companion.konverterUseReflection: Boolean
+    get() = KONVERTER_USE_REFLECTION_OPTION.get(CURRENT, String::toBoolean)
+
+/**
  * @see GENERATED_FILENAME_SUFFIX_OPTION
  */
 val Configuration.Companion.generatedFilenameSuffix: String

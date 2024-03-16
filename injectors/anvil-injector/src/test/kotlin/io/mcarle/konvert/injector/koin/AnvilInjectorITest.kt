@@ -1,6 +1,5 @@
 package io.mcarle.konvert.injector.koin
 
-import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.config.KONVERTER_GENERATE_CLASS_OPTION
@@ -8,9 +7,11 @@ import io.mcarle.konvert.injector.anvil.config.DEFAULT_INJECTION_METHOD_OPTION
 import io.mcarle.konvert.injector.anvil.config.DEFAULT_SCOPE_OPTION
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 
+@OptIn(ExperimentalCompilerApi::class)
 class AnvilInjectorITest : KonverterITest() {
 
     @Test

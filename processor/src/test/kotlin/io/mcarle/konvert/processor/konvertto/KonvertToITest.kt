@@ -1,5 +1,6 @@
 package io.mcarle.konvert.processor.konvertto
 
+import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERT_TO_PRIORITY
 import io.mcarle.konvert.converter.IterableToIterableConverter
@@ -8,6 +9,7 @@ import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
 import io.mcarle.konvert.processor.KonverterITest
 import io.mcarle.konvert.processor.generatedSourceFor
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -15,7 +17,7 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-
+@OptIn(ExperimentalCompilerApi::class)
 class KonvertToITest : KonverterITest() {
 
     @Test
@@ -51,6 +53,58 @@ class TargetClass(
         assertEquals("TargetClass", converter.targetClassDeclaration.simpleName.asString())
         assertEquals(true, converter.enabledByDefault)
         assertEquals(DEFAULT_KONVERT_TO_PRIORITY, converter.priority)
+    }
+
+    @Test
+    fun failOnAnnotationOnClassWithGenerics() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(TargetClass::class, mappings=[Mapping(source="sourceProperty", target="targetProperty")])
+class SourceClass<T>(
+    val sourceProperty: T
+)
+class TargetClass(
+    val targetProperty: String
+)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(result.messages, "@KonvertTo not allowed on types with generics: SourceClass")
+    }
+
+    @Test
+    fun failOnAnnotatingAnObject() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(TargetClass::class, mappings=[Mapping(source="sourceProperty", target="targetProperty")])
+object SourceClass {
+    val sourceProperty: String
+}
+class TargetClass(
+    val targetProperty: String
+)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(result.messages, "@KonvertTo can only target classes, but SourceClass is not a class")
     }
 
     @Test
@@ -150,10 +204,8 @@ class TargetProperty<E>(val value: E)
 
         assertSourceEquals(
             """
-            import io.mcarle.konvert.api.Konverter
-
             public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
-              targetProperty = Konverter.get<KonvertInterface>().toTargetProperty(sourceProperty = sourceProperty)
+              targetProperty = KonvertInterfaceImpl.toTargetProperty(sourceProperty = sourceProperty)
             )
         """.trimIndent(), extensionFunctionCode
         )
@@ -371,6 +423,77 @@ class TargetClass(val children: List<TargetClass>)
             )
             """.trimIndent(),
             extensionFunctionCode
+        )
+    }
+
+    @Test
+    fun nestedClass() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.OK,
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/Person.kt",
+                    contents =
+                    """
+package a
+
+import io.mcarle.konvert.api.KonvertTo
+import b.PersonDto
+
+data class Person(val firstName: String, val lastName: String, val age: Int, val address: Address) {
+    @KonvertTo(PersonDto.AddressDto::class)
+    data class Address(val address1: String, val address2: String)
+}
+                """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/PersonDto.kt",
+                    contents =
+                    """
+package b
+
+import io.mcarle.konvert.api.KonvertTo
+import a.Person.Address as AddressDomain
+
+data class PersonDto(val firstName: String, val lastName: String, val age: Int, val address: AddressDto) {
+    @KonvertTo(AddressDomain::class)
+    data class AddressDto(val address1: String, val address2: String)
+}
+                """.trimIndent()
+                )
+            )
+        )
+        val addressExtensionFunctionCode = compilation.generatedSourceFor("AddressKonverter.kt")
+        println(addressExtensionFunctionCode)
+        val addressDtoExtensionFunctionCode = compilation.generatedSourceFor("AddressDtoKonverter.kt")
+        println(addressDtoExtensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            package a
+
+            import b.PersonDto
+
+            public fun Person.Address.toAddressDto(): PersonDto.AddressDto = PersonDto.AddressDto(
+              address1 = address1,
+              address2 = address2
+            )
+            """.trimIndent(),
+            addressExtensionFunctionCode
+        )
+        assertSourceEquals(
+            """
+            package b
+
+            import a.Person
+
+            public fun PersonDto.AddressDto.toAddress(): Person.Address = Person.Address(
+              address1 = address1,
+              address2 = address2
+            )
+            """.trimIndent(),
+            addressDtoExtensionFunctionCode
         )
     }
 

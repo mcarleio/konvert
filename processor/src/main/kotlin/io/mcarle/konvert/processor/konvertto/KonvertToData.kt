@@ -50,7 +50,7 @@ class KonvertToData(
                 mappings = (annotation.arguments.first { it.name?.asString() == KonvertTo::mappings.name }.value as List<*>)
                     .filterIsInstance<KSAnnotation>()
                     .map { Mapping.from(it) },
-                constructor = (annotation.arguments.first { it.name?.asString() == KonvertTo::constructor.name }.value as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() },
+                constructor = (annotation.arguments.first { it.name?.asString() == KonvertTo::constructorArgs.name }.value as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() },
                 mapFunctionName = annotation.arguments.first { it.name?.asString() == KonvertTo::mapFunctionName.name }.value as String,
                 priority = annotation.arguments.first { it.name?.asString() == KonvertTo::priority.name }.value as Priority,
                 options = (annotation.arguments.first { it.name?.asString() == KonvertTo::options.name }.value as List<*>)

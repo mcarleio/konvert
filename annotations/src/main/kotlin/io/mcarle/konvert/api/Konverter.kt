@@ -38,6 +38,8 @@ annotation class Konverter(
      * This object can be used to load the generated class of an interface, which is annotated with `@Konverter`.
      */
     companion object {
+        const val KONVERTER_GENERATED_CLASS_SUFFIX = "Impl"
+
         private val mappers: MutableMap<KClass<*>, Any> = mutableMapOf()
         private val CLASS_LOADER_LIST = mutableListOf(
             ClassLoader.getSystemClassLoader()
@@ -47,13 +49,17 @@ annotation class Konverter(
             this.CLASS_LOADER_LIST += classLoader
         }
 
+        fun removeClassLoader(classLoader: ClassLoader) {
+            this.CLASS_LOADER_LIST -= classLoader
+        }
+
         inline fun <reified T : Any> get(): T = get(T::class)
 
         @Suppress("UNCHECKED_CAST")
         fun <T : Any> get(clazz: KClass<T>): T {
             return withCurrentClassLoaders(clazz) { classLoaders ->
                 if (!mappers.containsKey(clazz)) {
-                    val implFQN = "${clazz.qualifiedName}Impl"
+                    val implFQN = "${clazz.qualifiedName}$KONVERTER_GENERATED_CLASS_SUFFIX"
                     val implClass = classLoaders.firstNotNullOfOrNull {
                         try {
                             it.loadClass(implFQN)

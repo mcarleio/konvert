@@ -1,20 +1,28 @@
 package io.mcarle.konvert.example
 
+import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Mapping
+import io.mcarle.konvert.api.config.KONVERTER_GENERATE_CLASS
 import io.mcarle.konvert.api.converter.LONG_TO_UINT_CONVERTER
 import io.mcarle.konvert.api.converter.STRING_TO_INT_CONVERTER
 import io.mcarle.konvert.injector.spring.KComponent
 
-@Konverter
+@Konverter(options = [
+    /**
+     * This is already set in the pom.xml, but you can also define it here (and override default and global values with that).
+     */
+    Konfig(key = KONVERTER_GENERATE_CLASS, value = "true")
+])
 @KComponent
 interface Mapper {
     @Konvert(
         mappings = [
             Mapping(source = "streetName", target = "street"),
             Mapping(source = "zipCode", target = "zip")
-        ]
+        ],
+        priority = 1
     )
     fun fromDto(dto: AddressDto): Address
 
