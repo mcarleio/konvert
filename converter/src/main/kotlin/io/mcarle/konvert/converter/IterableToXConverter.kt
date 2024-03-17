@@ -6,6 +6,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Variance
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
@@ -25,6 +26,14 @@ internal const val MUTABLESET = "kotlin.collections.MutableSet"
 internal const val HASHSET = "java.util.HashSet"
 internal const val LINKEDHASHSET = "java.util.LinkedHashSet"
 
+internal const val KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE = "kotlinx.collections.immutable"
+internal const val IMMUTABLE_COLLECTION = "$KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE.ImmutableCollection"
+internal const val IMMUTABLE_LIST = "$KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE.ImmutableList"
+internal const val IMMUTABLE_SET = "$KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE.ImmutableSet"
+internal const val PERSISTENT_COLLECTION = "$KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE.PersistentCollection"
+internal const val PERSISTENT_LIST = "$KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE.PersistentList"
+internal const val PERSISTENT_SET = "$KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE.PersistentSet"
+
 abstract class IterableToXConverter(
     val targetFQN: String
 ) : AbstractTypeConverter() {
@@ -42,6 +51,12 @@ abstract class IterableToXConverter(
             MUTABLESET,
             HASHSET,
             LINKEDHASHSET,
+            IMMUTABLE_COLLECTION,
+            IMMUTABLE_LIST,
+            IMMUTABLE_SET,
+            PERSISTENT_COLLECTION,
+            PERSISTENT_LIST,
+            PERSISTENT_SET,
         )
     }
 
@@ -229,3 +244,44 @@ class IterableToLinkedHashSetConverter : IterableToXConverter(LINKEDHASHSET) {
     }
 }
 
+@AutoService(TypeConverter::class)
+class IterableToImmutableCollectionConverter : IterableToXConverter(IMMUTABLE_COLLECTION) {
+    override fun convertIterable(nc: String): CodeBlock {
+        return CodeBlock.of("$nc.%M()", MemberName(KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE, "toImmutableList"))
+    }
+}
+
+@AutoService(TypeConverter::class)
+class IterableToImmutableListConverter : IterableToXConverter(IMMUTABLE_LIST) {
+    override fun convertIterable(nc: String): CodeBlock {
+        return CodeBlock.of("$nc.%M()", MemberName(KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE, "toImmutableList"))
+    }
+}
+
+@AutoService(TypeConverter::class)
+class IterableToImmutableSetConverter : IterableToXConverter(IMMUTABLE_SET) {
+    override fun convertIterable(nc: String): CodeBlock {
+        return CodeBlock.of("$nc.%M()", MemberName(KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE, "toImmutableSet"))
+    }
+}
+
+@AutoService(TypeConverter::class)
+class IterableToPersistentCollectionConverter : IterableToXConverter(PERSISTENT_COLLECTION) {
+    override fun convertIterable(nc: String): CodeBlock {
+        return CodeBlock.of("$nc.%M()", MemberName(KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE, "toPersistentList"))
+    }
+}
+
+@AutoService(TypeConverter::class)
+class IterableToPersistentListConverter : IterableToXConverter(PERSISTENT_LIST) {
+    override fun convertIterable(nc: String): CodeBlock {
+        return CodeBlock.of("$nc.%M()", MemberName(KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE, "toPersistentList"))
+    }
+}
+
+@AutoService(TypeConverter::class)
+class IterableToPersistentSetConverter : IterableToXConverter(PERSISTENT_SET) {
+    override fun convertIterable(nc: String): CodeBlock {
+        return CodeBlock.of("$nc.%M()", MemberName(KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE, "toPersistentSet"))
+    }
+}
