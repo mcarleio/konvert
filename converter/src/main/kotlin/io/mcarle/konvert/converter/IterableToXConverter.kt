@@ -26,7 +26,7 @@ internal const val HASHSET = "java.util.HashSet"
 internal const val LINKEDHASHSET = "java.util.LinkedHashSet"
 
 abstract class IterableToXConverter(
-    private val targetFQN: String
+    val targetFQN: String
 ) : AbstractTypeConverter() {
 
     companion object {
