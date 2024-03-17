@@ -3,7 +3,7 @@ package io.mcarle.konvert.processor.konvertto
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERT_TO_PRIORITY
-import io.mcarle.konvert.converter.IterableToIterableConverter
+import io.mcarle.konvert.converter.IterableToListConverter
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
@@ -400,7 +400,7 @@ data class TargetClass(val property: String)
     @Test
     fun recursiveTreeMap() {
         val (compilation) = compileWith(
-            enabledConverters = listOf(IterableToIterableConverter()),
+            enabledConverters = listOf(IterableToListConverter()),
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =

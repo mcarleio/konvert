@@ -1,7 +1,7 @@
 package io.mcarle.konvert.processor
 
 import com.tschuchort.compiletesting.SourceFile
-import io.mcarle.konvert.converter.IterableToIterableConverter
+import io.mcarle.konvert.converter.IterableToListConverter
 import io.mcarle.konvert.converter.SameTypeConverter
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
@@ -12,7 +12,7 @@ class KonvertOptionsITest: KonverterITest() {
     @Test
     fun `konvert konverter use-reflection`() {
         val (compilation) = compileWith(
-            enabledConverters = listOf(SameTypeConverter(), IterableToIterableConverter()),
+            enabledConverters = listOf(SameTypeConverter(), IterableToListConverter()),
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =

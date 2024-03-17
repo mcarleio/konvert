@@ -7,7 +7,9 @@ import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
 import io.mcarle.konvert.api.DEFAULT_KONVERT_PRIORITY
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.converter.IntToStringConverter
-import io.mcarle.konvert.converter.IterableToIterableConverter
+import io.mcarle.konvert.converter.IterableToArrayListConverter
+import io.mcarle.konvert.converter.IterableToListConverter
+import io.mcarle.konvert.converter.IterableToSetConverter
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
@@ -1063,7 +1065,7 @@ interface Mapper {
     @Test
     fun recursiveTreeMap() {
         val (compilation) = compileWith(
-            enabledConverters = listOf(IterableToIterableConverter()),
+            enabledConverters = listOf(IterableToListConverter()),
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -1162,7 +1164,12 @@ class TargetProperty<E>(val value: E)
     @Test
     fun useIterableTypeConverter() {
         val (compilation) = compileWith(
-            enabledConverters = listOf(SameTypeConverter(), IterableToIterableConverter()),
+            enabledConverters = listOf(
+                SameTypeConverter(),
+                IterableToListConverter(),
+                IterableToSetConverter(),
+                IterableToArrayListConverter()
+            ),
             code = arrayOf(
                 SourceFile.kotlin(
                     contents =

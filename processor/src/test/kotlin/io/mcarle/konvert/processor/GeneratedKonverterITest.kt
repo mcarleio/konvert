@@ -4,6 +4,7 @@ import com.squareup.kotlinpoet.ksp.toClassName
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.GeneratedKonverter
 import io.mcarle.konvert.converter.IterableToIterableConverter
+import io.mcarle.konvert.converter.IterableToSetConverter
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.ADD_GENERATED_KONVERTER_ANNOTATION_OPTION
@@ -50,8 +51,8 @@ class GeneratedKonverterITest : KonverterITest() {
         }
         alreadyGeneratedKonverterList[2].let { converter ->
             // toClassName() would result in exception due to Resolver not initialized
-            assertEquals("List<SomeTestClass>",converter.sourceType.toString())
-            assertEquals("List<SomeOtherTestClass>",converter.targetType.toString())
+            assertEquals("List<SomeTestClass>", converter.sourceType.toString())
+            assertEquals("List<SomeOtherTestClass>", converter.targetType.toString())
 
             assertEquals("toSomeOtherTestClasses", converter.mapFunctionName)
             assertEquals("source", converter.paramName)
@@ -62,8 +63,8 @@ class GeneratedKonverterITest : KonverterITest() {
         }
         alreadyGeneratedKonverterList[3].let { converter ->
             // toClassName() would result in exception due to Resolver not initialized
-            assertEquals("List<SomeOtherTestClass>",converter.sourceType.toString())
-            assertEquals("List<SomeTestClass>",converter.targetType.toString())
+            assertEquals("List<SomeOtherTestClass>", converter.sourceType.toString())
+            assertEquals("List<SomeTestClass>", converter.targetType.toString())
 
             assertEquals("fromSomeOtherTestClasses", converter.mapFunctionName)
             assertEquals("source", converter.paramName)
@@ -214,7 +215,7 @@ class TargetClass(val property: List<SomeTestClass>)
     @Test
     fun useIterableToIterableConverterInsteadOfGeneratedKonverterWhenNotExactMatch() {
         val (compilation) = compileWith(
-            enabledConverters = listOf(IterableToIterableConverter()),
+            enabledConverters = listOf(IterableToSetConverter()),
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
