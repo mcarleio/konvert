@@ -52,6 +52,8 @@ object Versions {
 
     const val kotlinCompileTesting = "0.4.0"
 
+    const val kotlinxCollectionsImmutable = "0.3.7"
+
     const val kotlinPoet = "1.16.0"
     const val jUnit = "5.10.1"
 }

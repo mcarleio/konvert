@@ -22,6 +22,7 @@ dependencies {
     testImplementation("com.github.dpaukov:combinatoricslib3:${Versions.combinatoricslib3}")
     testImplementation("org.junit.jupiter:junit-jupiter-params:${Versions.jUnit}")
     testImplementation("org.reflections:reflections:${Versions.orgReflections}")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:${Versions.kotlinxCollectionsImmutable}")
 }
 
 ksp {

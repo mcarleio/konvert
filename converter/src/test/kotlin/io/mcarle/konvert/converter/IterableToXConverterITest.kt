@@ -5,6 +5,11 @@ import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.utils.ConverterITest
 import io.mcarle.konvert.converter.utils.SourceToTargetTypeNamePair
 import io.mcarle.konvert.converter.utils.VerificationData
+import kotlinx.collections.immutable.persistentHashSetOf
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -31,7 +36,12 @@ class IterableToXConverterITest : ConverterITest() {
                 MUTABLESET -> IterableToMutableSetConverter()
                 HASHSET -> IterableToHashSetConverter()
                 LINKEDHASHSET -> IterableToLinkedHashSetConverter()
-
+                IMMUTABLE_COLLECTION -> IterableToImmutableCollectionConverter()
+                IMMUTABLE_LIST -> IterableToImmutableListConverter()
+                IMMUTABLE_SET -> IterableToImmutableSetConverter()
+                PERSISTENT_COLLECTION -> IterableToPersistentCollectionConverter()
+                PERSISTENT_LIST -> IterableToPersistentListConverter()
+                PERSISTENT_SET -> IterableToPersistentSetConverter()
                 else -> throw RuntimeException("Unknown iterable target type: $targetTypeName")
             }
         }
@@ -141,6 +151,12 @@ typealias MyInt = ReallyMyInt
                 sourceTypeName.startsWith(MUTABLESET) -> mutableSetOf(collectionValue)
                 sourceTypeName.startsWith(HASHSET) -> HashSet(setOf(collectionValue))
                 sourceTypeName.startsWith(LINKEDHASHSET) -> LinkedHashSet(setOf(collectionValue))
+                sourceTypeName.startsWith(IMMUTABLE_COLLECTION) -> persistentListOf(collectionValue).toImmutableSet()
+                sourceTypeName.startsWith(IMMUTABLE_LIST) -> persistentListOf(collectionValue).toImmutableList()
+                sourceTypeName.startsWith(IMMUTABLE_SET) -> persistentListOf(collectionValue).toImmutableSet()
+                sourceTypeName.startsWith(PERSISTENT_COLLECTION) -> persistentHashSetOf(collectionValue)
+                sourceTypeName.startsWith(PERSISTENT_LIST) -> persistentListOf(collectionValue)
+                sourceTypeName.startsWith(PERSISTENT_SET) -> persistentSetOf(collectionValue)
                 else -> null
             }
         }

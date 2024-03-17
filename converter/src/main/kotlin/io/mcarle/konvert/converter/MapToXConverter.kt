@@ -7,6 +7,7 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Variance
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverter
@@ -22,6 +23,8 @@ internal const val JAVA_HASHMAP = "java.util.HashMap" // not "kotlin.collections
 internal const val JAVA_LINKEDHASHMAP = "java.util.LinkedHashMap" // not "kotlin.collections.LinkedHashMap"
 internal const val HASHMAP = "$KOTLIN_COLLECTIONS_PACKAGE.HashMap"
 internal const val LINKEDHASHMAP = "$KOTLIN_COLLECTIONS_PACKAGE.LinkedHashMap"
+internal const val PERISTENT_MAP = "kotlinx.collections.immutable.PersistentMap"
+internal const val IMMUTABLE_MAP = "kotlinx.collections.immutable.ImmutableMap"
 
 abstract class MapToXConverter(
     val targetFQN: String,
@@ -36,6 +39,8 @@ abstract class MapToXConverter(
             JAVA_LINKEDHASHMAP,
             HASHMAP,
             LINKEDHASHMAP,
+            PERISTENT_MAP,
+            IMMUTABLE_MAP,
         )
     }
 
@@ -303,5 +308,27 @@ class MapToHashMapConverter : MapToXConverter(HASHMAP, JAVA_HASHMAP) {
 class MapToLinkedHashMapConverter : MapToXConverter(LINKEDHASHMAP, JAVA_LINKEDHASHMAP) {
     override fun convertMap(nc: String): CodeBlock {
         return CodeBlock.of("$nc.toMap(%T())", ClassName(KOTLIN_COLLECTIONS_PACKAGE, "LinkedHashMap"))
+    }
+}
+
+@AutoService(TypeConverter::class)
+class MapToPersistentMapConverter : MapToXConverter(PERISTENT_MAP) {
+    override fun castNeeded(keySource: KSType, keyTarget: KSType): Boolean {
+        return !keySource.isNullable() && keyTarget.isNullable()
+    }
+
+    override fun convertMap(nc: String): CodeBlock {
+        return CodeBlock.of("$nc.%M()", MemberName("kotlinx.collections.immutable", "toPersistentMap"))
+    }
+}
+
+@AutoService(TypeConverter::class)
+class MapToImmutableMapConverter : MapToXConverter(IMMUTABLE_MAP) {
+    override fun castNeeded(keySource: KSType, keyTarget: KSType): Boolean {
+        return !keySource.isNullable() && keyTarget.isNullable()
+    }
+
+    override fun convertMap(nc: String): CodeBlock {
+        return CodeBlock.of("$nc.%M()", MemberName("kotlinx.collections.immutable", "toImmutableMap"))
     }
 }

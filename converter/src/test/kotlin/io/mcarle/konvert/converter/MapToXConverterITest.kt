@@ -5,6 +5,8 @@ import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.utils.ConverterITest
 import io.mcarle.konvert.converter.utils.SourceToTargetTypeNamePair
 import io.mcarle.konvert.converter.utils.VerificationData
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableMap
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -25,6 +27,8 @@ class MapToXConverterITest : ConverterITest() {
                 JAVA_HASHMAP -> MapToHashMapConverter()
                 LINKEDHASHMAP,
                 JAVA_LINKEDHASHMAP -> MapToLinkedHashMapConverter()
+                PERISTENT_MAP -> MapToPersistentMapConverter()
+                IMMUTABLE_MAP -> MapToImmutableMapConverter()
                 else -> throw RuntimeException("Unknown map target type: $targetTypeName")
             }
         }
@@ -144,6 +148,8 @@ typealias MyInt = ReallyMyInt
                 sourceTypeName.startsWith(JAVA_LINKEDHASHMAP) -> java.util.LinkedHashMap(mapOf(key to value))
                 sourceTypeName.startsWith(HASHMAP) -> HashMap(mapOf(key to value))
                 sourceTypeName.startsWith(LINKEDHASHMAP) -> LinkedHashMap(mapOf(key to value))
+                sourceTypeName.startsWith(PERISTENT_MAP) -> persistentMapOf(key to value)
+                sourceTypeName.startsWith(IMMUTABLE_MAP) -> persistentMapOf(key to value).toImmutableMap()
                 else -> null
             }
         }
