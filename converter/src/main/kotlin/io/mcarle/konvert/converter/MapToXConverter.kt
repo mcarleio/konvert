@@ -24,7 +24,7 @@ internal const val HASHMAP = "$KOTLIN_COLLECTIONS_PACKAGE.HashMap"
 internal const val LINKEDHASHMAP = "$KOTLIN_COLLECTIONS_PACKAGE.LinkedHashMap"
 
 abstract class MapToXConverter(
-    private val targetFQN: String,
+    val targetFQN: String,
     private val alternativeFQN: String? = null
 ) : AbstractTypeConverter() {
 

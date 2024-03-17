@@ -30,7 +30,7 @@ const val FROM_TO = "From\\To"
 fun generateBasicTypeConverterTable(outputDir: Path, typeConverters: List<TypeConverter>): List<KClass<*>> {
     val basicTypeConverters = typeConverters
         .filterIsInstance<BaseTypeConverter>()
-        .sortedWith(kotlin.comparisons.compareBy({ it.sourceClass.simpleName }, { it.targetClass.simpleName }))
+        .sortedWith(compareBy({ it.sourceClass.simpleName }, { it.targetClass.simpleName }))
 
     val basicClasses = (basicTypeConverters.flatMap { listOf(it.sourceClass, it.targetClass) })
         .distinct()
@@ -143,47 +143,27 @@ fun generateTemporalTypeConverterTable(outputDir: Path, typeConverters: List<Typ
 }
 
 fun generateIterablesTypeConverterTable(outputDir: Path, typeConverters: List<TypeConverter>) {
-    val iterableToIterableConverter = typeConverters
-        .filterIsInstance<IterableToIterableConverter>()
-        .first()
-
-    val supportedIterables = IterableToIterableConverter.supported().map { it.substringAfterLast(".") }.sorted()
+    val iterableToXConverter = typeConverters
+        .filterIsInstance<IterableToXConverter>()
+        .sortedBy { it.targetFQN.substringAfterLast(".") }
 
     val builder = Table.Builder()
-        .withAlignments(Table.ALIGN_CENTER, *supportedIterables.map { Table.ALIGN_CENTER }.toTypedArray())
-        .addRow(FROM_TO, *supportedIterables.toTypedArray())
-
-    supportedIterables.forEach { clazzName ->
-        builder.addRow(
-            BoldText(clazzName),
-            *supportedIterables
-                .map { if (iterableToIterableConverter.enabledByDefault) "✔" else "☑" }
-                .toTypedArray()
-        )
-    }
+        .withAlignments(Table.ALIGN_CENTER, *iterableToXConverter.map { Table.ALIGN_CENTER }.toTypedArray())
+        .addRow(FROM_TO, *iterableToXConverter.map { it.targetFQN.substringAfterLast(".") }.toTypedArray())
+        .addRow(BoldText("any iterable"), *iterableToXConverter.map { if (it.enabledByDefault) "✔" else "☑" }.toTypedArray())
 
     Files.writeString(outputDir.resolve("iterable.md"), builder.build().toString() + fixedFirstColumn(160))
 }
 
 fun generateMapTypeConverterTable(outputDir: Path, typeConverters: List<TypeConverter>) {
-    val mapToMapConverter = typeConverters
-        .filterIsInstance<MapToMapConverter>()
-        .first()
-
-    val supportedMaps = MapToMapConverter.supported().map { it.substringAfterLast(".") }.sorted()
+    val mapToXConverter = typeConverters
+        .filterIsInstance<MapToXConverter>()
+        .sortedBy { it.targetFQN.substringAfterLast(".") }
 
     val builder = Table.Builder()
-        .withAlignments(Table.ALIGN_CENTER, *supportedMaps.map { Table.ALIGN_CENTER }.toTypedArray())
-        .addRow(FROM_TO, *supportedMaps.toTypedArray())
-
-    supportedMaps.forEach { clazzName ->
-        builder.addRow(
-            BoldText(clazzName),
-            *supportedMaps
-                .map { if (mapToMapConverter.enabledByDefault) "✔" else "☑" }
-                .toTypedArray()
-        )
-    }
+        .withAlignments(Table.ALIGN_CENTER, *mapToXConverter.map { Table.ALIGN_CENTER }.toTypedArray())
+        .addRow(FROM_TO, *mapToXConverter.map { it.targetFQN.substringAfterLast(".") }.toTypedArray())
+        .addRow(BoldText("any map"), *mapToXConverter.map { if (it.enabledByDefault) "✔" else "☑" }.toTypedArray())
 
     Files.writeString(outputDir.resolve("map.md"), builder.build().toString() + fixedFirstColumn(140))
 }
