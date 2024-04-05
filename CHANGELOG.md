@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.0.1]
+
+### Bug fixes
+* Correctly resolve nested classes in generated code [#49](https://github.com/mcarleio/konvert/issues/49)
+
 ## [3.0.0]
 
 Update to Kotlin 1.9.22 and KSP 1.0.16
@@ -237,6 +242,8 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 ## [1.0.0] - 2023-03-27
 
 [unreleased]: https://github.com/mcarleio/konvert/compare/v3.0.0...HEAD
+
+[3.0.1]: https://github.com/mcarleio/konvert/compare/v3.0.0...v3.0.1
 
 [3.0.0]: https://github.com/mcarleio/konvert/compare/v2.4.0...v3.0.0
 
