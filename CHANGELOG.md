@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.1.0]
+
+### New features
+* Introduced support for `kotlinx.collections.immutable` [#51](https://github.com/mcarleio/konvert/discussions/51), [#58](https://github.com/mcarleio/konvert/pull/58)
+* reusable TypeConverters `IterableToXConverter` and `MapToXConverter` (instead of hard coded, non-reusable `IterableToIterableConverter` and `MapToMapConverter`) [#57](https://github.com/mcarleio/konvert/pull/57)
+
 ## [3.0.1]
 
 ### Bug fixes
@@ -241,7 +247,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v3.0.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v3.1.0...HEAD
+
+[3.1.0]: https://github.com/mcarleio/konvert/compare/v3.0.1...v3.1.0
 
 [3.0.1]: https://github.com/mcarleio/konvert/compare/v3.0.0...v3.0.1
 
