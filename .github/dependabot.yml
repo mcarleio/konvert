@@ -13,3 +13,6 @@ updates:
     directory: "/example"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "io.mcarle:konvert*"
+
