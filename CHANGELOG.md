@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.2.0]
+
+### Bug fixes
+* remove wrongly introduced invisible dependency on `kotlinx.collections.immutable` [#63](https://github.com/mcarleio/konvert/issues/63)
+
+### Improvements
+* better compatibility with Java classes by determining property names using getter functions [#54](https://github.com/mcarleio/konvert/issues/54)
+
 ## [3.1.0]
 
 ### New features
@@ -247,7 +255,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v3.1.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v3.2.0...HEAD
+
+[3.2.0]: https://github.com/mcarleio/konvert/compare/v3.1.0...v3.2.0
 
 [3.1.0]: https://github.com/mcarleio/konvert/compare/v3.0.1...v3.1.0
 
