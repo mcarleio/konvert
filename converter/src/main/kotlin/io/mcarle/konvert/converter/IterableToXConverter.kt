@@ -62,17 +62,19 @@ abstract class IterableToXConverter(
 
     private val iterableType: KSType by lazy { resolver.builtIns.iterableType }
 
-    private val targetClassDeclaration: KSClassDeclaration by lazy { resolver.getClassDeclarationByName(targetFQN)!! }
+    private val targetClassDeclaration: KSClassDeclaration? by lazy { resolver.getClassDeclarationByName(targetFQN) }
 
-    private val targetType: KSType by lazy { targetClassDeclaration.asStarProjectedType() }
+    private val targetType: KSType? by lazy { targetClassDeclaration?.asStarProjectedType() }
 
 
     override val enabledByDefault: Boolean = true
 
     override fun matches(source: KSType, target: KSType): Boolean {
+        if (targetType == null) return false
+
         return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
             iterableType.isAssignableFrom(sourceNotNullable) &&
-                targetType.isAssignableFrom(targetNotNullable) && targetNotNullable.isExactlyTarget()
+                targetType!!.isAssignableFrom(targetNotNullable) && targetNotNullable.isExactlyTarget()
         } && TypeConverterRegistry.any {
             it.matches(
                 source = source.arguments[0].type!!.resolve(),
@@ -149,7 +151,7 @@ abstract class IterableToXConverter(
     }
 
     protected fun KSType.isInstanceOfTarget(): Boolean {
-        return targetType.isAssignableFrom(this.starProjection().makeNotNullable())
+        return targetType!!.isAssignableFrom(this.starProjection().makeNotNullable())
     }
 
     abstract fun convertIterable(nc: String): CodeBlock

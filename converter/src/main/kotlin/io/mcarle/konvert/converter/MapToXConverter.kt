@@ -48,20 +48,21 @@ abstract class MapToXConverter(
         resolver.getClassDeclarationByName<Map<*, *>>()!!.asStarProjectedType()
     }
 
-    private val targetClassDeclaration: KSClassDeclaration by lazy {
+    private val targetClassDeclaration: KSClassDeclaration? by lazy {
         resolver.getClassDeclarationByName(targetFQN)
             ?: alternativeFQN?.let { resolver.getClassDeclarationByName(it) }
-            ?: throw IllegalStateException("No class declaration found for $targetFQN or $alternativeFQN")
     }
 
-    private val targetType: KSType by lazy { targetClassDeclaration.asStarProjectedType() }
+    private val targetType: KSType? by lazy { targetClassDeclaration?.asStarProjectedType() }
 
     override val enabledByDefault: Boolean = true
 
     override fun matches(source: KSType, target: KSType): Boolean {
+        if (targetType == null) return false
+
         return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
             mapType.isAssignableFrom(sourceNotNullable)
-                && targetType.isAssignableFrom(targetNotNullable) && targetNotNullable.isExactlyTarget()
+                && targetType!!.isAssignableFrom(targetNotNullable) && targetNotNullable.isExactlyTarget()
         } && TypeConverterRegistry.any {
             it.matches(
                 source = source.arguments[0].type!!.resolve(),
@@ -274,7 +275,7 @@ newKey·to·newValue
     }
 
     protected fun KSType.isInstanceOfTarget(): Boolean {
-        return targetType.isAssignableFrom(this.starProjection().makeNotNullable())
+        return targetType!!.isAssignableFrom(this.starProjection().makeNotNullable())
     }
 
     open fun castNeeded(keySource: KSType, keyTarget: KSType): Boolean = false
