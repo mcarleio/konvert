@@ -1,7 +1,7 @@
 package io.mcarle.konvert.processor.codegen
 
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import io.mcarle.konvert.api.TypeConverterName
+import io.mcarle.konvert.processor.SourceDataExtractionStrategy
 
 data class PropertyMappingInfo constructor(
     val mappingParamName: String?,
@@ -11,6 +11,6 @@ data class PropertyMappingInfo constructor(
     val expression: String?,
     val ignore: Boolean,
     val enableConverters: List<TypeConverterName>,
-    val declaration: KSPropertyDeclaration?,
+    val sourceData: SourceDataExtractionStrategy.SourceData?,
     val isBasedOnAnnotation: Boolean
 )

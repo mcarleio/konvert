@@ -3,6 +3,7 @@ package io.mcarle.konvert.processor.codegen
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -18,11 +19,13 @@ import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
+import io.mcarle.konvert.processor.DefaultSourceDataExtractionStrategy
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 
-class CodeGenerator(
-    private val logger: KSPLogger
+class CodeGenerator constructor(
+    private val logger: KSPLogger,
+    private val resolver: Resolver
 ) {
 
     fun generateCode(
@@ -49,7 +52,16 @@ class CodeGenerator(
             }
         }
 
-        val sourceProperties = PropertyMappingResolver(logger).determinePropertyMappings(paramName, mappings, source, additionalSourceParameters)
+        val sourceProperties = PropertyMappingResolver(
+            logger,
+            DefaultSourceDataExtractionStrategy(mappingCodeParentDeclaration, resolver.builtIns.unitType)
+        )
+            .determinePropertyMappings(
+                paramName,
+                mappings,
+                source,
+                additionalSourceParameters
+            )
 
         val targetClassDeclaration = target.classDeclaration()!!
 

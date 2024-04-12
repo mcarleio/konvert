@@ -7,9 +7,11 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.converter.api.classDeclaration
+import io.mcarle.konvert.processor.SourceDataExtractionStrategy
 
 class PropertyMappingResolver(
-    private val logger: KSPLogger
+    private val logger: KSPLogger,
+    private val sourceDataExtractionStrategy: SourceDataExtractionStrategy
 ) {
     fun determinePropertyMappings(
         mappingParamName: String?,
@@ -17,15 +19,12 @@ class PropertyMappingResolver(
         type: KSType,
         additionalSourceParameters: List<KSValueParameter>
     ): List<PropertyMappingInfo> {
-        val classDeclaration = type.classDeclaration()!!
-        val properties = classDeclaration.getAllProperties().toList()
-
-        verifyAllPropertiesExist(mappings, properties, classDeclaration)
+        val sourceDataList = sourceDataExtractionStrategy.extract(type.classDeclaration()!!)
 
         val propertiesWithoutSource = getPropertyMappingsWithoutSource(mappings, mappingParamName)
-        val propertiesWithSource = getPropertyMappingsWithSource(mappings, properties, mappingParamName)
+        val propertiesWithSource = getPropertyMappingsWithSource(mappings, sourceDataList, mappingParamName)
         val propertiesFromAdditionalParameters = getPropertyMappingsFromAdditionalParameters(additionalSourceParameters)
-        val propertiesWithoutMappings = getPropertyMappingsWithoutMappings(properties, mappingParamName)
+        val propertiesWithoutMappings = getPropertyMappingsWithoutMappings(sourceDataList, mappingParamName)
 
         return propertiesWithoutSource + propertiesWithSource + propertiesFromAdditionalParameters + propertiesWithoutMappings
     }
@@ -43,47 +42,47 @@ class PropertyMappingResolver(
                 expression = null,
                 ignore = false,
                 enableConverters = emptyList(),
-                declaration = null,
+                sourceData = null,
                 isBasedOnAnnotation = false
             )
         }
 
     private fun getPropertyMappingsWithoutMappings(
-        properties: List<KSPropertyDeclaration>,
+        sourceDataList: List<SourceDataExtractionStrategy.SourceData>,
         mappingParamName: String?
-    ) = properties
-        .map { property ->
+    ) = sourceDataList
+        .map { sourceData ->
             PropertyMappingInfo(
                 mappingParamName = mappingParamName,
-                sourceName = property.simpleName.asString(),
-                targetName = property.simpleName.asString(),
+                sourceName = sourceData.name,
+                targetName = sourceData.name,
                 constant = null,
                 expression = null,
                 ignore = false,
                 enableConverters = emptyList(),
-                declaration = property,
+                sourceData = sourceData,
                 isBasedOnAnnotation = false
             )
         }
 
     private fun getPropertyMappingsWithSource(
         mappings: List<Mapping>,
-        properties: List<KSPropertyDeclaration>,
+        sourceDataList: List<SourceDataExtractionStrategy.SourceData>,
         mappingParamName: String?
     ) = mappings.filter { it.source.isNotEmpty() }.mapNotNull { annotation ->
-        properties.firstOrNull { property ->
-            property.simpleName.asString() == annotation.source
+        sourceDataList.firstOrNull { property ->
+            property.name == annotation.source
         }?.let { annotation to it }
-    }.map { (annotation, property) ->
+    }.map { (annotation, sourceData) ->
         PropertyMappingInfo(
             mappingParamName = mappingParamName,
-            sourceName = property.simpleName.asString(),
+            sourceName = sourceData.name,
             targetName = annotation.target,
             constant = annotation.constant.takeIf { it.isNotEmpty() },
             expression = annotation.expression.takeIf { it.isNotEmpty() },
             ignore = annotation.ignore,
             enableConverters = annotation.enable.toList(),
-            declaration = property,
+            sourceData = sourceData,
             isBasedOnAnnotation = true
         )
     }
@@ -100,7 +99,7 @@ class PropertyMappingResolver(
             expression = annotation.expression.takeIf { it.isNotEmpty() },
             ignore = annotation.ignore,
             enableConverters = annotation.enable.toList(),
-            declaration = null,
+            sourceData = null,
             isBasedOnAnnotation = true
         )
     }

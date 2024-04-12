@@ -14,7 +14,8 @@ object KonvertFromCodeGenerator {
     fun generate(data: KonvertFromData, resolver: Resolver, logger: KSPLogger) = withIsolatedConfiguration(data.annotationData.options) {
 
         val mapper = CodeGenerator(
-            logger = logger
+            logger = logger,
+            resolver = resolver
         )
 
         val codeBuilder = CodeBuilder.getOrCreate(

@@ -212,7 +212,7 @@ $className(${"⇥\n%L"}
     private fun convertValue(source: PropertyMappingInfo, targetTypeRef: KSTypeReference, ignorable: Boolean): CodeBlock? {
         val targetType = targetTypeRef.resolve()
 
-        if (source.declaration == null) {
+        if (source.sourceData == null) {
             if (source.ignore && ignorable) {
                 return null
             }
@@ -230,7 +230,7 @@ $className(${"⇥\n%L"}
             }
             throw IllegalStateException("Could not convert value $source")
         } else {
-            val sourceType = source.declaration.type.resolve()
+            val sourceType = source.sourceData.typeRef.resolve()
             val paramName = source.mappingParamName?.let { "$it." } ?: ""
 
             return TypeConverterRegistry.withAdditionallyEnabledConverters(source.enableConverters + Configuration.enableConverters) {
