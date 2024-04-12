@@ -5,10 +5,23 @@
 
 version: 2
 updates:
+
+# Update dependencies weekly
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
       interval: "weekly"
+
+# Update dependencies in /injectors weekly, but ignore minor and patch updates
+  - package-ecosystem: "gradle"
+    directory: "/injectors"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
+
+# Update dependencies in /example weekly, but ignore io.mcarle:konvert* dependencies
   - package-ecosystem: "maven"
     directory: "/example"
     schedule:
