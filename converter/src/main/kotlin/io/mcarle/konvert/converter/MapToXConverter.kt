@@ -132,13 +132,12 @@ abstract class MapToXConverter(
 
                 else -> {
                     mapTypeChanged = true
-                    "$fieldName$nc.mapValues·{·(_,·it)·-> ${
-                        valueTypeConverter.convert(
-                            "it",
-                            genericSourceValueType,
-                            genericTargetValueType
-                        )
-                    } }"
+                    args += valueTypeConverter.convert(
+                        "it",
+                        genericSourceValueType,
+                        genericTargetValueType
+                    )
+                    "$fieldName$nc.mapValues·{·(_,·it)·-> %L }"
                 }
             }
 
@@ -163,10 +162,11 @@ abstract class MapToXConverter(
 
                 else -> {
                     mapTypeChanged = true
+                    args += valueTypeConverter.convert("value", genericSourceValueType, genericTargetValueType)
                     """
 $fieldName$nc.map·{·(key,·value)·->
 ⇥val·newKey·=·key!!
-val·newValue·=·${valueTypeConverter.convert("value", genericSourceValueType, genericTargetValueType)}
+val·newValue·=·%L
 newKey·to·newValue
 ⇤}$nc.toMap()
                     """.trimIndent()
@@ -193,13 +193,12 @@ newKey·to·newValue
 
                     else -> {
                         mapTypeChanged = true
-                        "$fieldName$nc.mapValues·{·(_,·it)·-> ${
-                            valueTypeConverter.convert(
-                                "it",
-                                genericSourceValueType,
-                                genericTargetValueType
-                            )
-                        } }"
+                        args += valueTypeConverter.convert(
+                            "it",
+                            genericSourceValueType,
+                            genericTargetValueType
+                        )
+                        "$fieldName$nc.mapValues·{·(_,·it)·-> %L }"
                     }
                 }
             }
@@ -207,20 +206,20 @@ newKey·to·newValue
             else -> when {
                 genericSourceValueType == genericTargetValueType -> {
                     mapTypeChanged = true
-                    "$fieldName$nc.mapKeys·{·(it,·_)·-> ${
-                        keyTypeConverter.convert(
-                            "it",
-                            genericSourceKeyType,
-                            genericTargetKeyType
-                        )
-                    } }"
+                    args += keyTypeConverter.convert(
+                        "it",
+                        genericSourceKeyType,
+                        genericTargetKeyType
+                    )
+                    "$fieldName$nc.mapKeys·{·(it,·_)·-> %L }"
                 }
 
                 needsNotNullAssertionOperator(genericSourceValueType, genericTargetValueType) -> {
                     mapTypeChanged = true
+                    args += keyTypeConverter.convert("key", genericSourceKeyType, genericTargetKeyType)
                     """
 $fieldName$nc.map·{·(key,·value)·->
-⇥val·newKey·=·${keyTypeConverter.convert("key", genericSourceKeyType, genericTargetKeyType)}
+⇥val·newKey·=·%L
 val·newValue·=·value!!
 newKey·to·newValue
 ⇤}$nc.toMap()
@@ -232,17 +231,18 @@ newKey·to·newValue
                         changedTypes = true
                     }
                     mapTypeChanged = true
-                    "$fieldName$nc.mapKeys·{·(it,·_)·-> ${
-                        keyTypeConverter.convert("it", genericSourceKeyType, genericTargetKeyType)
-                    } }"
+                    args += keyTypeConverter.convert("it", genericSourceKeyType, genericTargetKeyType)
+                    "$fieldName$nc.mapKeys·{·(it,·_)·-> %L }"
                 }
 
                 else -> {
                     mapTypeChanged = true
+                    args += keyTypeConverter.convert("key", genericSourceKeyType, genericTargetKeyType)
+                    args += valueTypeConverter.convert("value", genericSourceValueType, genericTargetValueType)
                     """
 $fieldName$nc.map·{·(key,·value)·->
-⇥val·newKey·=·${keyTypeConverter.convert("key", genericSourceKeyType, genericTargetKeyType)}
-val·newValue·=·${valueTypeConverter.convert("value", genericSourceValueType, genericTargetValueType)}
+⇥val·newKey·=·%L
+val·newValue·=·%L
 newKey·to·newValue
 ⇤}$nc.toMap()
                     """.trimIndent()

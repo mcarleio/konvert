@@ -4,6 +4,7 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERT_FROM_PRIORITY
 import io.mcarle.konvert.converter.IterableToListConverter
+import io.mcarle.konvert.converter.MapToMapConverter
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
@@ -572,6 +573,71 @@ data class PersonDto(val firstName: String, val lastName: String, val age: Int, 
             )
             """.trimIndent(),
             addressDtoExtensionFunctionCode
+        )
+    }
+
+    @Test
+    fun useOtherMappersWithPackages() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), MapToMapConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.OK,
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/Target.kt",
+                    contents =
+                    """
+package a
+
+import io.mcarle.konvert.api.KonvertFrom
+import b.SourceClass
+import b.SourceProperty
+
+class TargetClass(
+    val property: TargetProperty,
+    val other: Map<String, TargetProperty>
+) {
+    @KonvertFrom(SourceClass::class)
+    companion object
+}
+
+@KonvertFrom(SourceProperty::class)
+data class TargetProperty(val value: String) {
+    companion object
+}
+                """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/Source.kt",
+                    contents =
+                    """
+package b
+
+class SourceClass(
+    val property: SourceProperty,
+    val other: Map<String, SourceProperty>
+)
+data class SourceProperty(val value: String)
+                """.trimIndent()
+                )
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+package a
+
+import b.SourceClass
+
+public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass =
+    TargetClass(
+  property = TargetProperty.fromSourceProperty(sourceProperty = sourceClass.property),
+  other = sourceClass.other.mapValues { (_, it) ->
+      TargetProperty.fromSourceProperty(sourceProperty = it) }
+)
+            """.trimIndent(),
+            extensionFunctionCode
         )
     }
 
