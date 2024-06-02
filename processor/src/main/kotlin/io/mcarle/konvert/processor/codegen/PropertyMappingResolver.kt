@@ -1,9 +1,6 @@
 package io.mcarle.konvert.processor.codegen
 
 import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.converter.api.classDeclaration
@@ -14,17 +11,16 @@ class PropertyMappingResolver(
     private val sourceDataExtractionStrategy: SourceDataExtractionStrategy
 ) {
     fun determinePropertyMappings(
-        mappingParamName: String?,
+        source: Source,
         mappings: List<Mapping>,
-        type: KSType,
         additionalSourceParameters: List<KSValueParameter>
     ): List<PropertyMappingInfo> {
-        val sourceDataList = sourceDataExtractionStrategy.extract(type.classDeclaration()!!)
+        val sourceDataList = sourceDataExtractionStrategy.extract(source.type.classDeclaration()!!)
 
-        val propertiesWithoutSource = getPropertyMappingsWithoutSource(mappings, mappingParamName)
-        val propertiesWithSource = getPropertyMappingsWithSource(mappings, sourceDataList, mappingParamName)
+        val propertiesWithoutSource = getPropertyMappingsWithoutSource(mappings, source.paramName)
+        val propertiesWithSource = getPropertyMappingsWithSource(mappings, sourceDataList, source.paramName)
         val propertiesFromAdditionalParameters = getPropertyMappingsFromAdditionalParameters(additionalSourceParameters)
-        val propertiesWithoutMappings = getPropertyMappingsWithoutMappings(sourceDataList, mappingParamName)
+        val propertiesWithoutMappings = getPropertyMappingsWithoutMappings(sourceDataList, source.paramName)
 
         return propertiesWithoutSource + propertiesWithSource + propertiesFromAdditionalParameters + propertiesWithoutMappings
     }
@@ -102,17 +98,5 @@ class PropertyMappingResolver(
             sourceData = null,
             isBasedOnAnnotation = true
         )
-    }
-
-    private fun verifyAllPropertiesExist(
-        mappings: List<Mapping>,
-        properties: List<KSPropertyDeclaration>,
-        ksClassDeclaration: KSClassDeclaration
-    ) {
-        mappings.map { it.source }.filter { it.isNotEmpty() }.forEach { source ->
-            if (properties.none { it.simpleName.asString() == source }) {
-                logger.warn("Ignoring mapping: $source not existing in ${ksClassDeclaration.simpleName.asString()}")
-            }
-        }
     }
 }

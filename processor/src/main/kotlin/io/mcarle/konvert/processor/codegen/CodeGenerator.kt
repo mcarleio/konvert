@@ -23,45 +23,53 @@ import io.mcarle.konvert.processor.DefaultSourceDataExtractionStrategy
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 
+data class Source(
+    val paramName: String?,
+    val type: KSType
+)
+
 class CodeGenerator constructor(
     private val logger: KSPLogger,
     private val resolver: Resolver
 ) {
 
+
     fun generateCode(
         mappings: List<Mapping>,
         constructorTypes: List<KSClassDeclaration>,
-        paramName: String?,
         targetClassImportName: String?,
-        source: KSType,
+        sources: List<Source>,
         target: KSType,
         mappingCodeParentDeclaration: KSDeclaration,
         additionalSourceParameters: List<KSValueParameter>
     ): CodeBlock {
-        if (paramName != null) {
-            val existingTypeConverter = TypeConverterRegistry
-                .firstOrNull {
-                    it.matches(source, target) && it !is AnnotatedConverter
-                }
+        sources.forEach { source ->
+            if (source.paramName != null) {
+                val existingTypeConverter = TypeConverterRegistry
+                    .firstOrNull {
+                        it.matches(source.type, target) && it !is AnnotatedConverter
+                    }
 
-            if (existingTypeConverter != null) {
-                return CodeBlock.of(
-                    "return·%L",
-                    existingTypeConverter.convert(paramName, source, target)
-                )
+                if (existingTypeConverter != null) {
+                    return CodeBlock.of(
+                        "return·%L",
+                        existingTypeConverter.convert(source.paramName, source.type, target)
+                    )
+                }
             }
         }
-
-        val sourceProperties = PropertyMappingResolver(
+        val propertyResolver = PropertyMappingResolver(
             logger,
             DefaultSourceDataExtractionStrategy(mappingCodeParentDeclaration, resolver.builtIns.unitType)
         )
-            .determinePropertyMappings(
-                paramName,
-                mappings,
+
+        val sourceProperties = sources.flatMap { source ->
+            propertyResolver.determinePropertyMappings(
                 source,
+                mappings,
                 additionalSourceParameters
             )
+        }
 
         val targetClassDeclaration = target.classDeclaration()!!
 
@@ -71,22 +79,26 @@ class CodeGenerator constructor(
         val targetElements = determineTargetElements(sourceProperties, constructor, targetClassDeclaration)
 
         verifyPropertiesAndMandatoryParametersExist(sourceProperties, targetElements)
-
-        if (source.isNullable() && !target.isNullable() && !Configuration.enforceNotNull) {
-            throw NotNullOperatorNotEnabledException(paramName, source, target)
-        }
+        verifyNotNullOperatorNotNeededOrEnabled(sources, target)
 
         val targetPropertiesWithoutParameters = extractDistinctProperties(targetElements)
 
         return MappingCodeGenerator().generateMappingCode(
-            source,
+            sources,
             target,
             sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
             constructor,
-            paramName,
             targetClassImportName,
             targetPropertiesWithoutParameters
         )
+    }
+
+    private fun verifyNotNullOperatorNotNeededOrEnabled(sources: List<Source>, target: KSType) {
+        if (!target.isNullable() && !Configuration.enforceNotNull) {
+            sources.firstOrNull { it.type.isNullable() }?.let {
+                throw NotNullOperatorNotEnabledException(it.paramName, it.type, target)
+            }
+        }
     }
 
     private fun extractDistinctProperties(targetElements: List<TargetElement>) = targetElements

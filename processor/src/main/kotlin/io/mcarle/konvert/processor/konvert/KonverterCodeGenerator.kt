@@ -16,6 +16,7 @@ import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.plugin.api.KonverterInjector
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
+import io.mcarle.konvert.processor.codegen.Source
 import io.mcarle.konvert.processor.validated
 import java.util.ServiceLoader
 
@@ -111,9 +112,8 @@ object KonverterCodeGenerator {
                 konvertData.annotationData.mappings.asIterable()
                     .validated(konvertData.mapKSFunctionDeclaration, logger),
                 konvertData.annotationData.constructor,
-                konvertData.paramName,
                 targetClassImportName,
-                konvertData.sourceType,
+                listOf(Source(konvertData.paramName, konvertData.sourceType)),
                 konvertData.targetType,
                 konvertData.mapKSFunctionDeclaration,
                 konvertData.additionalParameters

@@ -23,11 +23,10 @@ import java.util.Locale
 class MappingCodeGenerator {
 
     fun generateMappingCode(
-        source: KSType,
+        sources: List<Source>,
         target: KSType,
         sourceProperties: List<PropertyMappingInfo>,
         constructor: KSFunctionDeclaration,
-        functionParamName: String?,
         targetClassImportName: String?,
         targetProperties: List<KSPropertyDeclaration>
     ): CodeBlock {
@@ -40,20 +39,26 @@ class MappingCodeGenerator {
         )
         val propertyCode = propertyCode(
             className = className,
-            functionParamName = functionParamName,
+            reservedParameterNames = sources.mapNotNull { it.paramName },
             sourceProperties = sourceProperties,
             targetProperties = targetProperties
         )
-        return if (source.isNullable()) {
+        val nullableSource = sources.firstOrNull { it.type.isNullable() }
+        return if (nullableSource != null) {
             // source can only be nullable in case of @Konverter/@Konvert which require a functionParamName
-            val code = "return·${functionParamName!!}?.let·{\n⇥%L%L⇤\n}"
+            val code = sources.map { "${it.paramName!!}?.let·{\n⇥%L⇤\n}" }
+                .reversed()
+                .fold(CodeBlock.of("%L%L", constructorCode, propertyCode)) { acc, letCode ->
+                    CodeBlock.of(letCode, acc)
+                }
+
             if (target.isNullable()) {
-                CodeBlock.of(code, constructorCode, propertyCode)
+                CodeBlock.of("return %L", code)
             } else {
                 if (Configuration.enforceNotNull) {
-                    CodeBlock.of("$code!!", constructorCode, propertyCode)
+                    CodeBlock.of("return %L!!", code)
                 } else {
-                    throw NotNullOperatorNotEnabledException(functionParamName, source, target)
+                    throw NotNullOperatorNotEnabledException(nullableSource.paramName, nullableSource.type, target)
                 }
             }
         } else {
@@ -143,14 +148,14 @@ $className(${"⇥\n%L"}
 
     private fun propertyCode(
         className: String,
-        functionParamName: String?,
+        reservedParameterNames: List<String>,
         sourceProperties: List<PropertyMappingInfo>,
         targetProperties: List<KSPropertyDeclaration>
     ): CodeBlock {
         if (noTargetOrAllIgnored(sourceProperties, targetProperties)) return CodeBlock.of("")
 
         var varName = className.replaceFirstChar { it.lowercase(Locale.getDefault()) }
-        if (varName == functionParamName) {
+        while (varName in reservedParameterNames) {
             varName += "0"
         }
 
