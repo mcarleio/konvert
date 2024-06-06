@@ -1443,6 +1443,48 @@ interface Mapper {
     }
 
     @Test
+    fun additionalFunctionParametersTakePrecedenceOverSourceValue() {
+        addGeneratedKonverterAnnotation = true // enable to verify, that no annotation is generated
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String, val otherValue: Int)
+class TargetClass(val property: String, val otherValue: Int)
+
+@Konverter
+interface Mapper {
+    fun toTarget(@Konverter.Source source: SourceClass, otherValue: Int): TargetClass
+}
+                    """.trimIndent(),
+                    name = "TestCode.kt"
+                )
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertFalse { mapperCode.contains("@GeneratedKonverter") }
+
+        assertSourceEquals(
+            """
+            import kotlin.Int
+
+            public object MapperImpl : Mapper {
+              override fun toTarget(source: SourceClass, otherValue: Int): TargetClass = TargetClass(
+                property = source.property,
+                otherValue = otherValue
+              )
+            }
+        """.trimIndent(), mapperCode
+        )
+    }
+
+    @Test
     fun allowMultipleFunctionParametersIfOneIsAnnotatedWithSourceInSelfImplementedMappingFunctions() {
         addGeneratedKonverterAnnotation = true // enable to verify, that no annotation is generated
         val (compilation) = compileWith(
