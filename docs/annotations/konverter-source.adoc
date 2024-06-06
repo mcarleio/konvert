@@ -1,0 +1,37 @@
+:page-title: @Konverter.Source
+:page-parent: @Konverter
+:page-grand_parent: Annotations
+
+= @Konverter.Source
+
+The annotation `@Konverter.Source` is only being processed in abstract functions in interfaces annotated with xref:konverter.adoc[`@Konverter`].
+
+It can be used to pass additional fields to the mapping functions.
+
+[source,kotlin]
+----
+@Konverter
+interface PersonMapper {
+    fun toDTO(@Konverter.Source partialPerson: PartialPerson, age: Int): PersonDto
+}
+
+class PartialPerson(val name: String)
+class PersonDto(val name: String, age: Int)
+----
+
+This will generate
+
+[source,kotlin]
+----
+object PersonMapperImpl : PersonMapper {
+  override fun toDTO(partialPerson: PartialPerson, age: Int): PersonDto = PersonDto(
+    name = partialPerson.name,
+    age = age
+  )
+}
+----
+
+Additional parameters passed to the mapping function take precedence over fields in the `@Konverter.Source` annotated
+parameter.
+
+
