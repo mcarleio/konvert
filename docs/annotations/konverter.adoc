@@ -10,6 +10,8 @@ The annotation `@Konverter` can only be applied to interfaces and will generate 
 Each abstract function which satisfies having exactly one parameter and a return type, will be implemented by generating the mapping code.
 You can define custom mappings and options per function using the xref:konvert.adoc[`@Konvert` annotation].
 
+If a member function is a `suspend fun`, the generated counterpart is also a `suspend fun`.
+
 [source,kotlin]
 ----
 @Konverter
