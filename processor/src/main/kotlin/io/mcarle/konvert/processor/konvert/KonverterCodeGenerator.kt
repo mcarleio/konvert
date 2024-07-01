@@ -72,6 +72,9 @@ object KonverterCodeGenerator {
                                 if (!konvertData.isAbstract) {
                                     generateSuperCall(konvertData)
                                 } else {
+                                    if (konvertData.isSuspend) {
+                                        addModifiers(KModifier.SUSPEND)
+                                    }
                                     generateMappingCode(mapper, konvertData, targetClassImportName, logger)
                                 }
                             },

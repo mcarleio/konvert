@@ -6,6 +6,8 @@
 
 The annotation `@Konvert` is only being processed on abstract functions in interfaces annotated with xref:konverter.adoc[`@Konverter`].
 
+If a `@Konvert`-annotated function is a `suspend fun`, the generated counterpart is also a `suspend fun`.
+
 [source,kotlin]
 ----
 @Konverter
