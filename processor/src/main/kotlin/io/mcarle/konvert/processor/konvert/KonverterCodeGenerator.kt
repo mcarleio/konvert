@@ -69,6 +69,9 @@ object KonverterCodeGenerator {
                                 builder.build()
                             })
                             .apply {
+                                if (konvertData.isSuspend) {
+                                    addModifiers(KModifier.SUSPEND)
+                                }
                                 if (!konvertData.isAbstract) {
                                     generateSuperCall(konvertData)
                                 } else {

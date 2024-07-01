@@ -1688,6 +1688,38 @@ interface DtoMapper {
 //            dtoMapperCode
 //        )
     }
+
+    @Test
+    fun suspendFun() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: SourceProperty)
+class TargetClass(val property: TargetProperty)
+
+class SourceProperty(val value: String)
+class TargetProperty(val value: String)
+
+@Konverter
+interface Mapper {
+    suspend fun toTarget(source: SourceClass): TargetClass
+    suspend fun toTarget(source: SourceProperty): TargetProperty =
+        TargetProperty(source.value)
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "suspend fun toTarget(source: SourceClass): TargetClass")
+        assertContains(mapperCode, "suspend fun toTarget(source: SourceProperty): TargetProperty")
+    }
 }
 
 private fun Konverter.Companion.getWithClassLoader(classFQN: String, classLoader: ClassLoader): Any {
