@@ -1720,6 +1720,32 @@ interface Mapper {
         assertContains(mapperCode, "suspend fun toTarget(source: SourceClass): TargetClass")
         assertContains(mapperCode, "suspend fun toTarget(source: SourceProperty): TargetProperty")
     }
+
+    @Test
+    fun internalInterface() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+
+@Konverter
+internal interface Mapper {
+    fun toTarget(source: SourceClass): TargetClass
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "internal object MapperImpl : Mapper {")
+    }
 }
 
 private fun Konverter.Companion.getWithClassLoader(classFQN: String, classLoader: ClassLoader): Any {
