@@ -12,6 +12,8 @@ You can define custom mappings and options per function using the xref:konvert.a
 
 If a member function is a `suspend fun`, the generated counterpart is also a `suspend fun`.
 
+If a `@Konverter`-annotated interface is `internal`, the generated object or class is also `internal`.
+
 [source,kotlin]
 ----
 @Konverter

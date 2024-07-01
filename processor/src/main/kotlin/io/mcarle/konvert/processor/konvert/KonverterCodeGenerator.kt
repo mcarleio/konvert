@@ -142,6 +142,9 @@ object KonverterCodeGenerator {
                     injectors.forEach {
                         it.processType(typeBuilder, konverterInterface.kSClassDeclaration)
                     }
+                    if (konverterInterface.isInternal) {
+                        typeBuilder.addModifiers(KModifier.INTERNAL)
+                    }
                 }
 
         }

@@ -1,5 +1,6 @@
 package io.mcarle.konvert.processor.konvert
 
+import com.google.devtools.ksp.isInternal
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.ksp.toTypeName
 
@@ -9,4 +10,5 @@ data class KonverterInterface constructor(
     val simpleName = kSClassDeclaration.simpleName.asString()
     val packageName = kSClassDeclaration.packageName.asString()
     val typeName = kSClassDeclaration.asStarProjectedType().toTypeName()
+    val isInternal = kSClassDeclaration.isInternal()
 }
