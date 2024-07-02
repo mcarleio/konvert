@@ -69,6 +69,9 @@ object KonverterCodeGenerator {
                                 builder.build()
                             })
                             .apply {
+                                if (konvertData.isSuspend) {
+                                    addModifiers(KModifier.SUSPEND)
+                                }
                                 if (!konvertData.isAbstract) {
                                     generateSuperCall(konvertData)
                                 } else {
@@ -138,6 +141,9 @@ object KonverterCodeGenerator {
                 .also { typeBuilder ->
                     injectors.forEach {
                         it.processType(typeBuilder, konverterInterface.kSClassDeclaration)
+                    }
+                    if (konverterInterface.isInternal) {
+                        typeBuilder.addModifiers(KModifier.INTERNAL)
                     }
                 }
 

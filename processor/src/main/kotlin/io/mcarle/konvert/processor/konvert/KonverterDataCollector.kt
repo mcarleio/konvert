@@ -96,6 +96,7 @@ object KonverterDataCollector {
                     KonvertData(
                         annotationData = annotation ?: KonvertData.AnnotationData.default(resolver, it.isAbstract),
                         isAbstract = it.isAbstract,
+                        isSuspend = Modifier.SUSPEND in it.modifiers,
                         sourceTypeReference = source,
                         targetTypeReference = target,
                         mapKSFunctionDeclaration = it,

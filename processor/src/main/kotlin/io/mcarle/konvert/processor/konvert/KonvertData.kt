@@ -19,6 +19,7 @@ import io.mcarle.konvert.processor.from
 class KonvertData constructor(
     val annotationData: AnnotationData,
     val isAbstract: Boolean,
+    val isSuspend: Boolean,
     val sourceTypeReference: KSTypeReference,
     val targetTypeReference: KSTypeReference,
     val mapKSFunctionDeclaration: KSFunctionDeclaration,
