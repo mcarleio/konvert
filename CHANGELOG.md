@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.2.2]
+
+### Improvements
+* keep `suspend` and `internal` modifiers in generated code (thanks to [@unshare](https://github.com/unshare)) [#88](https://github.com/mcarleio/konvert/pull/88)
+* exceptions thrown during code generation are wrapped with a `KonvertException` to provide more (basic) information (related to [#27](https://github.com/mcarleio/konvert/issues/27), [#83](https://github.com/mcarleio/konvert/issues/83))
+
+## [3.2.1]
+
+### Bug fixes
+* use kotlinpoet's `%L` placeholder instead of (implicit) using `CodeBlock.toString()` in [MapToXConverter](converter/src/main/kotlin/io/mcarle/konvert/converter/MapToXConverter.kt)  [#75](https://github.com/mcarleio/konvert/issues/75)
+
 ## [3.2.0]
 
 ### Bug fixes
@@ -255,7 +266,11 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v3.2.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v3.2.2...HEAD
+
+[3.2.2]: https://github.com/mcarleio/konvert/compare/v3.2.1...v3.2.2
+
+[3.2.1]: https://github.com/mcarleio/konvert/compare/v3.2.0...v3.2.1
 
 [3.2.0]: https://github.com/mcarleio/konvert/compare/v3.1.0...v3.2.0
 
