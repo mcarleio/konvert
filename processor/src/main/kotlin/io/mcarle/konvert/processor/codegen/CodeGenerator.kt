@@ -20,6 +20,7 @@ import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.DefaultSourceDataExtractionStrategy
+import io.mcarle.konvert.processor.exceptions.KonvertException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 
@@ -38,55 +39,59 @@ class CodeGenerator constructor(
         mappingCodeParentDeclaration: KSDeclaration,
         additionalSourceParameters: List<KSValueParameter>
     ): CodeBlock {
-        if (paramName != null) {
-            val existingTypeConverter = TypeConverterRegistry
-                .firstOrNull {
-                    it.matches(source, target) && it !is AnnotatedConverter
+        try {
+            if (paramName != null) {
+                val existingTypeConverter = TypeConverterRegistry
+                    .firstOrNull {
+                        it.matches(source, target) && it !is AnnotatedConverter
+                    }
+
+                if (existingTypeConverter != null) {
+                    return CodeBlock.of(
+                        "return·%L",
+                        existingTypeConverter.convert(paramName, source, target)
+                    )
                 }
-
-            if (existingTypeConverter != null) {
-                return CodeBlock.of(
-                    "return·%L",
-                    existingTypeConverter.convert(paramName, source, target)
-                )
             }
-        }
 
-        val sourceProperties = PropertyMappingResolver(
-            logger,
-            DefaultSourceDataExtractionStrategy(mappingCodeParentDeclaration, resolver.builtIns.unitType)
-        )
-            .determinePropertyMappings(
-                paramName,
-                mappings,
-                source,
-                additionalSourceParameters
+            val sourceProperties = PropertyMappingResolver(
+                logger,
+                DefaultSourceDataExtractionStrategy(mappingCodeParentDeclaration, resolver.builtIns.unitType)
             )
+                .determinePropertyMappings(
+                    paramName,
+                    mappings,
+                    source,
+                    additionalSourceParameters
+                )
 
-        val targetClassDeclaration = target.classDeclaration()!!
+            val targetClassDeclaration = target.classDeclaration()!!
 
-        val constructor = ConstructorResolver(logger)
-            .determineConstructor(mappingCodeParentDeclaration, targetClassDeclaration, sourceProperties, constructorTypes)
+            val constructor = ConstructorResolver(logger)
+                .determineConstructor(mappingCodeParentDeclaration, targetClassDeclaration, sourceProperties, constructorTypes)
 
-        val targetElements = determineTargetElements(sourceProperties, constructor, targetClassDeclaration)
+            val targetElements = determineTargetElements(sourceProperties, constructor, targetClassDeclaration)
 
-        verifyPropertiesAndMandatoryParametersExist(sourceProperties, targetElements)
+            verifyPropertiesAndMandatoryParametersExist(sourceProperties, targetElements)
 
-        if (source.isNullable() && !target.isNullable() && !Configuration.enforceNotNull) {
-            throw NotNullOperatorNotEnabledException(paramName, source, target)
+            if (source.isNullable() && !target.isNullable() && !Configuration.enforceNotNull) {
+                throw NotNullOperatorNotEnabledException(paramName, source, target)
+            }
+
+            val targetPropertiesWithoutParameters = extractDistinctProperties(targetElements)
+
+            return MappingCodeGenerator().generateMappingCode(
+                source,
+                target,
+                sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
+                constructor,
+                paramName,
+                targetClassImportName,
+                targetPropertiesWithoutParameters
+            )
+        } catch (e: Exception) {
+            throw KonvertException(source, target, e)
         }
-
-        val targetPropertiesWithoutParameters = extractDistinctProperties(targetElements)
-
-        return MappingCodeGenerator().generateMappingCode(
-            source,
-            target,
-            sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
-            constructor,
-            paramName,
-            targetClassImportName,
-            targetPropertiesWithoutParameters
-        )
     }
 
     private fun extractDistinctProperties(targetElements: List<TargetElement>) = targetElements
@@ -160,10 +165,10 @@ class CodeGenerator constructor(
         constructor(annotated: KSAnnotated) : this(annotated as? KSPropertyDeclaration, annotated as? KSValueParameter)
 
         override fun toString(): String {
-            return if (property != null) {
-                "propertyDeclaration=$property"
-            } else {
-                "valueParameter=$parameter"
+            return when {
+                property != null -> property.simpleName.asString()
+                parameter != null -> parameter.name?.asString() ?: parameter.toString()
+                else -> error("No property or parameter available")
             }
         }
 

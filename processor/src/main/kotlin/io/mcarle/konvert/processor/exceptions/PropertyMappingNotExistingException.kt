@@ -6,7 +6,7 @@ import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.codegen.PropertyMappingInfo
 
 class PropertyMappingNotExistingException(target: String, propertyMappings: List<PropertyMappingInfo>) : RuntimeException(
-    "No property for $target existing in $propertyMappings"
+    "No property for `$target` existing. Available mappings are: ${propertyMappings.map { it.targetName }}"
 ) {
     constructor(ksValueParameter: KSValueParameter, propertyMappings: List<PropertyMappingInfo>) : this(
         ksValueParameter.toString(),

@@ -8,6 +8,7 @@ import io.mcarle.konvert.converter.api.config.ENABLE_CONVERTERS_OPTION
 import io.mcarle.konvert.processor.exceptions.AmbiguousConstructorException
 import io.mcarle.konvert.processor.exceptions.NoMatchingConstructorException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
+import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
@@ -725,6 +726,31 @@ class TargetClass(val property: String)
         )
         assertEquals(expected = KotlinCompilation.ExitCode.COMPILATION_ERROR, actual = compilationResult.exitCode)
         assertContains(compilationResult.messages, NotNullOperatorNotEnabledException::class.qualifiedName!!)
+    }
+
+    @Test
+    fun throwPropertyMappingNotExistingException() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                """
+import io.mcarle.konvert.api.Konverter
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceClass): TargetClass
+}
+
+class SourceClass(val someDifferentPropertyName: String)
+class TargetClass(val property: String)
+                """.trimIndent()
+            )
+        )
+        assertEquals(expected = KotlinCompilation.ExitCode.COMPILATION_ERROR, actual = compilationResult.exitCode)
+        assertContains(compilationResult.messages, PropertyMappingNotExistingException::class.qualifiedName!!)
     }
 
     @Test
