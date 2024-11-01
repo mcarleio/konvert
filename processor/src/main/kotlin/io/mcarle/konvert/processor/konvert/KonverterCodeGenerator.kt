@@ -125,7 +125,7 @@ object KonverterCodeGenerator {
     }
 
     private fun isAlias(typeReference: KSTypeReference, type: KSType): Boolean {
-        return typeReference.toString() != type.makeNotNullable().toString().takeWhile { it != '<' }
+        return typeReference.toString().takeWhile { it != '<' } != type.makeNotNullable().toString().takeWhile { it != '<' }
     }
 
     private fun retrieveCodeBuilder(
