@@ -3,6 +3,7 @@
 package io.mcarle.konvert.converter.api.config
 
 import io.mcarle.konvert.api.TypeConverterName
+import java.util.UUID
 
 /**
  * Special handling for the case, that the source type is nullable and target type is not nullable:
@@ -89,3 +90,21 @@ object ADD_GENERATED_KONVERTER_ANNOTATION_OPTION : Option<Boolean>("konvert.add-
  * Default: empty
  */
 object ENABLE_CONVERTERS_OPTION : Option<List<TypeConverterName>>("konvert.enable-converters", emptyList())
+
+/**
+ * This setting defines the suffix for the generated module type.
+ *
+ * Any non word character will be replaced with an empty string.
+ *
+ * Default: random UUID
+ */
+object GENERATED_MODULE_SUFFIX_OPTION : Option<String>("konvert.generatedModuleSuffix", UUID.randomUUID().toString())
+
+/**
+ * This setting defines if the deprecated META-INF files should be parsed to load generated konverter functions.
+ *
+ * Will be removed in one of the next releases.
+ *
+ * Default: false
+ */
+object PARSE_DEPRECATED_META_INF_FILES_OPTION : Option<Boolean>("konvert.parseDeprecatedMetaInfFiles", false)

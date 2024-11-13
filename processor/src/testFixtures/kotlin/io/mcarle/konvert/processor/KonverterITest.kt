@@ -9,6 +9,7 @@ import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.ADD_GENERATED_KONVERTER_ANNOTATION_OPTION
+import io.mcarle.konvert.converter.api.config.GENERATED_MODULE_SUFFIX_OPTION
 import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.JvmTarget
@@ -22,6 +23,7 @@ abstract class KonverterITest {
     protected lateinit var temporaryFolder: File
 
     protected open var addGeneratedKonverterAnnotation = false
+    protected open var generatedModuleSuffix = ""
 
     fun compileWith(
         enabledConverters: List<TypeConverter>,
@@ -82,6 +84,7 @@ abstract class KonverterITest {
             jvmTarget = JvmTarget.JVM_17.description
             kspArgs += options.toMutableMap().apply {
                 putIfAbsent(ADD_GENERATED_KONVERTER_ANNOTATION_OPTION.key, "$addGeneratedKonverterAnnotation")
+                putIfAbsent(GENERATED_MODULE_SUFFIX_OPTION.key, generatedModuleSuffix)
             }
             kspWithCompilation = true
         }

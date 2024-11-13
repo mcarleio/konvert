@@ -66,10 +66,10 @@ class CodeBuilder private constructor(
             cache.clear()
         }
 
-        fun getOrCreate(packageName: String, fileName: String, typeBuilderProvider: () -> TypeSpec.Builder? = { null }): CodeBuilder {
+        fun getOrCreate(packageName: String, fileName: String, suffix: String = Configuration.generatedFilenameSuffix, typeBuilderProvider: () -> TypeSpec.Builder? = { null }): CodeBuilder {
             val qualifiedName = QualifiedName(packageName, fileName)
             return cache[qualifiedName] ?: CodeBuilder(
-                builder = FileSpec.builder(qualifiedName.packageName, qualifiedName.fileName + Configuration.generatedFilenameSuffix),
+                builder = FileSpec.builder(qualifiedName.packageName, qualifiedName.fileName + suffix),
                 typeBuilder = typeBuilderProvider.invoke(),
                 originating = mutableSetOf(),
             ).also {

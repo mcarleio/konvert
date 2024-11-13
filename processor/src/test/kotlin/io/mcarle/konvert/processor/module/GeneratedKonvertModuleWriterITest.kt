@@ -1,7 +1,9 @@
-package io.mcarle.konvert.processor
+package io.mcarle.konvert.processor.module
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.SameTypeConverter
+import io.mcarle.konvert.processor.KonverterITest
+import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -9,9 +11,10 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
 @OptIn(ExperimentalCompilerApi::class)
-class MetaInfKonverterResourcesITest : KonverterITest() {
+class GeneratedKonvertModuleWriterITest : KonverterITest() {
 
     override var addGeneratedKonverterAnnotation = true
+    override var generatedModuleSuffix = "4Test"
 
     @ParameterizedTest
     @ValueSource(strings = ["", "a.b"])
@@ -37,14 +40,23 @@ class TargetClass(val property: String)
                 """.trimIndent()
             )
         )
-        val metaInfFileContent = compilation.generatedSourceFor("io.mcarle.konvert.api.KonvertTo")
-        println(metaInfFileContent)
+        val moduleContent = compilation.generatedSourceFor("GeneratedModule.kt")
+        println(moduleContent)
 
         assertContentEquals(
             """
-            ${expectedPackagePrefix}toTargetClass
+            package generated.io.mcarle.konvert
+
+            import io.mcarle.konvert.api.GeneratedKonvertModule
+
+            @GeneratedKonvertModule(
+              konverterFQN = [],
+              konvertToFQN = ["${expectedPackagePrefix}toTargetClass"],
+              konvertFromFQN = [],
+            )
+            public interface GeneratedModule4Test
             """.trimIndent(),
-            metaInfFileContent
+            moduleContent
         )
     }
 
@@ -74,14 +86,23 @@ class TargetClass(val property: String) {
                 """.trimIndent()
             )
         )
-        val metaInfFileContent = compilation.generatedSourceFor("io.mcarle.konvert.api.KonvertFrom")
-        println(metaInfFileContent)
+        val moduleContent = compilation.generatedSourceFor("GeneratedModule.kt")
+        println(moduleContent)
 
         assertContentEquals(
             """
-            ${expectedPackagePrefix}fromSourceClass
+            package generated.io.mcarle.konvert
+
+            import io.mcarle.konvert.api.GeneratedKonvertModule
+
+            @GeneratedKonvertModule(
+              konverterFQN = [],
+              konvertToFQN = [],
+              konvertFromFQN = ["${expectedPackagePrefix}fromSourceClass"],
+            )
+            public interface GeneratedModule4Test
             """.trimIndent(),
-            metaInfFileContent
+            moduleContent
         )
     }
 
@@ -112,19 +133,28 @@ interface Mapper {
                 """.trimIndent()
             )
         )
-        val metaInfFileContent = compilation.generatedSourceFor("io.mcarle.konvert.api.Konvert")
-        println(metaInfFileContent)
+        val moduleContent = compilation.generatedSourceFor("GeneratedModule.kt")
+        println(moduleContent)
 
         assertContentEquals(
             """
-            ${expectedPackagePrefix}MapperImpl.toTarget
+            package generated.io.mcarle.konvert
+
+            import io.mcarle.konvert.api.GeneratedKonvertModule
+
+            @GeneratedKonvertModule(
+              konverterFQN = ["${expectedPackagePrefix}MapperImpl.toTarget"],
+              konvertToFQN = [],
+              konvertFromFQN = [],
+            )
+            public interface GeneratedModule4Test
             """.trimIndent(),
-            metaInfFileContent
+            moduleContent
         )
     }
 
     @Test
-    fun generateLineForKonverterWithExistingCodeInMETA_INF() {
+    fun addFqnForKonverterWithExistingCode() {
         val (compilation) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
             code = SourceFile.kotlin(
@@ -143,19 +173,28 @@ interface Mapper {
                 """.trimIndent()
             )
         )
-        val metaInfFileContent = compilation.generatedSourceFor("io.mcarle.konvert.api.Konvert")
-        println(metaInfFileContent)
+        val moduleContent = compilation.generatedSourceFor("GeneratedModule.kt")
+        println(moduleContent)
 
         assertContentEquals(
             """
-            MapperImpl.toTarget
+            package generated.io.mcarle.konvert
+
+            import io.mcarle.konvert.api.GeneratedKonvertModule
+
+            @GeneratedKonvertModule(
+              konverterFQN = ["MapperImpl.toTarget"],
+              konvertToFQN = [],
+              konvertFromFQN = [],
+            )
+            public interface GeneratedModule4Test
             """.trimIndent(),
-            metaInfFileContent
+            moduleContent
         )
     }
 
     @Test
-    fun generateLineForKonverterForInheritedImplementedFunctions() {
+    fun addFqnForKonverterWithInheritedImplementedFunctions() {
         val (compilation) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
             code = SourceFile.kotlin(
@@ -177,19 +216,28 @@ interface Mapper: IMapper {
                 """.trimIndent()
             )
         )
-        val metaInfFileContent = compilation.generatedSourceFor("io.mcarle.konvert.api.Konvert")
-        println(metaInfFileContent)
+        val moduleContent = compilation.generatedSourceFor("GeneratedModule.kt")
+        println(moduleContent)
 
         assertContentEquals(
             """
-            MapperImpl.toTarget
+            package generated.io.mcarle.konvert
+
+            import io.mcarle.konvert.api.GeneratedKonvertModule
+
+            @GeneratedKonvertModule(
+              konverterFQN = ["MapperImpl.toTarget"],
+              konvertToFQN = [],
+              konvertFromFQN = [],
+            )
+            public interface GeneratedModule4Test
             """.trimIndent(),
-            metaInfFileContent
+            moduleContent
         )
     }
 
     @Test
-    fun doNotGenerateLineForKonverterFunctionsWithMultipleParameters() {
+    fun doNotAddFqnForKonverterFunctionsWithMultipleParameters() {
         val (compilation) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
             code = SourceFile.kotlin(
@@ -209,7 +257,7 @@ interface Mapper {
             )
         )
         assertThrows<IllegalArgumentException> {
-            compilation.generatedSourceFor("io.mcarle.konvert.api.Konvert")
+            compilation.generatedSourceFor("GeneratedModule.kt").also { println(it) }
         }
     }
 
