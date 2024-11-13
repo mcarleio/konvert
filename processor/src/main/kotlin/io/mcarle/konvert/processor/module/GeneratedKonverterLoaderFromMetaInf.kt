@@ -1,41 +1,50 @@
-package io.mcarle.konvert.processor
+package io.mcarle.konvert.processor.module
 
-import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.closestClassDeclaration
-import com.google.devtools.ksp.getAnnotationsByType
-import com.google.devtools.ksp.getClassDeclarationByName
-import com.google.devtools.ksp.getFunctionDeclarationsByName
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import io.mcarle.konvert.api.GeneratedKonverter
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.KonvertTo
-import io.mcarle.konvert.api.Konverter
-import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.classDeclaration
+import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.parseDeprecatedMetaInfFiles
 import io.mcarle.konvert.processor.konvert.KonvertTypeConverter
 import io.mcarle.konvert.processor.konvert.KonverterInterface
 import io.mcarle.konvert.processor.konvertfrom.KonvertFromTypeConverter
 import io.mcarle.konvert.processor.konvertto.KonvertToTypeConverter
+import io.mcarle.konvert.processor.typeClassDeclaration
 
-class GeneratedKonverterLoader(
+/**
+ * Deprecated in favor of the new way Konvert passes FQNs of the
+ * generated functions (see [io.mcarle.konvert.processor.module.GeneratedKonvertModuleWriter]).
+ *
+ * Reads the generated Konverters from the three META-INF files:
+ * - `META-INF/konvert/io.mcarle.konvert.api.Konvert`
+ * - `META-INF/konvert/io.mcarle.konvert.api.KonvertTo`
+ * - `META-INF/konvert/io.mcarle.konvert.api.KonvertFrom`
+ */
+@Deprecated("Only here to be backwards compatible with older versions of Konvert")
+class GeneratedKonverterLoaderFromMetaInf(
     private val resolver: Resolver,
     private val logger: KSPLogger
 ) {
 
     fun load(): List<TypeConverter> {
-        return loadKonvertTypeConverter() + loadKonvertToTypeConverter() + loadKonvertFromTypeConverter()
+        return if (Configuration.parseDeprecatedMetaInfFiles) {
+            loadKonvertTypeConverter() + loadKonvertToTypeConverter() + loadKonvertFromTypeConverter()
+        } else {
+            emptyList()
+        }
     }
 
     private fun <T : TypeConverter> loadByFunctions(
         resourceFile: String,
         processor: (GeneratedKonverterData) -> T
     ): List<T> {
-        return ClassLoader.getSystemResources(resourceFile)
+        return this::class.java.classLoader.getResources(resourceFile)
             .toList()
             .flatMap { it.readText().lineSequence() }
             .filter { it.isNotBlank() }
@@ -47,7 +56,7 @@ class GeneratedKonverterLoader(
         resourceFile: String,
         processor: (GeneratedKonverterData) -> T
     ): List<T> {
-        return ClassLoader.getSystemResources(resourceFile)
+        return this::class.java.classLoader.getResources(resourceFile)
             .toList()
             .flatMap { it.readText().lineSequence() }
             .filter { it.isNotBlank() }
@@ -105,67 +114,6 @@ class GeneratedKonverterLoader(
                 sourceClassDeclaration = data.function.parameters.first().typeClassDeclaration()!!,
                 targetClassDeclaration = data.function.returnType!!.resolve().classDeclaration()!!
             )
-        }
-    }
-
-    data class GeneratedKonverterData(
-        val function: KSFunctionDeclaration,
-        val priority: Priority,
-    ) {
-
-        companion object {
-            fun from(
-                classFqn: String,
-                functionsFqn: List<String>,
-                resolver: Resolver,
-                logger: KSPLogger
-            ): Sequence<GeneratedKonverterData> {
-                return resolver.getClassDeclarationByName(classFqn)?.let { classDecl ->
-                    classDecl.getAllFunctions()
-                        .filter { funDecl -> funDecl.qualifiedName?.asString() in functionsFqn }
-                        .mapNotNull {
-                            val priority = extractPriority(it)
-
-                            if (priority != null) {
-                                GeneratedKonverterData(
-                                    function = it,
-                                    priority = priority
-                                )
-                            } else {
-                                logger.logging("Ignoring $classFqn, as there is no ${GeneratedKonverter::class.simpleName}, ${Konvert::class.simpleName} or ${Konverter::class.simpleName} annotation")
-                                null
-                            }
-                        }
-                } ?: emptySequence()
-            }
-
-            fun from(
-                fqn: String,
-                resolver: Resolver,
-                logger: KSPLogger
-            ): Sequence<GeneratedKonverterData> {
-                return resolver.getFunctionDeclarationsByName(fqn, true).mapNotNull {
-                    val priority = extractPriority(it)
-
-                    if (priority != null) {
-                        GeneratedKonverterData(
-                            function = it,
-                            priority = priority
-                        )
-                    } else {
-                        logger.logging("Ignoring $fqn, as there is no ${GeneratedKonverter::class.simpleName} annotation")
-                        null
-                    }
-                }
-            }
-
-            @OptIn(KspExperimental::class)
-            private fun extractPriority(funDeclaration: KSFunctionDeclaration): Priority? {
-                return funDeclaration.getAnnotationsByType(GeneratedKonverter::class)
-                    .firstOrNull()
-                    ?.priority
-            }
-
         }
     }
 }

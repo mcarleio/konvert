@@ -108,7 +108,7 @@ Will generate a file `Person_XX.kt` instead of `PersonKonverter.kt`
 a|`*konvert.add-generated-konverter-annotation*`
 a|`true`/`false`
 a|`true`
-a|This setting will add the `@GeneratedKonverter` annotation on the generated functions. Together with a file being written to META-INF containing all generated functions FQN, this annotation is used to reuse previously generated konverter functions from other modules or libraries.
+a|This setting will add the `@GeneratedKonverter` annotation on the generated functions. Together with a generated Konvert module file referencing all generated functions FQN, this annotation is used to reuse previously generated konverter functions from other modules or libraries.
 If you do not want your generated konverter functions to be reused in other modules, you can turn this setting globally or per annotation.
 
 4+a|
@@ -197,6 +197,20 @@ fun Group.toGroupWithoutReflection() = GroupDto(
 )
 ----
 ====
+
+a|`*konvert.generatedModuleSuffix*`
+a|any string
+a|`UUID.randomUUID()`
+a|Only effective if set globally. This setting defines the suffix for the generated module type.
+
+Any non word character will be replaced with an empty string.
+
+a|`*konvert.parseDeprecatedMetaInfFiles*`
+a|`true`/`false`
+a|`false`
+a|Only effective if set globally. This setting defines if the deprecated META-INF files should be parsed to load generated konverter functions.
+
+Will be removed in one of the next releases.
 
 |===
 

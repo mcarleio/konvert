@@ -39,6 +39,18 @@ val Configuration.Companion.enableConverters: List<TypeConverterName>
     get() = ENABLE_CONVERTERS_OPTION.get(CURRENT) { configString -> configString.split(";", ",").map { it.trim() } }
 
 /**
+ * @see GENERATED_MODULE_SUFFIX_OPTION
+ */
+val Configuration.Companion.generatedModuleSuffix: String
+    get() = GENERATED_MODULE_SUFFIX_OPTION.get(CURRENT) { it.replace("\\W".toRegex(), "") }
+
+/**
+ * @see PARSE_DEPRECATED_META_INF_FILES_OPTION
+ */
+val Configuration.Companion.parseDeprecatedMetaInfFiles: Boolean
+    get() = PARSE_DEPRECATED_META_INF_FILES_OPTION.get(CURRENT, String::toBoolean)
+
+/**
  * Reads the value for [Option.key] from the provided `options` or fallbacks to the [Option.defaultValue].
  */
 inline fun <T> Option<T>.get(configuration: Configuration, mapping: (String) -> T): T {

@@ -20,6 +20,9 @@ import io.mcarle.konvert.processor.konvertfrom.KonvertFromDataCollector
 import io.mcarle.konvert.processor.konvertto.KonvertToCodeGenerator
 import io.mcarle.konvert.processor.konvertto.KonvertToData
 import io.mcarle.konvert.processor.konvertto.KonvertToDataCollector
+import io.mcarle.konvert.processor.module.GeneratedKonvertModuleLoader
+import io.mcarle.konvert.processor.module.GeneratedKonvertModuleWriter
+import io.mcarle.konvert.processor.module.GeneratedKonverterLoaderFromMetaInf
 
 class KonvertProcessor(
     private val environment: SymbolProcessorEnvironment,
@@ -43,14 +46,15 @@ class KonvertProcessor(
 
             writeFiles()
 
-            generateMetaInfFiles(data)
+            generateKonvertModule(data)
 
             emptyList()
         }
     }
 
     private fun collectGeneratedKonverter(resolver: Resolver): List<TypeConverter> {
-        return GeneratedKonverterLoader(resolver, logger).load()
+        return GeneratedKonvertModuleLoader(resolver, logger).load() +
+            @Suppress("DEPRECATION") GeneratedKonverterLoaderFromMetaInf(resolver, logger).load()
     }
 
     private fun writeFiles() {
@@ -73,8 +77,8 @@ class KonvertProcessor(
         }
     }
 
-    private fun generateMetaInfFiles(converterData: List<AnnotatedConverterData>) {
-        return GeneratedKonverterWriter(codeGenerator, logger).write(converterData)
+    private fun generateKonvertModule(converterData: List<AnnotatedConverterData>) {
+        return GeneratedKonvertModuleWriter(codeGenerator, logger).write(converterData)
     }
 
     private fun registerTypeConverters(typeConverters: List<TypeConverter>) {

@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Breaking Change
+* META-INF files for `@Konvert`/`@KonverTo`/`@KonvertFrom` annotated functions are no longer generated.
+  This is due to the fact that the generated META-INF files are not (directly) accessible for Konvert during following KSP runs.
+
+  To be backwards compatible, the new option `konvert.parseDeprecatedMetaInfFiles`
+  can be set to `true` to nevertheless parse the deprecated META-INF files as before.
+  This option is set to `false` by default and will be removed in a future release.
+
+  From now on, Konvert will generate a new code file which contains all the generated functions
+  in the new `@GeneratedKonvertModule` annotation. This information can be accessed more easily during KSP runs.
+
 ## [3.2.3]
 
 ### Bug fixes
