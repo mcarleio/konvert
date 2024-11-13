@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.2.3]
+
+### Bug fixes
+* improve compatibility with KSP2 which may include generics in the `KSTypeReference` [#93](https://github.com/mcarleio/konvert/issues/93)
+
 ## [3.2.2]
 
 ### Improvements
@@ -266,7 +271,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v3.2.2...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v3.2.3...HEAD
+
+[3.2.3]: https://github.com/mcarleio/konvert/compare/v3.2.2...v3.2.3
 
 [3.2.2]: https://github.com/mcarleio/konvert/compare/v3.2.1...v3.2.2
 
