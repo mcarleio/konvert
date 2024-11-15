@@ -24,7 +24,7 @@ To use `Konvert` with Gradle, you have to do the following steps:
 2. Add the KSP plugin matching your Kotlin version:
    ```kotlin
    plugins {
-       id("com.google.devtools.ksp").version("1.9.22-1.0.16")
+       id("com.google.devtools.ksp").version("2.0.21-1.0.27")
    }
    ```
 
@@ -83,7 +83,7 @@ There are three different ways to use `Konvert`:
 1. Using `@KonvertTo`:
    ```kotlin
    @KonvertTo(PersonDto::class)
-   data class Person(val firstName: String, val lastName: String)
+   class Person(val firstName: String, val lastName: String)
    data class PersonDto(val firstName: String, val lastName: String)
    ```
    This will generate the following extension function
@@ -94,7 +94,7 @@ There are three different ways to use `Konvert`:
 
 2. Using `@KonvertFrom` (especially useful, if you cannot change the code of the source class)
    ```kotlin
-   data class Person(val firstName: String, val lastName: String) {
+   class Person(val firstName: String, val lastName: String) {
       @KonvertFrom(PersonDto::class)
       companion object
    }
@@ -108,7 +108,7 @@ There are three different ways to use `Konvert`:
 
 3. Using `@Konverter`:
    ```kotlin
-   data class Person(val firstName: String, val lastName: String)
+   class Person(val firstName: String, val lastName: String)
    data class PersonDto(val firstName: String, val lastName: String)
 
    @Konverter
@@ -130,7 +130,7 @@ For simple type mappings, like from `Instant` to `Date`, there already is a type
 
 ```kotlin
 @KonvertTo(PersonDto::class)
-data class Person(val name: String, val birthday: Instant)
+class Person(val name: String, val birthday: Instant)
 data class PersonDto(val name: String, val birthday: Date)
 ```
 
@@ -163,7 +163,7 @@ You can configure specific mappings and rename the generated extension function 
    ],
    mapFunctionName = "asDto"
 )
-data class Person(val firstName: String, val lastName: String)
+class Person(val firstName: String, val lastName: String)
 data class PersonDto(val givenName: String, val familyName: String)
 ```
 

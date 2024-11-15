@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+Update to Kotlin 2.0.21 and KSP 1.0.27
+
 ### Breaking Change
 * META-INF files for `@Konvert`/`@KonverTo`/`@KonvertFrom` annotated functions are no longer generated.
   This is due to the fact that the generated META-INF files are not (directly) accessible for Konvert during following KSP runs.
