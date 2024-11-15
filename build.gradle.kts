@@ -53,3 +53,9 @@ val copySymbolProcessorProvider = tasks.register<Copy>("copySymbolProcessorProvi
 tasks.named<Copy>("processResources") {
     dependsOn(copySymbolProcessorProvider)
 }
+
+afterEvaluate {
+    tasks.named("koverGenerateArtifactJvm") {
+        dependsOn(copySymbolProcessorProvider)
+    }
+}
