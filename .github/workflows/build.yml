@@ -25,7 +25,7 @@ jobs:
       - name: Publish locally
         run: unset CI && ./gradlew publishToMavenLocal
       - name: Test example project with gradle
-        run: cd example && ./gradlew build
+        run: ./gradlew -p ./example build
       - name: Test example project with maven
         run: cd example && mvn --batch-mode --update-snapshots package
       - name: Test
