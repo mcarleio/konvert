@@ -313,8 +313,7 @@ class TargetClass {
 
             import a.SourceClass
 
-            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass =
-                TargetClass().also { targetClass ->
+            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass = TargetClass().also { targetClass ->
               targetClass.property = sourceClass.property
             }
             """.trimIndent(),
@@ -359,8 +358,7 @@ class SomeClass {
             """
             package b
 
-            public fun SomeClass.Companion.fromSomeClass(someClass: a.SomeClass): SomeClass =
-                SomeClass().also { someClass0 ->
+            public fun SomeClass.Companion.fromSomeClass(someClass: a.SomeClass): SomeClass = SomeClass().also { someClass0 ->
               someClass0.property = someClass.property
             }
             """.trimIndent(),
@@ -408,8 +406,7 @@ class SomeClass {
             """
             package b
 
-            public fun SomeClass.Companion.fromSomeClass(someClass: a.SomeClass): SomeClass =
-                SomeClass().also { someClass0 ->
+            public fun SomeClass.Companion.fromSomeClass(someClass: a.SomeClass): SomeClass = SomeClass().also { someClass0 ->
               someClass0.property = someClass.property
             }
             """.trimIndent(),
@@ -456,8 +453,7 @@ data class SourceClass(val property: String)
 
         assertSourceEquals(
             """
-            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass =
-                TargetClass(
+            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass = TargetClass(
               property = sourceClass.property
             )
             """.trimIndent(),
@@ -490,8 +486,7 @@ class TargetClass(val children: List<TargetClass>) {
 
         assertSourceEquals(
             """
-            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass =
-                TargetClass(
+            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass = TargetClass(
               children = sourceClass.children.map { TargetClass.fromSourceClass(sourceClass = it) }
             )
             """.trimIndent(),
@@ -552,8 +547,7 @@ data class PersonDto(val firstName: String, val lastName: String, val age: Int, 
 
             import b.PersonDto
 
-            public fun Person.Address.Companion.fromAddressDto(addressDto: PersonDto.AddressDto): Person.Address
-                = Person.Address(
+            public fun Person.Address.Companion.fromAddressDto(addressDto: PersonDto.AddressDto): Person.Address = Person.Address(
               address1 = addressDto.address1,
               address2 = addressDto.address2
             )
@@ -566,8 +560,7 @@ data class PersonDto(val firstName: String, val lastName: String, val age: Int, 
 
             import a.Person
 
-            public fun PersonDto.AddressDto.Companion.fromAddress(address: Person.Address): PersonDto.AddressDto
-                = PersonDto.AddressDto(
+            public fun PersonDto.AddressDto.Companion.fromAddress(address: Person.Address): PersonDto.AddressDto = PersonDto.AddressDto(
               address1 = address.address1,
               address2 = address.address2
             )
@@ -630,11 +623,9 @@ package a
 
 import b.SourceClass
 
-public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass =
-    TargetClass(
+public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass = TargetClass(
   property = TargetProperty.fromSourceProperty(sourceProperty = sourceClass.property),
-  other = sourceClass.other.mapValues { (_, it) ->
-      TargetProperty.fromSourceProperty(sourceProperty = it) }
+  other = sourceClass.other.mapValues { (_, it) -> TargetProperty.fromSourceProperty(sourceProperty = it) }
 )
             """.trimIndent(),
             extensionFunctionCode

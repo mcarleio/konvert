@@ -24,7 +24,7 @@ class ExampleTest {
         val code = SourceFile.kotlin(
             name = "Source.kt",
             contents =
-            """
+                """
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Mapping
@@ -93,7 +93,7 @@ interface FooMapper {
     }
 
     private fun checkIfGeneratedMapperCompiles(compilation: KotlinCompilation, code: String): JvmCompilationResult {
-        compilation.symbolProcessorProviders = emptyList()
+        compilation.symbolProcessorProviders = mutableListOf()
         compilation.sources += SourceFile.kotlin("FooMapperKonverter.kt", code)
 
         val result = compilation.compile()
@@ -105,7 +105,8 @@ interface FooMapper {
         .apply {
             workingDir = temporaryFolder
             inheritClassPath = true
-            symbolProcessorProviders = listOf(KonvertProcessorProvider())
+            languageVersion = "1.9"
+            symbolProcessorProviders = mutableListOf(KonvertProcessorProvider())
             jvmTarget = JvmTarget.JVM_17.description
             sources = sourceFiles
             verbose = false

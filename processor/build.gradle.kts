@@ -41,8 +41,10 @@ tasks.test {
 }
 
 kover {
-    excludeSourceSets {
-        names(sourceSets.testFixtures.name)
+    currentProject {
+        sources {
+            excludedSourceSets.addAll(sourceSets.testFixtures.name)
+        }
     }
 }
 
