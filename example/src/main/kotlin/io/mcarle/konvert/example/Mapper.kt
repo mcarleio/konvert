@@ -43,3 +43,13 @@ interface Mapper {
     @Konvert(mappings = [Mapping(source = "age", target = "numberOfYearsSinceBirth", enable = [LONG_TO_UINT_CONVERTER])])
     fun toDto(person: Person): PersonDto
 }
+
+
+@Konverter
+interface AMapper {
+    fun map(domain: Domain): DTO
+    fun map(domains: Collection<Domain>): List<DTO>
+}
+
+data class Domain(val prop: String)
+data class DTO(val prop: String)
