@@ -55,11 +55,6 @@ object KonverterDataCollector {
                     return@mapNotNull null
                 }
 
-                if (Modifier.INLINE in it.modifiers) {
-                    // ignore inline functions
-                    return@mapNotNull null
-                }
-
                 if (it.extensionReceiver != null) {
                     // ignore extension functions
                     return@mapNotNull null

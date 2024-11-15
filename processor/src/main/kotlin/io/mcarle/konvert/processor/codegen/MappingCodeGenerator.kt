@@ -99,39 +99,33 @@ $className(${"⇥\n%L"}
         sourceProperties: List<PropertyMappingInfo>
     ): CodeBlock {
         return constructor.parameters.mapNotNull { ksValueParameter ->
-            val sourceHasParamNames = constructor.origin !in listOf(
+            val constructorHasParamNames = constructor.origin !in listOf(
                 Origin.JAVA,
                 Origin.JAVA_LIB
             )
-            val valueParamHasDefault = ksValueParameter.hasDefault && sourceHasParamNames
-            val valueParamIsNullable = ksValueParameter.type.resolve().isNullable()
+            val valueParamHasDefault = ksValueParameter.hasDefault && constructorHasParamNames
+            val valueParamIsNullable = ksValueParameter.type.resolve().isNullable() && constructorHasParamNames
 
-            val sourcePropertyMappingInfo = try {
-                determinePropertyMappingInfo(sourceProperties, ksValueParameter)
-            } catch (e: PropertyMappingNotExistingException) {
-                if (valueParamHasDefault) {
+            val propertyMappingInfo = determinePropertyMappingInfo(sourceProperties, ksValueParameter)
+                ?: if (valueParamHasDefault) {
+                    // when constructor param has a default value, ignore it
                     return@mapNotNull null
+                } else if (valueParamIsNullable) {
+                    // when constructor param is nullable, set it to null
+                    return@mapNotNull CodeBlock.of("${ksValueParameter.name?.asString()}·=·null")
                 } else {
-                    throw e
+                    throw PropertyMappingNotExistingException(ksValueParameter, sourceProperties)
                 }
-            }
+
             val convertedValue = convertValue(
-                source = sourcePropertyMappingInfo,
+                source = propertyMappingInfo,
                 targetTypeRef = ksValueParameter.type,
                 ignorable = valueParamHasDefault || valueParamIsNullable
-            ) ?: if (valueParamHasDefault) {
-                // when constructor param has a default value, ignore it
-                null
-            } else if (valueParamIsNullable) {
-                // when constructor param is nullable, set it to null
-                CodeBlock.of("null")
-            } else {
-                null
-            }
+            )
 
             if (convertedValue != null) {
-                if (sourceHasParamNames) {
-                    CodeBlock.of("${sourcePropertyMappingInfo.targetName}·=·%L", convertedValue)
+                if (constructorHasParamNames) {
+                    CodeBlock.of("${propertyMappingInfo.targetName}·=·%L", convertedValue)
                 } else {
                     convertedValue
                 }
@@ -194,10 +188,10 @@ $className(${"⇥\n%L"}
     private fun determinePropertyMappingInfo(
         propertyMappings: List<PropertyMappingInfo>,
         ksValueParameter: KSValueParameter
-    ): PropertyMappingInfo {
+    ): PropertyMappingInfo? {
         return propertyMappings.firstOrNull {
             it.targetName == ksValueParameter.name?.asString()
-        } ?: throw PropertyMappingNotExistingException(ksValueParameter, propertyMappings)
+        }
     }
 
     private fun determinePropertyMappingInfo(

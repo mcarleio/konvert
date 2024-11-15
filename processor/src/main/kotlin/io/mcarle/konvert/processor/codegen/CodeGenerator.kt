@@ -124,7 +124,10 @@ class CodeGenerator constructor(
             val name = if (targetElement.property != null) {
                 targetElement.property.simpleName.asString()
             } else if (targetElement.parameter != null) {
-                if (targetElement.parameter.hasDefault) return@firstOrNull false // break, as optional
+                if (targetElement.parameter.hasDefault)
+                    return@firstOrNull false // break, as optional
+                else if (targetElement.parameter.type.resolve().isNullable())
+                    return@firstOrNull false // break, as nullable
                 targetElement.parameter.name?.asString()
             } else {
                 // should not occur...
