@@ -4,5 +4,5 @@ plugins {
 }
 
 dependencies {
-    api("jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1")
+    api("jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0")
 }

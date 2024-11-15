@@ -214,8 +214,7 @@ class TargetClass(val property: String) {
             import io.mcarle.konvert.api.GeneratedKonverter
 
             @GeneratedKonverter(priority = 123)
-            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass =
-                TargetClass(
+            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass = TargetClass(
               property = sourceClass.property
             )
             """.trimIndent(),
@@ -318,8 +317,7 @@ class TargetClass(val property: String) {
 
         assertSourceEquals(
             """
-            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass =
-                TargetClass(
+            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass = TargetClass(
               property = sourceClass.property
             )
             """.trimIndent(),

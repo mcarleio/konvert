@@ -3,7 +3,7 @@ package io.mcarle.konvert.processor
 import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import com.tschuchort.compiletesting.kspArgs
+import com.tschuchort.compiletesting.kspProcessorOptions
 import com.tschuchort.compiletesting.kspWithCompilation
 import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.mcarle.konvert.converter.api.TypeConverter
@@ -78,11 +78,12 @@ abstract class KonverterITest {
         .apply {
             workingDir = temporaryFolder
             inheritClassPath = true
-            symbolProcessorProviders = listOf(KonvertProcessorProvider())
+            symbolProcessorProviders = mutableListOf(KonvertProcessorProvider())
             sources = sourceFiles
             verbose = false
+            languageVersion = "1.9"
             jvmTarget = JvmTarget.JVM_17.description
-            kspArgs += options.toMutableMap().apply {
+            kspProcessorOptions += options.toMutableMap().apply {
                 putIfAbsent(ADD_GENERATED_KONVERTER_ANNOTATION_OPTION.key, "$addGeneratedKonverterAnnotation")
                 putIfAbsent(GENERATED_MODULE_SUFFIX_OPTION.key, generatedModuleSuffix)
             }

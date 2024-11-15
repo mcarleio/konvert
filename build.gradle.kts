@@ -15,24 +15,22 @@ dependencies {
     }
 }
 
-koverReport {
-    filters {
-        includes {
-            packages("io.mcarle.konvert")
-        }
-    }
-    defaults {
-        html {
-            onCheck = true
-        }
-        xml {
-            onCheck = true
-        }
-    }
-}
-
 kover {
-    disable()
+    reports {
+        filters {
+            includes {
+                packages("io.mcarle.konvert")
+            }
+        }
+        total {
+            html {
+                onCheck = true
+            }
+            xml {
+                onCheck = true
+            }
+        }
+    }
 }
 
 /**
@@ -54,4 +52,10 @@ val copySymbolProcessorProvider = tasks.register<Copy>("copySymbolProcessorProvi
 
 tasks.named<Copy>("processResources") {
     dependsOn(copySymbolProcessorProvider)
+}
+
+afterEvaluate {
+    tasks.named("koverGenerateArtifactJvm") {
+        dependsOn(copySymbolProcessorProvider)
+    }
 }
