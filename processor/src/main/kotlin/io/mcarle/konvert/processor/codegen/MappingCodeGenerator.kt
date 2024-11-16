@@ -15,6 +15,7 @@ import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enableConverters
 import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.isNullable
+import io.mcarle.konvert.processor.exceptions.IgnoredTargetNotIgnorableException
 import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
@@ -103,29 +104,20 @@ $className(${"⇥\n%L"}
                 Origin.JAVA,
                 Origin.JAVA_LIB
             )
-            val valueParamHasDefault = ksValueParameter.hasDefault && constructorHasParamNames
-            val valueParamIsNullable = ksValueParameter.type.resolve().isNullable() && constructorHasParamNames
+            val valueParamHasDefault = ksValueParameter.hasDefault
+            val valueParamIsNullable = ksValueParameter.type.resolve().isNullable()
 
             val propertyMappingInfo = determinePropertyMappingInfo(sourceProperties, ksValueParameter)
-                ?: if (valueParamHasDefault) {
-                    // when constructor param has a default value, ignore it
-                    return@mapNotNull null
-                } else if (valueParamIsNullable) {
-                    // when constructor param is nullable, set it to null
-                    return@mapNotNull CodeBlock.of("${ksValueParameter.name?.asString()}·=·null")
-                } else {
-                    throw PropertyMappingNotExistingException(ksValueParameter, sourceProperties)
-                }
-
             val convertedValue = convertValue(
                 source = propertyMappingInfo,
                 targetTypeRef = ksValueParameter.type,
-                ignorable = valueParamHasDefault || valueParamIsNullable
+                valueParamHasDefault = valueParamHasDefault,
+                valueParamIsNullable = valueParamIsNullable
             )
 
             if (convertedValue != null) {
                 if (constructorHasParamNames) {
-                    CodeBlock.of("${propertyMappingInfo.targetName}·=·%L", convertedValue)
+                    CodeBlock.of("${propertyMappingInfo?.targetName ?: ksValueParameter.name?.asString()}·=·%L", convertedValue)
                 } else {
                     convertedValue
                 }
@@ -175,7 +167,8 @@ $className(${"⇥\n%L"}
             val convertedValue = convertValue(
                 source = sourceProperty,
                 targetTypeRef = targetProperty.type,
-                ignorable = true
+                valueParamIsNullable = false,
+                valueParamHasDefault = true
             )
             if (convertedValue != null) {
                 CodeBlock.of("$targetVarName.${sourceProperty.targetName}·=·$convertedValue")
@@ -203,36 +196,77 @@ $className(${"⇥\n%L"}
         } ?: throw PropertyMappingNotExistingException(ksPropertyDeclaration, propertyMappings)
     }
 
-    private fun convertValue(source: PropertyMappingInfo, targetTypeRef: KSTypeReference, ignorable: Boolean): CodeBlock? {
+    private fun convertValue(
+        source: PropertyMappingInfo?,
+        targetTypeRef: KSTypeReference,
+        valueParamHasDefault: Boolean,
+        valueParamIsNullable: Boolean
+    ): CodeBlock? {
         val targetType = targetTypeRef.resolve()
 
-        if (source.sourceData == null) {
-            if (source.ignore && ignorable) {
-                return null
-            }
-            if (source.constant != null) {
-                return CodeBlock.of(source.constant)
-            }
-            if (source.expression != null) {
-                return CodeBlock.of(
-                    if (source.mappingParamName != null) {
-                        "${source.mappingParamName}.let·{ ${source.expression} }"
-                    } else {
-                        "let·{ ${source.expression} }"
-                    }
+        return when {
+            source == null -> handleNullSource(valueParamHasDefault, valueParamIsNullable, targetTypeRef)
+            source.sourceData == null -> handleNullSourceData(source, valueParamHasDefault, valueParamIsNullable, targetTypeRef)
+            else -> handleNonNullSourceData(source, targetType)
+        }
+    }
+
+    private fun handleNullSource(
+        valueParamHasDefault: Boolean,
+        valueParamIsNullable: Boolean,
+        targetTypeRef: KSTypeReference
+    ): CodeBlock? {
+        return when {
+            valueParamHasDefault -> null
+            valueParamIsNullable -> CodeBlock.of("null")
+            else -> throw PropertyMappingNotExistingException(targetTypeRef.toString(), emptyList())
+        }
+    }
+
+    private fun handleNullSourceData(
+        source: PropertyMappingInfo,
+        valueParamHasDefault: Boolean,
+        valueParamIsNullable: Boolean,
+        targetTypeRef: KSTypeReference
+    ): CodeBlock? {
+        return when {
+            source.ignore -> handleIgnoredSource(valueParamHasDefault, valueParamIsNullable, targetTypeRef)
+            source.constant != null -> CodeBlock.of(source.constant)
+            source.expression != null -> {
+                val expression = "let·{ ${source.expression} }"
+                CodeBlock.of(
+                    source.mappingParamName
+                        ?.let { "$it.let·{ $expression }" }
+                        ?: expression
                 )
             }
-            throw IllegalStateException("Could not convert value $source")
-        } else {
-            val sourceType = source.sourceData.typeRef.resolve()
-            val paramName = source.mappingParamName?.let { "$it." } ?: ""
+            else -> error("Could not convert value $source")
+        }
+    }
 
-            return TypeConverterRegistry.withAdditionallyEnabledConverters(source.enableConverters + Configuration.enableConverters) {
-                firstOrNull { it.matches(sourceType, targetType) }
-                    ?.convert(paramName + source.sourceName!!, sourceType, targetType)
-                    ?: throwException(paramName + source.sourceName, sourceType, source.targetName, targetType)
-            }
+    private fun handleIgnoredSource(
+        valueParamHasDefault: Boolean,
+        valueParamIsNullable: Boolean,
+        targetTypeRef: KSTypeReference
+    ): CodeBlock? {
+        return when {
+            valueParamHasDefault -> null
+            valueParamIsNullable -> CodeBlock.of("null")
+            else -> throw IgnoredTargetNotIgnorableException(targetTypeRef.toString())
+        }
+    }
 
+    private fun handleNonNullSourceData(
+        source: PropertyMappingInfo,
+        targetType: KSType
+    ): CodeBlock {
+        val sourceType = source.sourceData!!.typeRef.resolve()
+        val paramName = source.mappingParamName?.let { "$it." } ?: ""
+
+        return TypeConverterRegistry.withAdditionallyEnabledConverters(source.enableConverters + Configuration.enableConverters) {
+            firstOrNull { it.matches(sourceType, targetType) }
+                ?.convert(paramName + source.sourceName!!, sourceType, targetType)
+                ?: throwException(paramName + source.sourceName, sourceType, source.targetName, targetType)
         }
     }
 
