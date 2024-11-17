@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.0.1]
+
+### Bug fixes
+* fix `expression` in `@KonvertFrom` generating non-compilable code due to duplicate nested `let` blocks [#99](https://github.com/mcarleio/konvert/issues/99)
+
+## [4.0.0]
+
 Update to Kotlin 2.0.21 and KSP 1.0.27
 
 ### Breaking Change
@@ -284,7 +291,11 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v3.2.3...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v4.0.1...HEAD
+
+[4.0.1]: https://github.com/mcarleio/konvert/compare/v4.0.0...v4.0.1
+
+[4.0.0]: https://github.com/mcarleio/konvert/compare/v3.2.3...v4.0.0
 
 [3.2.3]: https://github.com/mcarleio/konvert/compare/v3.2.2...v3.2.3
 
