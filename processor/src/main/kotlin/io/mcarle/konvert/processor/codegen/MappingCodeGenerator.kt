@@ -236,7 +236,7 @@ $className(${"⇥\n%L"}
                 val expression = "let·{ ${source.expression} }"
                 CodeBlock.of(
                     source.mappingParamName
-                        ?.let { "$it.let·{ $expression }" }
+                        ?.let { "$it.$expression" }
                         ?: expression
                 )
             }

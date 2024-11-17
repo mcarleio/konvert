@@ -28,7 +28,7 @@ class KonvertFromITest : KonverterITest() {
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Mapping
 
@@ -66,7 +66,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Mapping
 
@@ -105,7 +105,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Mapping
 
@@ -133,7 +133,7 @@ class TargetClass<T>(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Mapping
 
@@ -159,7 +159,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Mapping
 
@@ -187,7 +187,7 @@ annotation class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Mapping
 
@@ -215,7 +215,7 @@ class TargetClass<T>(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Mapping
 
@@ -243,7 +243,7 @@ object TargetClass {
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Mapping
 
@@ -271,6 +271,43 @@ data class TargetProperty(val value: String) {
         assertContains(extensionFunctionCode, "TargetProperty.fromSourceProperty(sourceProperty = sourceClass.sourceProperty)")
     }
 
+    @Test
+    fun useExpression() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.KonvertFrom
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(
+    val sourceProperty: String
+)
+@KonvertFrom(SourceClass::class, mappings=[
+    Mapping(target="targetProperty", expression = "it.sourceProperty.lowercase()"),
+])
+class TargetClass(
+    var targetProperty: String
+) {
+    companion object
+}
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): TargetClass = TargetClass(
+              targetProperty = sourceClass.let { it.sourceProperty.lowercase() }
+            )
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
 
     @Test
     fun handleDifferentPackages() {
@@ -280,7 +317,7 @@ data class TargetProperty(val value: String) {
                 SourceFile.kotlin(
                     name = "a/SourceClass.kt",
                     contents =
-                    """
+                        """
 package a
 
 class SourceClass(val property: String)
@@ -289,7 +326,7 @@ class SourceClass(val property: String)
                 SourceFile.kotlin(
                     name = "b/TargetClass.kt",
                     contents =
-                    """
+                        """
 package b
 
 import io.mcarle.konvert.api.KonvertFrom
@@ -329,7 +366,7 @@ class TargetClass {
                 SourceFile.kotlin(
                     name = "a/SomeClass.kt",
                     contents =
-                    """
+                        """
 package a
 
 class SomeClass(val property: String)
@@ -338,7 +375,7 @@ class SomeClass(val property: String)
                 SourceFile.kotlin(
                     name = "b/SomeClass.kt",
                     contents =
-                    """
+                        """
 package b
 import io.mcarle.konvert.api.KonvertFrom
 
@@ -374,7 +411,7 @@ class SomeClass {
                 SourceFile.kotlin(
                     name = "a/SomeClass.kt",
                     contents =
-                    """
+                        """
 package a
 
 
@@ -384,7 +421,7 @@ class SomeClass(val property: String)
                 SourceFile.kotlin(
                     name = "b/SomeClass.kt",
                     contents =
-                    """
+                        """
 package b
 
 import io.mcarle.konvert.api.KonvertFrom
@@ -469,7 +506,7 @@ data class SourceClass(val property: String)
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Mapping
 
@@ -503,7 +540,7 @@ class TargetClass(val children: List<TargetClass>) {
                 SourceFile.kotlin(
                     name = "a/Person.kt",
                     contents =
-                    """
+                        """
 package a
 
 import io.mcarle.konvert.api.KonvertFrom
@@ -520,7 +557,7 @@ data class Person(val firstName: String, val lastName: String, val age: Int, val
                 SourceFile.kotlin(
                     name = "b/PersonDto.kt",
                     contents =
-                    """
+                        """
 package b
 
 import io.mcarle.konvert.api.KonvertFrom
@@ -578,7 +615,7 @@ data class PersonDto(val firstName: String, val lastName: String, val age: Int, 
                 SourceFile.kotlin(
                     name = "a/Target.kt",
                     contents =
-                    """
+                        """
 package a
 
 import io.mcarle.konvert.api.KonvertFrom
@@ -602,7 +639,7 @@ data class TargetProperty(val value: String) {
                 SourceFile.kotlin(
                     name = "b/Source.kt",
                     contents =
-                    """
+                        """
 package b
 
 class SourceClass(
