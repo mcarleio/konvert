@@ -1,19 +1,18 @@
-package io.mcarle.konvert.processor
+package io.mcarle.konvert.processor.sourcedata
 
+import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 
-interface SourceDataExtractionStrategy {
-
-    val mappingCodeParentDeclaration: KSDeclaration
-    val unitType: KSType
+fun interface SourceDataExtractionStrategy {
 
     fun extract(
-        classDeclaration: KSClassDeclaration
+        resolver: Resolver,
+        classDeclaration: KSClassDeclaration,
+        mappingCodeParentDeclaration: KSDeclaration,
     ): List<SourceData>
 
     sealed interface SourceData {

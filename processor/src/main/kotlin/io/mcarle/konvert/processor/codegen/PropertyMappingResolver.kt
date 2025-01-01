@@ -1,26 +1,16 @@
 package io.mcarle.konvert.processor.codegen
 
-import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.konvert.api.Mapping
-import io.mcarle.konvert.converter.api.classDeclaration
-import io.mcarle.konvert.processor.SourceDataExtractionStrategy
+import io.mcarle.konvert.processor.sourcedata.SourceDataExtractionStrategy
 
-class PropertyMappingResolver(
-    private val logger: KSPLogger,
-    private val sourceDataExtractionStrategy: SourceDataExtractionStrategy
-) {
+object PropertyMappingResolver {
     fun determinePropertyMappings(
         mappingParamName: String?,
         mappings: List<Mapping>,
-        type: KSType,
-        additionalSourceParameters: List<KSValueParameter>
+        additionalSourceParameters: List<KSValueParameter>,
+        sourceDataList: List<SourceDataExtractionStrategy.SourceData>
     ): List<PropertyMappingInfo> {
-        val sourceDataList = sourceDataExtractionStrategy.extract(type.classDeclaration()!!)
-
         val propertiesWithoutSource = getPropertyMappingsWithoutSource(mappings, mappingParamName)
         val propertiesWithSource = getPropertyMappingsWithSource(mappings, sourceDataList, mappingParamName)
         val propertiesFromAdditionalParameters = getPropertyMappingsFromAdditionalParameters(additionalSourceParameters)
@@ -104,15 +94,4 @@ class PropertyMappingResolver(
         )
     }
 
-    private fun verifyAllPropertiesExist(
-        mappings: List<Mapping>,
-        properties: List<KSPropertyDeclaration>,
-        ksClassDeclaration: KSClassDeclaration
-    ) {
-        mappings.map { it.source }.filter { it.isNotEmpty() }.forEach { source ->
-            if (properties.none { it.simpleName.asString() == source }) {
-                logger.warn("Ignoring mapping: $source not existing in ${ksClassDeclaration.simpleName.asString()}")
-            }
-        }
-    }
 }

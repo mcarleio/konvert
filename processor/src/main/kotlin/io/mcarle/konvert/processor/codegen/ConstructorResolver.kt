@@ -1,54 +1,43 @@
 package io.mcarle.konvert.processor.codegen
 
-import com.google.devtools.ksp.getConstructors
-import com.google.devtools.ksp.isVisibleFrom
-import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.konvert.processor.exceptions.AmbiguousConstructorException
 import io.mcarle.konvert.processor.exceptions.NoMatchingConstructorException
+import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy
 import io.mcarle.konvert.processor.typeClassDeclaration
 
-class ConstructorResolver(
-    private val logger: KSPLogger
-) {
+object ConstructorResolver {
     fun determineConstructor(
-        mappingCodeParentDeclaration: KSDeclaration,
-        targetClassDeclaration: KSClassDeclaration,
+        targetData: TargetDataExtractionStrategy.TargetData,
         sourceProperties: List<PropertyMappingInfo>,
         constructorTypes: List<KSClassDeclaration>
     ): KSFunctionDeclaration {
-        val visibleConstructors = targetClassDeclaration.getConstructors()
-            .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }.toList()
-
         return if (constructorTypes.firstOrNull()?.qualifiedName?.asString() == Unit::class.qualifiedName) {
-            if (targetClassDeclaration.primaryConstructor != null
-                && targetClassDeclaration.primaryConstructor!!.isVisibleFrom(mappingCodeParentDeclaration)
+            if (targetData.primaryConstructor != null
                 && propertiesMatching(
                     sourceProperties,
-                    targetClassDeclaration.primaryConstructor!!.parameters
+                    targetData.primaryConstructor.parameters
                 )
             ) {
-                // Primary constructor
-                targetClassDeclaration.primaryConstructor!!
+                targetData.primaryConstructor
             } else {
-                determineSingleOrEmptyConstructor(visibleConstructors)
-                    ?: findMatchingConstructors(visibleConstructors, sourceProperties)
+                determineSingleOrEmptyConstructor(targetData.constructors)
+                    ?: findMatchingConstructors(targetData.constructors, sourceProperties)
                         .let {
                             if (it.size > 1) {
-                                throw AmbiguousConstructorException(targetClassDeclaration, it)
+                                throw AmbiguousConstructorException(targetData.classDeclaration, it)
                             } else if (it.isEmpty()) {
-                                throw NoMatchingConstructorException(targetClassDeclaration, *sourceProperties.toTypedArray())
+                                throw NoMatchingConstructorException(targetData.classDeclaration, *sourceProperties.toTypedArray())
                             } else {
                                 it.first()
                             }
                         }
             }
         } else {
-            findConstructorByParameterTypes(visibleConstructors, constructorTypes)
-                ?: throw NoMatchingConstructorException(targetClassDeclaration, *constructorTypes.toTypedArray())
+            findConstructorByParameterTypes(targetData.constructors, constructorTypes)
+                ?: throw NoMatchingConstructorException(targetData.classDeclaration, *constructorTypes.toTypedArray())
         }
     }
 

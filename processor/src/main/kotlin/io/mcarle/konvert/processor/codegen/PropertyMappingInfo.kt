@@ -1,7 +1,7 @@
 package io.mcarle.konvert.processor.codegen
 
 import io.mcarle.konvert.api.TypeConverterName
-import io.mcarle.konvert.processor.SourceDataExtractionStrategy
+import io.mcarle.konvert.processor.sourcedata.SourceDataExtractionStrategy
 
 data class PropertyMappingInfo constructor(
     val mappingParamName: String?,

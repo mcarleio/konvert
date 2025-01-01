@@ -19,19 +19,23 @@ import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
-import io.mcarle.konvert.processor.DefaultSourceDataExtractionStrategy
 import io.mcarle.konvert.processor.exceptions.KonvertException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
+import io.mcarle.konvert.processor.sourcedata.DefaultSourceDataExtractionStrategy
+import io.mcarle.konvert.processor.targetdata.DefaultTargetDataExtractionStrategy
 
 class CodeGenerator constructor(
     private val logger: KSPLogger,
     private val resolver: Resolver
 ) {
 
+    private val sourceDataExtractionStrategy = DefaultSourceDataExtractionStrategy()
+    private val targetDataExtractionStrategy = DefaultTargetDataExtractionStrategy()
+
     fun generateCode(
         mappings: List<Mapping>,
-        constructorTypes: List<KSClassDeclaration>,
+        enforcedConstructorTypes: List<KSClassDeclaration>,
         paramName: String?,
         targetClassImportName: String?,
         source: KSType,
@@ -54,21 +58,26 @@ class CodeGenerator constructor(
                 }
             }
 
-            val sourceProperties = PropertyMappingResolver(
-                logger,
-                DefaultSourceDataExtractionStrategy(mappingCodeParentDeclaration, resolver.builtIns.unitType)
-            )
-                .determinePropertyMappings(
-                    paramName,
-                    mappings,
-                    source,
-                    additionalSourceParameters
-                )
+            val sourceClassDeclaration =
+                source.classDeclaration()!!
 
             val targetClassDeclaration = target.classDeclaration()!!
 
-            val constructor = ConstructorResolver(logger)
-                .determineConstructor(mappingCodeParentDeclaration, targetClassDeclaration, sourceProperties, constructorTypes)
+            val sourceDataList = sourceDataExtractionStrategy.extract(resolver, sourceClassDeclaration, mappingCodeParentDeclaration)
+            val targetData = targetDataExtractionStrategy.extract(resolver, targetClassDeclaration, mappingCodeParentDeclaration)
+
+            val sourceProperties = PropertyMappingResolver.determinePropertyMappings(
+                mappingParamName = paramName,
+                mappings = mappings,
+                additionalSourceParameters = additionalSourceParameters,
+                sourceDataList = sourceDataList
+            )
+
+            val constructor = ConstructorResolver.determineConstructor(
+                targetData = targetData,
+                sourceProperties = sourceProperties,
+                constructorTypes = enforcedConstructorTypes
+            )
 
             val targetElements = determineTargetElements(sourceProperties, constructor, targetClassDeclaration)
 
