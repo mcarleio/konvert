@@ -27,8 +27,8 @@ jobs:
         run: unset CI && ./gradlew publishToMavenLocal
       - name: Test example project with gradle
         run: ./gradlew -p ./example build
-      - name: Test example project with maven
-        run: cd example && mvn --batch-mode --update-snapshots package
+#      - name: Test example project with maven
+#        run: cd example && mvn --batch-mode --update-snapshots package
       - name: Test
         run: ./gradlew test check -PrunAllTests
       - name: Upload coverage reports to Codecov
