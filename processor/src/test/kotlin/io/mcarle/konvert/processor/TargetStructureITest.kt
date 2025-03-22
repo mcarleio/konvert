@@ -12,7 +12,6 @@ import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingExceptio
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
-import kotlin.test.assertEquals
 
 
 @Suppress("RedundantVisibilityModifier")
@@ -614,7 +613,7 @@ class TargetClass {
     fun throwAmbiguousConstructorException() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -639,7 +638,6 @@ class TargetClass {
                 """.trimIndent()
             )
         )
-        assertEquals(expected = KotlinCompilation.ExitCode.COMPILATION_ERROR, actual = compilationResult.exitCode)
         assertContains(compilationResult.messages, AmbiguousConstructorException::class.qualifiedName!!)
     }
 
@@ -647,7 +645,7 @@ class TargetClass {
     fun throwNoMatchingConstructorException() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -672,7 +670,6 @@ class TargetClass {
                 """.trimIndent()
             )
         )
-        assertEquals(expected = KotlinCompilation.ExitCode.COMPILATION_ERROR, actual = compilationResult.exitCode)
         assertContains(compilationResult.messages, NoMatchingConstructorException::class.qualifiedName!!)
     }
 
@@ -680,7 +677,7 @@ class TargetClass {
     fun throwNoMatchingConstructorExceptionWhenConstructorTypesWrong() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -699,7 +696,6 @@ class TargetClass(
                 """.trimIndent()
             )
         )
-        assertEquals(expected = KotlinCompilation.ExitCode.COMPILATION_ERROR, actual = compilationResult.exitCode)
         assertContains(compilationResult.messages, NoMatchingConstructorException::class.qualifiedName!!)
     }
 
@@ -707,7 +703,7 @@ class TargetClass(
     fun throwNotNullOperatorNotEnabledExceptionWhenSourceNullableAndTargetNot() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -724,7 +720,6 @@ class TargetClass(val property: String)
                 """.trimIndent()
             )
         )
-        assertEquals(expected = KotlinCompilation.ExitCode.COMPILATION_ERROR, actual = compilationResult.exitCode)
         assertContains(compilationResult.messages, NotNullOperatorNotEnabledException::class.qualifiedName!!)
     }
 
@@ -732,7 +727,7 @@ class TargetClass(val property: String)
     fun throwPropertyMappingNotExistingException() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -749,7 +744,6 @@ class TargetClass(val property: String)
                 """.trimIndent()
             )
         )
-        assertEquals(expected = KotlinCompilation.ExitCode.COMPILATION_ERROR, actual = compilationResult.exitCode)
         assertContains(compilationResult.messages, PropertyMappingNotExistingException::class.qualifiedName!!)
     }
 
