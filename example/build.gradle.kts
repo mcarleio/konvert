@@ -1,13 +1,14 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.9.0"
-    id("com.google.devtools.ksp").version("1.9.0-1.0.12")
+    kotlin("jvm") version "2.1.20"
+    id("com.google.devtools.ksp").version("2.1.20-1.0.31")
 }
 
 val konvertVersion = "0.1.0-SNAPSHOT"
 
-val jUnitVersion = "5.12.2"
+val jUnitVersion = "5.12.1"
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
@@ -46,8 +47,10 @@ kotlin {
 }
 
 tasks.withType<KotlinCompile>().configureEach {
-    kotlinOptions.jvmTarget = "17"
-    kotlinOptions.javaParameters = true
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+        javaParameters = true
+    }
 }
 
 ksp {
