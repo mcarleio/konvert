@@ -59,7 +59,7 @@ class TargetClass(
     fun failOnAnnotationOnClassWithGenerics() {
         val (_, result) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -85,7 +85,7 @@ class TargetClass(
     fun failOnAnnotatingAnObject() {
         val (_, result) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =

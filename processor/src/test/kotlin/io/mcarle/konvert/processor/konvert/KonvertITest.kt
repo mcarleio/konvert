@@ -36,6 +36,7 @@ class KonvertITest : KonverterITest() {
     fun converter() {
         val (compilation) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
+            enableKsp2 = false,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -79,6 +80,7 @@ interface Mapper {
     fun defaultMappingsOnMissingKonvertAnnotation() {
         val (compilation) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
+            enableKsp2 = false,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -119,6 +121,7 @@ interface Mapper {
     fun registerConverterForImplementedFunctions() {
         val (compilation) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
+            enableKsp2 = false,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -892,14 +895,13 @@ interface SomeConverter {
         val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
         println(mapperCode)
 
-        // TODO: use alias in return type after https://github.com/square/kotlinpoet/issues/2020 is solved
         assertSourceEquals(
             """
             import a.SomeClass
             import b.SomeClass as B
 
             public object SomeConverterImpl : SomeConverter {
-              override fun toB(source: SomeClass): b.SomeClass? = B().also { someClass ->
+              override fun toB(source: SomeClass): B? = B().also { someClass ->
                 someClass.property = source.property
               }
             }
@@ -954,14 +956,13 @@ interface SomeConverter {
         val mapperCode = compilation.generatedSourceFor("SomeConverterKonverter.kt")
         println(mapperCode)
 
-        // TODO: use alias in function parameter after https://github.com/square/kotlinpoet/issues/2020 is solved
         assertSourceEquals(
             """
             import b.SomeClass
             import a.SomeClass as A
 
             public object SomeConverterImpl : SomeConverter {
-              override fun toSomeClass(source: a.SomeClass?): SomeClass? = source?.let {
+              override fun toSomeClass(source: A?): SomeClass? = source?.let {
                 SomeClass().also { someClass ->
                   someClass.property = source.property
                 }
@@ -1338,7 +1339,7 @@ interface Mapper {
     fun failOnAbstractFunctionsAboutMultipleFunctionParametersIfNoneIsAnnotatedWithSource() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = arrayOf(
                 SourceFile.kotlin(
                     contents =
@@ -1444,6 +1445,54 @@ interface Mapper {
     }
 
     @Test
+    fun allowMultipleFunctionParametersIfOneIsAnnotatedWithSourceKSP1() {
+        addGeneratedKonverterAnnotation = true // enable to verify, that no annotation is generated
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            enableKsp2 = false,
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                        """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String, val otherValue: Int)
+
+@Konverter
+interface Mapper {
+    fun toTarget(@Konverter.Source source: SourceClass, otherValue: Int, vararg furtherParams: String): TargetClass
+}
+                    """.trimIndent(),
+                    name = "TestCode.kt"
+                )
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertFalse { mapperCode.contains("@GeneratedKonverter") }
+
+        assertSourceEquals(
+            """
+            import kotlin.Int
+            import kotlin.String
+
+            public object MapperImpl : Mapper {
+              override fun toTarget(
+                source: SourceClass,
+                otherValue: Int,
+                vararg furtherParams: String,
+              ): TargetClass = TargetClass(
+                property = source.property,
+                otherValue = otherValue
+              )
+            }
+        """.trimIndent(), mapperCode
+        )
+    }
+
+    @Test
     fun additionalFunctionParametersTakePrecedenceOverSourceValue() {
         addGeneratedKonverterAnnotation = true // enable to verify, that no annotation is generated
         val (compilation) = compileWith(
@@ -1490,6 +1539,58 @@ interface Mapper {
         addGeneratedKonverterAnnotation = true // enable to verify, that no annotation is generated
         val (compilation) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                        """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String, val otherValue: Int)
+
+@Konverter
+interface Mapper {
+    fun toTarget(@Konverter.Source source: SourceClass, otherValue: Int, vararg furtherParams: String): TargetClass = TargetClass(
+      property = source.property,
+      otherValue = otherValue
+    )
+}
+                    """.trimIndent(),
+                    name = "TestCode.kt"
+                )
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertFalse { mapperCode.contains("@GeneratedKonverter") }
+
+        assertSourceEquals(
+            """
+            import kotlin.Int
+            import kotlin.String
+
+            public object MapperImpl : Mapper {
+              override fun toTarget(
+                source: SourceClass,
+                otherValue: Int,
+                vararg furtherParams: String,
+              ): TargetClass = super.toTarget(
+                  source = source,
+                  otherValue = otherValue,
+                  furtherParams = furtherParams
+              )
+            }
+        """.trimIndent(), mapperCode
+        )
+    }
+
+    @Test
+    fun allowMultipleFunctionParametersIfOneIsAnnotatedWithSourceInSelfImplementedMappingFunctionsKSP1() {
+        addGeneratedKonverterAnnotation = true // enable to verify, that no annotation is generated
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            enableKsp2 = false,
             code = arrayOf(
                 SourceFile.kotlin(
                     contents =
@@ -1736,7 +1837,7 @@ internal interface Mapper {
         this.enforceNotNull = enforceNotNull
         val (compilation, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = if (enforceNotNull) KotlinCompilation.ExitCode.OK else KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = if (enforceNotNull) KotlinCompilation.ExitCode.OK else KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =

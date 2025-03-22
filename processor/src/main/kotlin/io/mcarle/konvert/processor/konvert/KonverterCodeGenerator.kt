@@ -2,12 +2,14 @@ package io.mcarle.konvert.processor.konvert
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.converter.api.config.Configuration
@@ -26,10 +28,14 @@ object KonverterCodeGenerator {
         ServiceLoader.load(KonverterInjector::class.java, this::class.java.classLoader).toList()
     }
 
-    fun generate(data: KonverterData, resolver: Resolver, logger: KSPLogger) = withIsolatedConfiguration(data.annotationData.options) {
+    fun generate(
+        data: KonverterData,
+        resolver: Resolver,
+        environment: SymbolProcessorEnvironment
+    ) = withIsolatedConfiguration(data.annotationData.options) {
         withCurrentKonverterInterface(data.konverterInterface) {
             val mapper = CodeGenerator(
-                logger = logger,
+                logger = environment.logger,
                 resolver = resolver
             )
 
@@ -61,7 +67,14 @@ object KonverterCodeGenerator {
                             .addParameters(konvertData.mapKSFunctionDeclaration.parameters.map {
                                 val builder = ParameterSpec.builder(
                                     name = it.name!!.asString(),
-                                    type = it.type.toTypeName(),
+                                    type = if (environment.kspVersion.isAtLeast(2, 0)) {
+                                        // TODO: Reevaluate once https://github.com/google/ksp/issues/2379 is released
+                                        (it.type.resolve().arguments.firstOrNull()?.toTypeName() as? WildcardTypeName)
+                                            ?.outTypes?.first()
+                                            ?: it.type.toTypeName()
+                                    } else {
+                                        it.type.toTypeName()
+                                    },
                                     modifiers = emptyArray()
                                 )
                                 if (it.isVararg) {
@@ -76,7 +89,7 @@ object KonverterCodeGenerator {
                                 if (!konvertData.isAbstract) {
                                     generateSuperCall(konvertData)
                                 } else {
-                                    generateMappingCode(mapper, konvertData, targetClassImportName, logger)
+                                    generateMappingCode(mapper, konvertData, targetClassImportName, environment.logger)
                                 }
                             },
                         priority = konvertData.priority,
