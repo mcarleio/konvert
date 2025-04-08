@@ -1,5 +1,6 @@
 package io.mcarle.konvert.processor.codegen
 
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -14,6 +15,7 @@ import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enableConverters
 import io.mcarle.konvert.converter.api.config.enforceNotNull
+import io.mcarle.konvert.converter.api.config.ignoreUnmappedTargetProperties
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.exceptions.IgnoredTargetNotIgnorableException
 import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
@@ -22,7 +24,9 @@ import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingExceptio
 import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy.TargetSetter
 import java.util.Locale
 
-class MappingCodeGenerator {
+class MappingCodeGenerator constructor(
+    private val logger: KSPLogger
+) {
 
     fun generateMappingCode(
         context: MappingContext,
@@ -175,16 +179,28 @@ $className(${"⇥\n%L"}
     ): CodeBlock {
         val propertyCodeBlocks = targetProperties.mapNotNull { targetProperty ->
             val sourceProperty = determinePropertyMappingInfo(sourceProperties, targetProperty)
-            val convertedValue = convertValue(
-                source = sourceProperty,
-                targetTypeRef = targetProperty.type,
-                valueParamIsNullable = false,
-                valueParamHasDefault = true
-            )
-            if (convertedValue != null) {
-                CodeBlock.of("$targetVarName.${sourceProperty.targetName}·=·$convertedValue")
+            if (sourceProperty == null) {
+                if (!Configuration.ignoreUnmappedTargetProperties) {
+                    throw PropertyMappingNotExistingException(targetProperty, sourceProperties)
+                } else {
+                    logger.warn(
+                        "Ignoring unmapped target property `${targetProperty.simpleName.asString()}`  due to configuration 'konvert.ignore-unmapped-target-properties=true'",
+                        targetProperty
+                    )
+                    null
+                }
             } else {
-                null
+                val convertedValue = convertValue(
+                    source = sourceProperty,
+                    targetTypeRef = targetProperty.type,
+                    valueParamIsNullable = false,
+                    valueParamHasDefault = true
+                )
+                if (convertedValue != null) {
+                    CodeBlock.of("$targetVarName.${sourceProperty.targetName}·=·$convertedValue")
+                } else {
+                    null
+                }
             }
         }
         val setterCodeBlocks = targetSetters.mapNotNull { targetSetter ->
@@ -218,10 +234,8 @@ $className(${"⇥\n%L"}
     private fun determinePropertyMappingInfo(
         propertyMappings: List<PropertyMappingInfo>,
         ksPropertyDeclaration: KSPropertyDeclaration
-    ): PropertyMappingInfo {
-        return propertyMappings.firstOrNull {
-            it.targetName == ksPropertyDeclaration.simpleName.asString()
-        } ?: throw PropertyMappingNotExistingException(ksPropertyDeclaration, propertyMappings)
+    ): PropertyMappingInfo? = propertyMappings.firstOrNull {
+        it.targetName == ksPropertyDeclaration.simpleName.asString()
     }
 
     private fun determinePropertyMappingInfo(

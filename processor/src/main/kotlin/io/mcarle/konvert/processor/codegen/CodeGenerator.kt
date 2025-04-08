@@ -10,6 +10,8 @@ import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enforceNotNull
+import io.mcarle.konvert.converter.api.config.ignoreUnmappedTargetProperties
+import io.mcarle.konvert.converter.api.config.nonConstructorPropertiesMapping
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.exceptions.KonvertException
@@ -17,6 +19,9 @@ import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 import io.mcarle.konvert.processor.sourcedata.DefaultSourceDataExtractionStrategy
 import io.mcarle.konvert.processor.targetdata.DefaultTargetDataExtractionStrategy
+import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy
+import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy.TargetSetter
+import kotlin.collections.List
 
 class CodeGenerator constructor(
     private val logger: KSPLogger,
@@ -72,28 +77,9 @@ class CodeGenerator constructor(
 
             verifyAvailableMappingsForConstructorParameters(sourceProperties, constructorParameters)
 
-            val constructorMatchesExactly = propertiesMatchingExact(sourceProperties, constructorParameters)
+            val (variablesWithoutConstructorParameters, remainingSetters) = obtainTargetNonConstructorPropertiesAndSetters(sourceProperties, mappings, constructorParameters, targetData)
 
-            val variablesWithoutConstructorParameters = if (constructorMatchesExactly) {
-                emptyList()
-            } else {
-                targetData.varProperties
-                    .filter { variable ->
-                        variable.name !in constructorParameters.mapNotNull { it.name?.asString() }
-                    }
-            }
-
-            val remainingSetters = if (constructorMatchesExactly) {
-                emptyList()
-            } else {
-                targetData.setter
-                    .filter { setter ->
-                        setter.name !in constructorParameters.mapNotNull { it.name?.asString() }
-                            && setter.name !in variablesWithoutConstructorParameters.map { it.name }
-                    }
-            }
-
-            return MappingCodeGenerator().generateMappingCode(
+            return MappingCodeGenerator(logger).generateMappingCode(
                 context,
                 sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
                 constructor,
@@ -102,6 +88,47 @@ class CodeGenerator constructor(
             )
         } catch (e: Exception) {
             throw KonvertException(context.source, context.target, e)
+        }
+    }
+
+    /**
+     * Determines which non-constructor properties and setters should be included in the mapping.
+     *
+     * Applies configuration options to control inclusion and fallback logic in strict mode.
+     */
+    private fun obtainTargetNonConstructorPropertiesAndSetters(
+        sourceProperties: List<PropertyMappingInfo>,
+        mappings: List<Mapping>,
+        constructorParameters: List<KSValueParameter>,
+        targetData: TargetDataExtractionStrategy.TargetData
+    ): Pair<List<TargetDataExtractionStrategy.TargetVarProperty>, List<TargetSetter>> {
+        val constructorMatchesExactly = propertiesMatchingExact(sourceProperties, constructorParameters)
+        return if (constructorMatchesExactly && Configuration.nonConstructorPropertiesMapping == "ignore") {
+            // Default behavior: skip mapping non-constructor properties when constructor parameters match source
+            Pair(emptyList(), emptyList())
+        } else {
+            val effectiveMappingMode = if (constructorParameters.isEmpty() && mappings.isEmpty() && Configuration.nonConstructorPropertiesMapping == "strict") {
+                // fallback: target class has no constructor and no mappings are defined
+                // in strict mode this would result in no mapping at all, which is not useful
+                logger.warn(
+                    "konvert.non-constructor-properties-mapping=strict is active, but target class `${targetData.classDeclaration.simpleName}` has no constructor and no @Mapping. Fallback to `auto` mode will be applied.",
+                    targetData.classDeclaration
+                )
+                "auto"
+            } else Configuration.nonConstructorPropertiesMapping
+            // Map properties outside constructor and available public setters (if applicable)
+            val nonConstructorVariables = targetData.varProperties
+                .filter { variable ->
+                    variable.name !in constructorParameters.mapNotNull { it.name?.asString() }
+                }.filter { variable ->
+                    effectiveMappingMode != "strict" || mappings.any { it.target == variable.name && !it.ignore }
+                }
+            val remainingSetters = targetData.setter
+                .filter { setter ->
+                    setter.name !in constructorParameters.mapNotNull { it.name?.asString() }
+                        && setter.name !in nonConstructorVariables.map { it.name }
+                }
+            Pair(nonConstructorVariables, remainingSetters)
         }
     }
 
@@ -122,16 +149,17 @@ class CodeGenerator constructor(
                 it.name?.asString() !in availableNotIgnoredTargetNames
             }
         }
-        if (missingSourceForRequiredParameter != null) {
+        if (missingSourceForRequiredParameter != null && !Configuration.ignoreUnmappedTargetProperties) {
             throw PropertyMappingNotExistingException(missingSourceForRequiredParameter, sourceProperties)
         }
     }
 
     private fun propertiesMatchingExact(props: List<PropertyMappingInfo>, parameters: List<KSValueParameter>): Boolean {
         if (parameters.isEmpty()) return props.isEmpty()
-        return props
+        val propsFiltered = props
             .filter { it.isBasedOnAnnotation }
             .filterNot { it.ignore }
+        return propsFiltered
             .all { property ->
                 parameters.any { parameter ->
                     property.targetName == parameter.name?.asString()
