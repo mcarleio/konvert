@@ -54,6 +54,69 @@ TIP: Have a look in the package `io.mcarle.konvert.api.config` for all provided 
 
 [cols="4,1,1,7"]
 |===
+
+a|`*konvert.non-constructor-properties-mapping*`
+a|`ignore`, `auto`, `strict`
+a|`ignore`
+a|Defines how properties of the target class that are *not* part of the constructor are handled.
+
+* `ignore` (default): only constructor parameters are considered; non-constructor properties are ignored
+* `auto`: all mutable properties not in constructor are matched by name and type automatically and mapped via `.also {}` block
+* `strict`: only properties explicitly listed via `@Mapping(...)` will be mapped; all others are ignored
+
+4+a|
+[.pl-6]
+.Example
+[%collapsible]
+====
+[source,kotlin]
+----
+class Source(val id: String) {
+    var description: String? = null
+}
+
+class Target(val id: String) {
+    var description: String? = null
+    var extra: String? = null
+}
+
+@Konverter
+interface Mapper {
+    fun map(source: Source): Target
+}
+----
+
+With configuration:
+
+[source,kotlin]
+----
+ksp {
+    arg("konvert.non-constructor-properties-mapping", "auto")
+    arg("konvert.ignore-unmapped-target-properties", "true")
+}
+----
+
+Will generate:
+
+[source,kotlin]
+----
+Target(
+  id = source.id
+).also {
+  it.description = source.description
+}
+----
+====
+
+a|`*konvert.ignore-unmapped-target-properties*`
+a|`true` / `false`
+a|`false`
+a|Defines behavior when a target property is not mapped (either automatically or via `@Mapping`).
+
+* `true`: unmapped properties are ignored
+* `false`: unmapped properties trigger `PropertyMappingNotExistingException`
+
+Note: In `strict` mode, only properties explicitly listed in `@Mapping` are considered for validation.
 |Option |Possible values |Default |Description
 
 a|`*konvert.enforce-not-null*`

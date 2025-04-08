@@ -4,19 +4,15 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.*
 import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enforceNotNull
+import io.mcarle.konvert.converter.api.config.ignoreUnmappedTargetProperties
+import io.mcarle.konvert.converter.api.config.nonConstructorPropertiesMapping
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.exceptions.KonvertException
@@ -79,7 +75,8 @@ class CodeGenerator constructor(
                 constructorTypes = enforcedConstructorTypes
             )
 
-            val targetElements = determineTargetElements(sourceProperties, constructor, targetClassDeclaration)
+            val mappingProperties = mappings.map { it.target }.toSet()
+            val targetElements = determineTargetElements(mappingProperties, sourceProperties, constructor, targetClassDeclaration)
 
             verifyPropertiesAndMandatoryParametersExist(sourceProperties, targetElements)
 
@@ -89,7 +86,7 @@ class CodeGenerator constructor(
 
             val targetPropertiesWithoutParameters = extractDistinctProperties(targetElements)
 
-            return MappingCodeGenerator().generateMappingCode(
+            return MappingCodeGenerator(logger).generateMappingCode(
                 source,
                 target,
                 sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
@@ -114,16 +111,30 @@ class CodeGenerator constructor(
         }
 
     private fun determineTargetElements(
+        mappingProperties: Set<String>,
         sourceProperties: List<PropertyMappingInfo>,
         constructor: KSFunctionDeclaration,
         target: KSClassDeclaration
-    ) = if (propertiesMatchingExact(sourceProperties, constructor.parameters)) {
-        // constructor params matching sourceParams
-        constructor.parameters
-    } else {
-        // constructor params not matching sourceParams, combine with mutable properties
-        constructor.parameters + determineMutableProperties(target)
-    }.map { TargetElement(it) }
+    ): List<TargetElement> {
+        val matchingExact = propertiesMatchingExact(sourceProperties, constructor.parameters)
+        val targetElements = if (matchingExact && Configuration.nonConstructorPropertiesMapping == "ignore") {
+            // constructor params matching sourceParams
+            constructor.parameters
+        } else if (constructor.parameters.isEmpty() && Configuration.nonConstructorPropertiesMapping == "strict") {
+            logger.warn(
+                "Falling back to property-based mapping for class `${target.simpleName.getShortName()}`: " +
+                    "target class does not define a primary constructor and 'konvert.non-constructor-properties-mapping=strict'. " +
+                    "Using all mutable target properties as mapping candidates.",
+                target
+            )
+            determineMutableProperties(target)
+        } else {
+            constructor.parameters + determineMutableProperties(target).filter {
+                Configuration.nonConstructorPropertiesMapping != "strict" || mappingProperties.contains(it.simpleName.getShortName())
+            }
+        }
+        return targetElements.map { TargetElement(it) }
+    }
 
     private fun verifyPropertiesAndMandatoryParametersExist(
         propertyMappings: List<PropertyMappingInfo>,
@@ -144,7 +155,7 @@ class CodeGenerator constructor(
             }
             propertyMappings.none { name == it.targetName }
         }
-        if (targetElement != null) {
+        if (!Configuration.ignoreUnmappedTargetProperties && targetElement != null) {
             throw PropertyMappingNotExistingException(targetElement, propertyMappings)
         }
     }
@@ -160,9 +171,10 @@ class CodeGenerator constructor(
 
     private fun propertiesMatchingExact(props: List<PropertyMappingInfo>, parameters: List<KSValueParameter>): Boolean {
         if (parameters.isEmpty()) return props.isEmpty()
-        return props
+        val propsFiltered = props
             .filter { it.isBasedOnAnnotation }
             .filterNot { it.ignore }
+        return propsFiltered
             .all { property ->
                 parameters.any { parameter ->
                     property.targetName == parameter.name?.asString()

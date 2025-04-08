@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Support for configurable mapping of non-constructor target properties:
+   - New option `konvert.non-constructor-properties-mapping` with values:
+      - `ignore` (default): only constructor parameters are mapped
+      - `auto`: all mutable properties matched by name will be mapped via `.also {}` block
+      - `strict`: only properties explicitly listed via `@Mapping(...)` are considered
+   - New option `konvert.ignore-unmapped-target-properties`:
+      - `false` (default): triggers `PropertyMappingNotExistingException` if any target property is not mapped
+      - `true`: unmapped target properties are ignored
+
+- Fallback mechanism: in `strict` mode, when target class has no constructor, all mutable properties are considered and a warning is logged.
+
+- New integration tests covering all combinations of options and edge cases
+
+- Updated documentation in `docs/options/index.adoc` with usage details and examples
+
+
 ## [4.0.1]
 
 ### Bug fixes
