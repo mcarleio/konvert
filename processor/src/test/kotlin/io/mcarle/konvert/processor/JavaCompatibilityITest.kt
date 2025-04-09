@@ -267,4 +267,76 @@ class TargetClass(
         )
     }
 
+    @Test
+    fun javaConstructor() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "SourceClass.kt",
+                    contents =
+                        """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(TargetClass::class, mappings = [
+    Mapping(source = "country", target = "state"),
+    Mapping(target = "street", expression = "it.street + \" \" + it.streetNumber"),
+])
+class SourceClass(
+    val street: String,
+    val streetNumber: String,
+    val zip: String,
+    val city: String,
+    val country: String,
+    val primary: Boolean,
+)
+                """.trimIndent()
+                ),
+                SourceFile.java(
+                    name = "TargetClass.java",
+                    contents =
+                        """
+public class TargetClass {
+    private String street;
+    private String city;
+    private String state;
+    private String zip;
+    private boolean primary;
+
+    public TargetClass(
+        String street,
+        String city,
+        String state,
+        String zip,
+        boolean primary
+    ) {
+        this.street = street;
+        this.city = city;
+        this.state = state;
+        this.zip = zip;
+        this.primary = primary;
+    }
+}
+                        """.trimIndent()
+                ),
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
+              let { it.street + " " + it.streetNumber },
+              city,
+              country,
+              zip,
+              primary
+            )
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
 }
