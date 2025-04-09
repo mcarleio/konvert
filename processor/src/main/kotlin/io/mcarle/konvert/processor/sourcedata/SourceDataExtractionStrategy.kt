@@ -30,8 +30,21 @@ fun interface SourceDataExtractionStrategy {
     data class SourceGetter(
         val getter: KSFunctionDeclaration
     ) : SourceData {
-        override val name: String = getter.simpleName.asString().removePrefix("get").replaceFirstChar { it.lowercase() }
+        override val name: String = getter.simpleName.asString()
+            .run {
+                when {
+                    startsWith("get") -> removePrefix("get").replaceFirstChar { it.lowercase() }
+                    else -> this
+                }
+            }
         override val typeRef: KSTypeReference = getter.returnType!!
+    }
+
+    data class SourceFunction(
+        val function: KSFunctionDeclaration
+    ) : SourceData {
+        override val name: String = function.simpleName.asString()
+        override val typeRef: KSTypeReference = function.returnType!!
     }
 
 }

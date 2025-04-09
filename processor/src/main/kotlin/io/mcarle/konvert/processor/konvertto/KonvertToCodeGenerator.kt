@@ -7,6 +7,7 @@ import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
+import io.mcarle.konvert.processor.codegen.MappingContext
 import io.mcarle.konvert.processor.validated
 
 object KonvertToCodeGenerator {
@@ -29,14 +30,16 @@ object KonvertToCodeGenerator {
                 .receiver(data.sourceClassDeclaration.asStarProjectedType().toTypeName())
                 .addCode(
                     mapper.generateCode(
-                        data.annotationData.mappings.validated(data.sourceClassDeclaration, logger),
-                        data.annotationData.constructor,
-                        null,
-                        null,
-                        data.sourceClassDeclaration.asStarProjectedType(),
-                        data.targetClassDeclaration.asStarProjectedType(),
-                        data.sourceClassDeclaration,
-                        emptyList()
+                        mappings = data.annotationData.mappings.validated(data.sourceClassDeclaration, logger),
+                        enforcedConstructorTypes = data.annotationData.constructor,
+                        context = MappingContext(
+                            source = data.sourceClassDeclaration.asStarProjectedType(),
+                            target = data.targetClassDeclaration.asStarProjectedType(),
+                            paramName = null,
+                            targetClassImportName = null
+                        ),
+                        mappingCodeParentDeclaration = data.sourceClassDeclaration,
+                        additionalSourceParameters = emptyList()
                     )
                 ),
             priority = data.priority,

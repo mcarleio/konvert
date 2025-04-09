@@ -16,6 +16,7 @@ import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.plugin.api.KonverterInjector
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
+import io.mcarle.konvert.processor.codegen.MappingContext
 import io.mcarle.konvert.processor.validated
 import java.util.ServiceLoader
 
@@ -111,15 +112,17 @@ object KonverterCodeGenerator {
     ): FunSpec.Builder {
         return addCode(
             mapper.generateCode(
-                konvertData.annotationData.mappings.asIterable()
+                mappings = konvertData.annotationData.mappings.asIterable()
                     .validated(konvertData.mapKSFunctionDeclaration, logger),
-                konvertData.annotationData.constructor,
-                konvertData.paramName,
-                targetClassImportName,
-                konvertData.sourceType,
-                konvertData.targetType,
-                konvertData.mapKSFunctionDeclaration,
-                konvertData.additionalParameters
+                enforcedConstructorTypes = konvertData.annotationData.constructor,
+                context = MappingContext(
+                    source = konvertData.sourceType,
+                    target = konvertData.targetType,
+                    paramName = konvertData.paramName,
+                    targetClassImportName = targetClassImportName,
+                ),
+                mappingCodeParentDeclaration = konvertData.mapKSFunctionDeclaration,
+                additionalSourceParameters = konvertData.additionalParameters
             )
         )
     }

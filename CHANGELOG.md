@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Improvements
+* Improve Java support and compatibility [#125](https://github.com/mcarleio/konvert/issues/125)
+  * values in records are now identified as sources
+  * getter functions are now identified as sources
+  * setter functions are now identified as targets
+
 ## [4.0.1]
 
 ### Bug fixes

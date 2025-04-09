@@ -19,42 +19,42 @@ import io.mcarle.konvert.processor.exceptions.IgnoredTargetNotIgnorableException
 import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
+import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy.TargetSetter
 import java.util.Locale
 
 class MappingCodeGenerator {
 
     fun generateMappingCode(
-        source: KSType,
-        target: KSType,
+        context: MappingContext,
         sourceProperties: List<PropertyMappingInfo>,
         constructor: KSFunctionDeclaration,
-        functionParamName: String?,
-        targetClassImportName: String?,
-        targetProperties: List<KSPropertyDeclaration>
+        targetProperties: List<KSPropertyDeclaration>,
+        targetSetters: List<TargetSetter>
     ): CodeBlock {
         val className = constructor.parentDeclaration!!.simpleName.asString()
         val constructorCode = constructorCode(
-            className = targetClassImportName,
+            className = context.targetClassImportName,
             classDeclaration = constructor.parentDeclaration as? KSClassDeclaration,
             constructor = constructor,
             sourceProperties = sourceProperties
         )
         val propertyCode = propertyCode(
             className = className,
-            functionParamName = functionParamName,
+            functionParamName = context.paramName,
             sourceProperties = sourceProperties,
-            targetProperties = targetProperties
+            targetProperties = targetProperties,
+            targetSetters = targetSetters
         )
-        return if (source.isNullable()) {
+        return if (context.source.isNullable()) {
             // source can only be nullable in case of @Konverter/@Konvert which require a functionParamName
-            val code = "return·${functionParamName!!}?.let·{\n⇥%L%L⇤\n}"
-            if (target.isNullable()) {
+            val code = "return·${context.paramName!!}?.let·{\n⇥%L%L⇤\n}"
+            if (context.target.isNullable()) {
                 CodeBlock.of(code, constructorCode, propertyCode)
             } else {
                 if (Configuration.enforceNotNull) {
                     CodeBlock.of("$code!!", constructorCode, propertyCode)
                 } else {
-                    throw NotNullOperatorNotEnabledException(functionParamName, source, target)
+                    throw NotNullOperatorNotEnabledException(context.paramName, context.source, context.target)
                 }
             }
         } else {
@@ -131,9 +131,10 @@ $className(${"⇥\n%L"}
         className: String,
         functionParamName: String?,
         sourceProperties: List<PropertyMappingInfo>,
-        targetProperties: List<KSPropertyDeclaration>
+        targetProperties: List<KSPropertyDeclaration>,
+        targetSetters: List<TargetSetter>
     ): CodeBlock {
-        if (noTargetOrAllIgnored(sourceProperties, targetProperties)) return CodeBlock.of("")
+        if (noTargetOrAllIgnored(sourceProperties, targetProperties, targetSetters)) return CodeBlock.of("")
 
         var varName = className.replaceFirstChar { it.lowercase(Locale.getDefault()) }
         if (varName == functionParamName) {
@@ -144,25 +145,35 @@ $className(${"⇥\n%L"}
             """
 .also·{·$varName·->${"⇥\n%L"}
 ⇤}
-        """.trimIndent(), propertySettingCode(targetProperties, sourceProperties, varName)
+        """.trimIndent(), propertySettingCode(targetProperties, targetSetters, sourceProperties, varName)
         )
     }
 
-    private fun noTargetOrAllIgnored(sourceProperties: List<PropertyMappingInfo>, targetProperties: List<KSPropertyDeclaration>): Boolean {
+    private fun noTargetOrAllIgnored(
+        sourceProperties: List<PropertyMappingInfo>,
+        targetProperties: List<KSPropertyDeclaration>,
+        targetSetters: List<TargetSetter>
+    ): Boolean {
         return targetProperties.all { targetProperty ->
             sourceProperties.any { sourceProperty ->
                 sourceProperty.ignore
                     && sourceProperty.targetName == targetProperty.simpleName.asString()
+            }
+        } && targetSetters.all { targetSetter ->
+            sourceProperties.any { sourceProperty ->
+                sourceProperty.ignore
+                    && sourceProperty.targetName == targetSetter.name
             }
         }
     }
 
     private fun propertySettingCode(
         targetProperties: List<KSPropertyDeclaration>,
+        targetSetters: List<TargetSetter>,
         sourceProperties: List<PropertyMappingInfo>,
         targetVarName: String
     ): CodeBlock {
-        return targetProperties.mapNotNull { targetProperty ->
+        val propertyCodeBlocks = targetProperties.mapNotNull { targetProperty ->
             val sourceProperty = determinePropertyMappingInfo(sourceProperties, targetProperty)
             val convertedValue = convertValue(
                 source = sourceProperty,
@@ -175,7 +186,24 @@ $className(${"⇥\n%L"}
             } else {
                 null
             }
-        }.joinToCode("\n")
+        }
+        val setterCodeBlocks = targetSetters.mapNotNull { targetSetter ->
+            val sourceProperty = determinePropertyMappingInfo(sourceProperties, targetSetter)
+            val convertedValue = convertValue(
+                source = sourceProperty,
+                targetTypeRef = targetSetter.typeRef,
+                valueParamIsNullable = false,
+                valueParamHasDefault = true
+            )
+            if (convertedValue != null) {
+                CodeBlock.of("$targetVarName.%L", targetSetter.generateAssignmentCode(convertedValue))
+            } else {
+                null
+            }
+        }
+
+
+        return (propertyCodeBlocks + setterCodeBlocks).joinToCode("\n")
     }
 
     private fun determinePropertyMappingInfo(
@@ -194,6 +222,15 @@ $className(${"⇥\n%L"}
         return propertyMappings.firstOrNull {
             it.targetName == ksPropertyDeclaration.simpleName.asString()
         } ?: throw PropertyMappingNotExistingException(ksPropertyDeclaration, propertyMappings)
+    }
+
+    private fun determinePropertyMappingInfo(
+        propertyMappings: List<PropertyMappingInfo>,
+        setter: TargetSetter
+    ): PropertyMappingInfo {
+        return propertyMappings.firstOrNull {
+            it.targetName == setter.name
+        } ?: throw PropertyMappingNotExistingException(setter.name, propertyMappings)
     }
 
     private fun convertValue(
