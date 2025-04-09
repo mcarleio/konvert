@@ -2,11 +2,8 @@ package io.mcarle.konvert.processor.codegen
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.Mapping
@@ -144,28 +141,6 @@ class CodeGenerator constructor(
                     property.targetName == parameter.name?.asString()
                 }
             }
-    }
-
-    class TargetElement private constructor(
-        val property: KSPropertyDeclaration? = null,
-        val parameter: KSValueParameter? = null,
-        val setter: KSFunctionDeclaration? = null,
-    ) {
-        constructor(annotated: KSAnnotated) : this(
-            property = annotated as? KSPropertyDeclaration,
-            parameter = annotated as? KSValueParameter,
-            setter = annotated as? KSFunctionDeclaration,
-        )
-
-        override fun toString(): String {
-            return when {
-                property != null -> property.simpleName.asString()
-                parameter != null -> parameter.name?.asString() ?: parameter.toString()
-                setter != null -> setter.simpleName.asString()
-                else -> error("No property, parameter or setter available")
-            }
-        }
-
     }
 
 }
