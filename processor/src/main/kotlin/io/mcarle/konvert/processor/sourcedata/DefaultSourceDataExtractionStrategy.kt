@@ -6,10 +6,8 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
-import io.mcarle.konvert.converter.api.isNullable
 
 
 class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
@@ -20,7 +18,6 @@ class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
         mappingCodeParentDeclaration: KSDeclaration,
     ): List<SourceDataExtractionStrategy.SourceData> {
         val unitType = resolver.builtIns.unitType
-        val booleanType = resolver.builtIns.booleanType
 
         val properties = classDeclaration.getAllProperties()
             .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }
@@ -34,7 +31,7 @@ class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
 
         val functionsAndGetters = when {
             classDeclaration.isRecord() -> handleRecords(potentialFunctions)
-            else -> handleClasses(potentialFunctions, booleanType)
+            else -> handleClasses(potentialFunctions, resolver)
         }
 
         return (properties + functionsAndGetters).toList()
@@ -48,22 +45,11 @@ class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
 
     private fun handleClasses(
         potentialFunctions: Sequence<KSFunctionDeclaration>,
-        booleanType: KSType
+        resolver: Resolver
     ): Sequence<SourceDataExtractionStrategy.SourceData> {
-        val getters = potentialFunctions
-            .filter {
-                it.simpleName.asString().run { startsWith("get") && !this[3].isLowerCase() }
-            }
-            .map { SourceDataExtractionStrategy.SourceGetter(it) }
-
-        val functions = potentialFunctions
-            .filter {
-                it.simpleName.asString().run { startsWith("is") && !this[2].isLowerCase() }
-                    && it.returnType!!.resolve().run { this == booleanType && !isNullable() }
-            }
-            .map { SourceDataExtractionStrategy.SourceFunction(it) }
-
-        return getters + functions
+        return potentialFunctions.mapNotNull {
+            SourceDataExtractionStrategy.SourceData.from(it, resolver)
+        }
     }
 
     private fun KSClassDeclaration.isRecord(): Boolean {
