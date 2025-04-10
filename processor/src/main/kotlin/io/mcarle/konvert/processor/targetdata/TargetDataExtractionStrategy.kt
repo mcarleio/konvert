@@ -27,7 +27,6 @@ fun interface TargetDataExtractionStrategy {
         val property: KSPropertyDeclaration,
     ) {
         val name = property.simpleName.asString()
-        val typeRef = property.type
     }
 
     data class TargetSetter(
