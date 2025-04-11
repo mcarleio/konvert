@@ -14,7 +14,7 @@ updates:
 
   # Update dependencies in /injectors weekly, but ignore minor and patch updates
   - package-ecosystem: "gradle"
-    directories: "/injectors/**"
+    directories: ["/injectors/**"]
     schedule:
       interval: "weekly"
     ignore:
