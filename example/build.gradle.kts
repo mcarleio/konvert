@@ -15,6 +15,7 @@ dependencies {
     implementation("io.mcarle:konvert-spring-annotations:$konvertVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jUnitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jUnitVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // KSP to generate mapping code
     ksp("io.mcarle:konvert:$konvertVersion")
