@@ -7,6 +7,7 @@ import io.mcarle.konvert.converter.StringToIntConverter
 import io.mcarle.konvert.converter.api.config.ENABLE_CONVERTERS_OPTION
 import io.mcarle.konvert.processor.exceptions.AmbiguousConstructorException
 import io.mcarle.konvert.processor.exceptions.NoMatchingConstructorException
+import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
@@ -26,7 +27,7 @@ class TargetStructureITest : KonverterITest() {
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -70,7 +71,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -115,7 +116,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -157,7 +158,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -197,7 +198,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -233,7 +234,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -271,7 +272,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -312,7 +313,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -350,7 +351,7 @@ class TargetClass {
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -392,7 +393,7 @@ class TargetClass {
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -430,7 +431,7 @@ class TargetClass {
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -479,7 +480,7 @@ typealias MyInt = Int
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -521,7 +522,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -568,7 +569,7 @@ typealias MyInt = Int
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -618,7 +619,7 @@ class TargetClass {
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 
 @KonvertTo(TargetClass::class)
@@ -651,7 +652,7 @@ class TargetClass {
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 
 @KonvertTo(TargetClass::class)
@@ -684,7 +685,7 @@ class TargetClass {
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 
 @KonvertTo(TargetClass::class, constructorArgs = [String::class, Long::class])
@@ -711,7 +712,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.Konverter
 
 @Konverter
@@ -736,7 +737,7 @@ class TargetClass(val property: String)
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.Konverter
 
 @Konverter
@@ -760,7 +761,7 @@ class TargetClass(val property: String)
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -812,7 +813,7 @@ value class TargetValueClass(val value: String)
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -836,6 +837,40 @@ data class TargetClass(val property: String, val optional: Boolean = true)
     }
 
     @Test
+    fun setNullableConstructorParametersToNullValueWhenMissingOrIgnored() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(TargetClass::class, mappings = [
+    Mapping(target = "ignored", ignore = true)
+])
+data class SourceClass(val property: String)
+data class TargetClass(val property: String, val missing: Boolean?, val ignored: Boolean?)
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
+              property = property,
+              missing = null,
+              ignored = null
+            )
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
+    @Test
     fun enableConvertersOption() {
         val (compilation) = compileWith(
             enabledConverters = emptyList(), // intentionally empty, as enabled via option
@@ -843,7 +878,7 @@ data class TargetClass(val property: String, val optional: Boolean = true)
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Konfig
 
@@ -866,6 +901,26 @@ data class TargetClass(val property: Int)
             """.trimIndent(),
             extensionFunctionCode
         )
+    }
+
+    @Test
+    fun throwExceptionOnMissingConverter() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = emptyList(), // intentionally empty
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.KonvertTo
+
+@KonvertTo(TargetClass::class)
+data class SourceClass(val property: String)
+data class TargetClass(val property: Int)
+                """.trimIndent()
+            )
+        )
+        assertContains(compilationResult.messages, NoMatchingTypeConverterException::class.qualifiedName!!)
     }
 
 }

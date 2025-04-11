@@ -1,20 +1,13 @@
 package io.mcarle.konvert.processor.codegen
 
-import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
-import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.isNullable
@@ -36,38 +29,34 @@ class CodeGenerator constructor(
     fun generateCode(
         mappings: List<Mapping>,
         enforcedConstructorTypes: List<KSClassDeclaration>,
-        paramName: String?,
-        targetClassImportName: String?,
-        source: KSType,
-        target: KSType,
+        context: MappingContext,
         mappingCodeParentDeclaration: KSDeclaration,
         additionalSourceParameters: List<KSValueParameter>
     ): CodeBlock {
         try {
-            if (paramName != null) {
+            if (context.paramName != null) {
                 val existingTypeConverter = TypeConverterRegistry
                     .firstOrNull {
-                        it.matches(source, target) && it !is AnnotatedConverter
+                        it.matches(context.source, context.target) && it !is AnnotatedConverter
                     }
 
                 if (existingTypeConverter != null) {
                     return CodeBlock.of(
                         "return·%L",
-                        existingTypeConverter.convert(paramName, source, target)
+                        existingTypeConverter.convert(context.paramName, context.source, context.target)
                     )
                 }
             }
 
-            val sourceClassDeclaration =
-                source.classDeclaration()!!
+            if (context.source.isNullable() && !context.target.isNullable() && !Configuration.enforceNotNull) {
+                throw NotNullOperatorNotEnabledException(context.paramName, context.source, context.target)
+            }
 
-            val targetClassDeclaration = target.classDeclaration()!!
-
-            val sourceDataList = sourceDataExtractionStrategy.extract(resolver, sourceClassDeclaration, mappingCodeParentDeclaration)
-            val targetData = targetDataExtractionStrategy.extract(resolver, targetClassDeclaration, mappingCodeParentDeclaration)
+            val sourceDataList = sourceDataExtractionStrategy.extract(resolver, context.sourceClassDeclaration, mappingCodeParentDeclaration)
+            val targetData = targetDataExtractionStrategy.extract(resolver, context.targetClassDeclaration, mappingCodeParentDeclaration)
 
             val sourceProperties = PropertyMappingResolver.determinePropertyMappings(
-                mappingParamName = paramName,
+                mappingParamName = context.paramName,
                 mappings = mappings,
                 additionalSourceParameters = additionalSourceParameters,
                 sourceDataList = sourceDataList
@@ -79,83 +68,63 @@ class CodeGenerator constructor(
                 constructorTypes = enforcedConstructorTypes
             )
 
-            val targetElements = determineTargetElements(sourceProperties, constructor, targetClassDeclaration)
+            val constructorParameters = constructor.parameters
 
-            verifyPropertiesAndMandatoryParametersExist(sourceProperties, targetElements)
+            verifyAvailableMappingsForConstructorParameters(sourceProperties, constructorParameters)
 
-            if (source.isNullable() && !target.isNullable() && !Configuration.enforceNotNull) {
-                throw NotNullOperatorNotEnabledException(paramName, source, target)
+            val constructorMatchesExactly = propertiesMatchingExact(sourceProperties, constructorParameters)
+
+            val variablesWithoutConstructorParameters = if (constructorMatchesExactly) {
+                emptyList()
+            } else {
+                targetData.varProperties
+                    .filter { variable ->
+                        variable.name !in constructorParameters.mapNotNull { it.name?.asString() }
+                    }
             }
 
-            val targetPropertiesWithoutParameters = extractDistinctProperties(targetElements)
+            val remainingSetters = if (constructorMatchesExactly) {
+                emptyList()
+            } else {
+                targetData.setter
+                    .filter { setter ->
+                        setter.name !in constructorParameters.mapNotNull { it.name?.asString() }
+                            && setter.name !in variablesWithoutConstructorParameters.map { it.name }
+                    }
+            }
 
             return MappingCodeGenerator().generateMappingCode(
-                source,
-                target,
+                context,
                 sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
                 constructor,
-                paramName,
-                targetClassImportName,
-                targetPropertiesWithoutParameters
+                variablesWithoutConstructorParameters.map { it.property },
+                remainingSetters
             )
         } catch (e: Exception) {
-            throw KonvertException(source, target, e)
+            throw KonvertException(context.source, context.target, e)
         }
     }
 
-    private fun extractDistinctProperties(targetElements: List<TargetElement>) = targetElements
-        .mapNotNull { it.property }
-        .filterNot { property ->
-            targetElements
-                .mapNotNull { it.parameter }
-                .any { parameter ->
-                    property.simpleName.asString() == parameter.name?.asString() && property.type.resolve() == parameter.type.resolve()
-                }
-        }
-
-    private fun determineTargetElements(
+    private fun verifyAvailableMappingsForConstructorParameters(
         sourceProperties: List<PropertyMappingInfo>,
-        constructor: KSFunctionDeclaration,
-        target: KSClassDeclaration
-    ) = if (propertiesMatchingExact(sourceProperties, constructor.parameters)) {
-        // constructor params matching sourceParams
-        constructor.parameters
-    } else {
-        // constructor params not matching sourceParams, combine with mutable properties
-        constructor.parameters + determineMutableProperties(target)
-    }.map { TargetElement(it) }
-
-    private fun verifyPropertiesAndMandatoryParametersExist(
-        propertyMappings: List<PropertyMappingInfo>,
-        targetElements: List<TargetElement>
+        constructorParameters: List<KSValueParameter>
     ) {
-        val targetElement = targetElements.firstOrNull { targetElement ->
-            val name = if (targetElement.property != null) {
-                targetElement.property.simpleName.asString()
-            } else if (targetElement.parameter != null) {
-                if (targetElement.parameter.hasDefault)
-                    return@firstOrNull false // break, as optional
-                else if (targetElement.parameter.type.resolve().isNullable())
-                    return@firstOrNull false // break, as nullable
-                targetElement.parameter.name?.asString()
-            } else {
-                // should not occur...
-                null
-            }
-            propertyMappings.none { name == it.targetName }
-        }
-        if (targetElement != null) {
-            throw PropertyMappingNotExistingException(targetElement, propertyMappings)
-        }
-    }
+        val availableNotIgnoredTargetNames = sourceProperties
+            .filterNot { it.ignore }
+            .map { it.targetName }
 
-    @OptIn(KspExperimental::class)
-    private fun determineMutableProperties(ksClassDeclaration: KSClassDeclaration): List<KSPropertyDeclaration> {
-        return ksClassDeclaration.getAllProperties()
-            .filter { it.extensionReceiver == null }
-            .filter { it.isMutable }
-            .filter { !it.isAnnotationPresent(Transient::class) } // CHECKME: is it correct to exclude transient?
-            .toList()
+        val missingSourceForRequiredParameter = constructorParameters.firstOrNull {
+            if (it.hasDefault) {
+                false
+            } else if (it.type.resolve().isNullable()) {
+                false
+            } else {
+                it.name?.asString() !in availableNotIgnoredTargetNames
+            }
+        }
+        if (missingSourceForRequiredParameter != null) {
+            throw PropertyMappingNotExistingException(missingSourceForRequiredParameter, sourceProperties)
+        }
     }
 
     private fun propertiesMatchingExact(props: List<PropertyMappingInfo>, parameters: List<KSValueParameter>): Boolean {
@@ -168,22 +137,6 @@ class CodeGenerator constructor(
                     property.targetName == parameter.name?.asString()
                 }
             }
-    }
-
-    class TargetElement private constructor(
-        val property: KSPropertyDeclaration? = null,
-        val parameter: KSValueParameter? = null
-    ) {
-        constructor(annotated: KSAnnotated) : this(annotated as? KSPropertyDeclaration, annotated as? KSValueParameter)
-
-        override fun toString(): String {
-            return when {
-                property != null -> property.simpleName.asString()
-                parameter != null -> parameter.name?.asString() ?: parameter.toString()
-                else -> error("No property or parameter available")
-            }
-        }
-
     }
 
 }

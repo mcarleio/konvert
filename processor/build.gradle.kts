@@ -27,6 +27,8 @@ dependencies {
     testImplementation(kotlinReflect)
     testFixturesApi(kotlinCompileTesting)
     testFixturesApi(kotlinCompileTestingKsp)
+    testFixturesApi("com.google.devtools.ksp:symbol-processing-common-deps:${Versions.kotlin}-${Versions.ksp}")
+    testFixturesApi("com.google.devtools.ksp:symbol-processing-aa-embeddable:${Versions.kotlin}-${Versions.ksp}")
     testFixturesApi(kotlinCompilerEmbeddable)
     testFixturesApi(symbolProcessing)
     testFixturesImplementation("org.junit.jupiter:junit-jupiter-api:${Versions.jUnit}")

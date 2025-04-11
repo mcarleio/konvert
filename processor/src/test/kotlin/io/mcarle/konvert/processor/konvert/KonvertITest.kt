@@ -16,11 +16,13 @@ import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
 import io.mcarle.konvert.converter.api.config.KONVERTER_GENERATE_CLASS_OPTION
 import io.mcarle.konvert.converter.api.config.KONVERTER_USE_REFLECTION_OPTION
 import io.mcarle.konvert.processor.KonverterITest
+import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -1726,6 +1728,50 @@ internal interface Mapper {
         println(mapperCode)
 
         assertContains(mapperCode, "internal object MapperImpl : Mapper {")
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun konvertNullToNotNull(enforceNotNull: Boolean) {
+        this.enforceNotNull = enforceNotNull
+        val (compilation, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = if (enforceNotNull) KotlinCompilation.ExitCode.OK else KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+class SourceClass(val property: String)
+class TargetClass(val property: String)
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceClass?): TargetClass
+}
+                """.trimIndent()
+            )
+        )
+        if (enforceNotNull) {
+            val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+            println(mapperCode)
+
+            assertSourceEquals(
+                """
+                public object MapperImpl : Mapper {
+                  override fun toTarget(source: SourceClass?): TargetClass = source?.let {
+                    TargetClass(
+                      property = source.property
+                    )
+                  }!!
+                }
+                """.trimIndent(),
+                mapperCode
+            )
+        } else {
+            assertContains(compilationResult.messages, NotNullOperatorNotEnabledException::class.qualifiedName!!)
+        }
     }
 }
 

@@ -5,6 +5,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.squareup.kotlinpoet.CodeBlock
 
 fun interface TargetDataExtractionStrategy {
 
@@ -17,7 +18,6 @@ fun interface TargetDataExtractionStrategy {
     data class TargetData(
         val classDeclaration: KSClassDeclaration,
         val varProperties: List<TargetVarProperty>,
-        val valProperties: List<TargetValProperty>,
         val setter: List<TargetSetter>,
         val primaryConstructor: KSFunctionDeclaration?,
         val constructors: List<KSFunctionDeclaration>,
@@ -27,21 +27,32 @@ fun interface TargetDataExtractionStrategy {
         val property: KSPropertyDeclaration,
     ) {
         val name = property.simpleName.asString()
-        val typeRef = property.type
-    }
-
-    data class TargetValProperty(
-        val property: KSPropertyDeclaration,
-    ) {
-        val name = property.simpleName.asString()
-        val typeRef = property.type
     }
 
     data class TargetSetter(
-        val setter: KSFunctionDeclaration
+        val setter: KSFunctionDeclaration,
+        val correspondingGetter: KSFunctionDeclaration?
     ) {
-        val name = setter.simpleName.asString().removePrefix("set").replaceFirstChar { it.lowercase() }
+        companion object {
+            fun extractPropertyName(setter: KSFunctionDeclaration): String {
+                return setter.simpleName.asString().removePrefix("set").replaceFirstChar { it.lowercase() }
+            }
+        }
+
+        val name = extractPropertyName(setter)
         val typeRef = setter.parameters.single().type
+
+        fun generateAssignmentCode(valueToAssign: CodeBlock): CodeBlock {
+            return if (correspondingGetter != null) {
+                if (correspondingGetter.simpleName.asString().startsWith("is")) {
+                    CodeBlock.of("${correspondingGetter.simpleName.asString()}·=·%L", valueToAssign)
+                } else {
+                    CodeBlock.of("$name·=·%L", valueToAssign)
+                }
+            } else {
+                CodeBlock.of("${setter.simpleName.asString()}(%L)", valueToAssign)
+            }
+        }
     }
 
 }

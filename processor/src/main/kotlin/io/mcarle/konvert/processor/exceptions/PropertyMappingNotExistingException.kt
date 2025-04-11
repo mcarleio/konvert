@@ -2,7 +2,6 @@ package io.mcarle.konvert.processor.exceptions
 
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
-import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.codegen.PropertyMappingInfo
 
 class PropertyMappingNotExistingException(target: String, propertyMappings: List<PropertyMappingInfo>) : RuntimeException(
@@ -15,11 +14,6 @@ class PropertyMappingNotExistingException(target: String, propertyMappings: List
 
     constructor(ksPropertyDeclaration: KSPropertyDeclaration, propertyMappings: List<PropertyMappingInfo>) : this(
         ksPropertyDeclaration.toString(),
-        propertyMappings
-    )
-
-    constructor(targetElement: CodeGenerator.TargetElement, propertyMappings: List<PropertyMappingInfo>) : this(
-        targetElement.toString(),
         propertyMappings
     )
 }
