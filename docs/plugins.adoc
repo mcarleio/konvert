@@ -13,10 +13,10 @@ Have a look at the link:{github}/tree/main/example[example project] or follow th
 
 1. Add dependency to `konvert-spring-annotations`
 +
-[source,gradle,subs="attributes+"]
+[source,gradle]
 ----
 dependencies {
-    implementation("io.mcarle:konvert-spring-annotations:{konvertVersion}")
+    implementation("io.mcarle:konvert-spring-annotations:$konvertVersion")
 }
 ----
 2. Add `@KComponent` annotation to your `@Konverter` annotated interface
@@ -31,10 +31,10 @@ interface MyMapper {
 ----
 3. Add `konvert-spring-injector` as a KSP dependency
 +
-[source,gradle,subs="attributes+"]
+[source,gradle]
 ----
 dependencies {
-    ksp("io.mcarle:konvert-spring-injector:{konvertVersion}")
+    ksp("io.mcarle:konvert-spring-injector:$konvertVersion")
 }
 ----
 

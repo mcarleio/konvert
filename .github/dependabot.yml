@@ -14,7 +14,7 @@ updates:
 
   # Update dependencies in /injectors weekly, but ignore minor and patch updates
   - package-ecosystem: "gradle"
-    directories: ["/injectors/**"]
+    directories: [ "/injectors/**" ]
     schedule:
       interval: "weekly"
     ignore:
@@ -37,10 +37,10 @@ updates:
     ignore:
       - dependency-name: "io.mcarle:konvert*"
 
-  # Disable updates for /docs
+  # Update direct dependencies in /docs weekly
   - package-ecosystem: "bundler"
-    directory: "/docs"
+    directory: "/"
     schedule:
-      interval: "monthly"
-    ignore:
-      - dependency-name: "*"
+      interval: "weekly"
+    allow:
+      - dependency-type: "direct"
