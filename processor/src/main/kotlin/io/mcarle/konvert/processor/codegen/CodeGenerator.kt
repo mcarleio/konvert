@@ -8,7 +8,6 @@ import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
-import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.isNullable
@@ -53,11 +52,8 @@ class CodeGenerator constructor(
                 throw NotNullOperatorNotEnabledException(context.paramName, context.source, context.target)
             }
 
-            val sourceClassDeclaration = context.source.classDeclaration()!!
-            val targetClassDeclaration = context.target.classDeclaration()!!
-
-            val sourceDataList = sourceDataExtractionStrategy.extract(resolver, sourceClassDeclaration, mappingCodeParentDeclaration)
-            val targetData = targetDataExtractionStrategy.extract(resolver, targetClassDeclaration, mappingCodeParentDeclaration)
+            val sourceDataList = sourceDataExtractionStrategy.extract(resolver, context.sourceClassDeclaration, mappingCodeParentDeclaration)
+            val targetData = targetDataExtractionStrategy.extract(resolver, context.targetClassDeclaration, mappingCodeParentDeclaration)
 
             val sourceProperties = PropertyMappingResolver.determinePropertyMappings(
                 mappingParamName = context.paramName,

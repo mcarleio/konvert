@@ -116,6 +116,8 @@ object KonverterCodeGenerator {
                     .validated(konvertData.mapKSFunctionDeclaration, logger),
                 enforcedConstructorTypes = konvertData.annotationData.constructor,
                 context = MappingContext(
+                    sourceClassDeclaration = konvertData.sourceClassDeclaration,
+                    targetClassDeclaration = konvertData.targetClassDeclaration,
                     source = konvertData.sourceType,
                     target = konvertData.targetType,
                     paramName = konvertData.paramName,

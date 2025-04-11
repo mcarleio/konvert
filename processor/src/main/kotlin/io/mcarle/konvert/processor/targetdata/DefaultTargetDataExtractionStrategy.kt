@@ -23,22 +23,16 @@ class DefaultTargetDataExtractionStrategy : TargetDataExtractionStrategy {
         }
 
         val properties = classDeclaration.getAllProperties()
-            .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }
             .filter { it.extensionReceiver == null }
-            .mapNotNull {
-                if (it.isMutable) {
-                    TargetDataExtractionStrategy.TargetVarProperty(it)
-                } else {
-                    null
-                }
-            }
+            .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }
+            .filter { it.isMutable }
+            .map { TargetDataExtractionStrategy.TargetVarProperty(it) }
 
         val setters = classDeclaration.getAllFunctions()
             .filter { it.extensionReceiver == null }
             .filter { it.origin in listOf(Origin.JAVA, Origin.JAVA_LIB) }
             .filter { it.parameters.size == 1 }
-            .filter { it.simpleName.asString().startsWith("set") }
-            .filter { it.returnType?.resolve() == resolver.builtIns.unitType }
+            .filter { isSetter(it.simpleName.asString()) }
             .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }
             .map {
                 TargetDataExtractionStrategy.TargetSetter(
@@ -58,7 +52,13 @@ class DefaultTargetDataExtractionStrategy : TargetDataExtractionStrategy {
         )
     }
 
-    private fun determineCorrespondingGetter(setter: KSFunctionDeclaration, classDeclaration: KSClassDeclaration, resolver: Resolver): KSFunctionDeclaration? {
+    private fun isSetter(functionName: String) = functionName.startsWith("set") && !functionName[3].isLowerCase()
+
+    private fun determineCorrespondingGetter(
+        setter: KSFunctionDeclaration,
+        classDeclaration: KSClassDeclaration,
+        resolver: Resolver
+    ): KSFunctionDeclaration? {
         val booleanType = resolver.builtIns.booleanType
 
         return classDeclaration.getAllFunctions()
@@ -71,7 +71,8 @@ class DefaultTargetDataExtractionStrategy : TargetDataExtractionStrategy {
     }
 
     private fun allowedGetterNames(setter: KSFunctionDeclaration, booleanType: KSType): Array<String> {
-        val propertyNamePascalCase = TargetDataExtractionStrategy.TargetSetter.extractPropertyName(setter).replaceFirstChar { it.uppercase() }
+        val propertyNamePascalCase =
+            TargetDataExtractionStrategy.TargetSetter.extractPropertyName(setter).replaceFirstChar { it.uppercase() }
         return if (setter.parameters.first().type.resolve() == booleanType) {
             arrayOf("is$propertyNamePascalCase", "get$propertyNamePascalCase")
         } else {

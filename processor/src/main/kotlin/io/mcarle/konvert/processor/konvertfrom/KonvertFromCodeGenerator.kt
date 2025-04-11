@@ -34,6 +34,8 @@ object KonvertFromCodeGenerator {
                         mappings = data.annotationData.mappings.validated(data.sourceClassDeclaration, logger),
                         enforcedConstructorTypes = data.annotationData.constructor,
                         context = MappingContext(
+                            sourceClassDeclaration = data.sourceClassDeclaration,
+                            targetClassDeclaration = data.targetClassDeclaration,
                             source = data.sourceClassDeclaration.asStarProjectedType(),
                             target = data.targetClassDeclaration.asStarProjectedType(),
                             paramName = data.paramName,

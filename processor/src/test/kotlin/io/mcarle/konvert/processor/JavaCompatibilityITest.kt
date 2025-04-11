@@ -71,9 +71,12 @@ public class JavaAddress {
                     contents =
                         """
 import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
 
-@KonvertTo(JavaAddress::class)
-data class Address(val street: String, val verified: Boolean, val primary: Boolean)
+@KonvertTo(JavaAddress::class, mappings = [
+    Mapping(target = "id", ignore = true)
+])
+data class Address(val street: String, val streetNum: Int, val verified: Boolean, val primary: Boolean)
                     """.trimIndent()
                 ),
                 SourceFile.java(
@@ -81,7 +84,9 @@ data class Address(val street: String, val verified: Boolean, val primary: Boole
                     contents =
                         """
 public class JavaAddress {
+    private int id = 0;
     private String street_ = "";
+    private int streetNum = 0;
     private Boolean verified = null;
     private boolean primary = false;
 
@@ -105,6 +110,23 @@ public class JavaAddress {
         return this.primary;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return this.id;
+    }
+
+    public JavaAddress setStreetNum(int streetNum) {
+        this.streetNum = streetNum;
+        return this;
+    }
+
+    public int getStreetNum() {
+        return this.streetNum;
+    }
+
 }
                 """.trimIndent()
                 )
@@ -119,6 +141,7 @@ public class JavaAddress {
               javaAddress.street = street
               javaAddress.setVerified(verified)
               javaAddress.isPrimary = primary
+              javaAddress.streetNum = streetNum
             }
             """.trimIndent(),
             extensionFunctionCode

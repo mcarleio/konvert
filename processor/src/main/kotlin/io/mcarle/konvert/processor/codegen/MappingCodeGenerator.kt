@@ -34,7 +34,7 @@ class MappingCodeGenerator {
         val className = constructor.parentDeclaration!!.simpleName.asString()
         val constructorCode = constructorCode(
             className = context.targetClassImportName,
-            classDeclaration = constructor.parentDeclaration as? KSClassDeclaration,
+            classDeclaration = context.targetClassDeclaration,
             constructor = constructor,
             sourceProperties = sourceProperties
         )
@@ -64,20 +64,20 @@ class MappingCodeGenerator {
 
     private fun constructorCode(
         className: String?,
-        classDeclaration: KSClassDeclaration?,
+        classDeclaration: KSClassDeclaration,
         constructor: KSFunctionDeclaration,
         sourceProperties: List<PropertyMappingInfo>
     ): CodeBlock {
         if (className == null) {
             return if (constructor.parameters.isEmpty()) {
-                CodeBlock.of("%T()", classDeclaration?.toClassName())
+                CodeBlock.of("%T()", classDeclaration.toClassName())
             } else {
                 CodeBlock.of(
                     """
 %T(${"⇥\n%L"}
 ⇤)
                     """.trimIndent(),
-                    classDeclaration?.toClassName(),
+                    classDeclaration.toClassName(),
                     constructorParamsCode(constructor = constructor, sourceProperties = sourceProperties)
                 )
             }
