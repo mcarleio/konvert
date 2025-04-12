@@ -7,7 +7,7 @@ plugins {
 
 val konvertVersion = "0.1.0-SNAPSHOT"
 
-val jUnitVersion = "5.9.2"
+val jUnitVersion = "5.12.2"
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
@@ -15,6 +15,7 @@ dependencies {
     implementation("io.mcarle:konvert-spring-annotations:$konvertVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jUnitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jUnitVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // KSP to generate mapping code
     ksp("io.mcarle:konvert:$konvertVersion")
