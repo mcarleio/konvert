@@ -39,7 +39,7 @@ updates:
 
   # Update direct dependencies in /docs weekly
   - package-ecosystem: "bundler"
-    directory: "/"
+    directory: "/docs"
     schedule:
       interval: "weekly"
     allow:

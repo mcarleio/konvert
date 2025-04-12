@@ -206,7 +206,7 @@ To run all tests, append the property `runAllTests`, e.g.:
 
 To serve the Jekyll site locally, simply run the following command inside `docs`:
 
-> docker run --rm -it -v "$PWD":/srv/jekyll -p 4000:4000 jekyll/jekyll jekyll serve
+> docker run --rm -it -v "$PWD":/site -p 4000:4000 bretfisher/jekyll-serve
 
 ### CI
 
