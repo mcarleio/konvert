@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.1.0]
+
+### Bug fixes
+* fix property mappings (e.g. when using empty constructor or having additional variables) to use correct import statement [#139](https://github.com/mcarleio/konvert/issues/139)
+
 ### Improvements
 * Improve Java support and compatibility [#125](https://github.com/mcarleio/konvert/issues/125)
   * values in records are now identified as sources
@@ -297,7 +302,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v4.0.1...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v4.1.0...HEAD
+
+[4.1.0]: https://github.com/mcarleio/konvert/compare/v4.0.1...v4.1.0
 
 [4.0.1]: https://github.com/mcarleio/konvert/compare/v4.0.0...v4.0.1
 
