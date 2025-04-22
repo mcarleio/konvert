@@ -182,7 +182,7 @@ $className(${"⇥\n%L"}
                 valueParamHasDefault = true
             )
             if (convertedValue != null) {
-                CodeBlock.of("$targetVarName.${sourceProperty.targetName}·=·$convertedValue")
+                CodeBlock.of("$targetVarName.${sourceProperty.targetName}·=·%L", convertedValue)
             } else {
                 null
             }
