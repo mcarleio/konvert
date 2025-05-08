@@ -923,4 +923,56 @@ data class TargetClass(val property: Int)
         assertContains(compilationResult.messages, NoMatchingTypeConverterException::class.qualifiedName!!)
     }
 
+    @Test
+    fun emptyConstructorPropertiesDifferentPackage() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "a/SourceClass.kt",
+                    contents =
+                        """
+package a
+
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.processor.SomeTestClass
+import b.TargetClass
+
+@KonvertTo(TargetClass::class)
+data class SourceClass(val property: SomeTestClass)
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "b/TargetClass.kt",
+                    contents =
+                        """
+package b
+
+import io.mcarle.konvert.processor.SomeOtherTestClass
+
+class TargetClass {
+    var property: SomeOtherTestClass? = null
+}
+                    """.trimIndent()
+                ),
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            package a
+
+            import b.TargetClass
+            import io.mcarle.konvert.processor.toSomeOtherTestClass
+
+            public fun SourceClass.toTargetClass(): TargetClass = TargetClass().also { targetClass ->
+              targetClass.property = property.toSomeOtherTestClass()
+            }
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
 }

@@ -179,6 +179,7 @@ $className(${"⇥\n%L"}
     ): CodeBlock {
         val propertyCodeBlocks = targetProperties.mapNotNull { targetProperty ->
             val sourceProperty = determinePropertyMappingInfo(sourceProperties, targetProperty)
+
             if (sourceProperty == null) {
                 if (!Configuration.ignoreUnmappedTargetProperties) {
                     throw PropertyMappingNotExistingException(targetProperty, sourceProperties)
@@ -197,7 +198,7 @@ $className(${"⇥\n%L"}
                     valueParamHasDefault = true
                 )
                 if (convertedValue != null) {
-                    CodeBlock.of("$targetVarName.${sourceProperty.targetName}·=·$convertedValue")
+                    CodeBlock.of("$targetVarName.${sourceProperty.targetName}·=·%L", convertedValue)
                 } else {
                     null
                 }
