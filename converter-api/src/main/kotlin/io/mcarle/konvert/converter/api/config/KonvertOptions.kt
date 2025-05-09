@@ -110,19 +110,14 @@ object GENERATED_MODULE_SUFFIX_OPTION : Option<String>("konvert.generatedModuleS
 object PARSE_DEPRECATED_META_INF_FILES_OPTION : Option<Boolean>("konvert.parseDeprecatedMetaInfFiles", false)
 
 /**
- * Controls how properties outside the constructor (non-constructor properties) are handled during mapping.
+ * Controls how properties outside the constructor (non-constructor properties and setters) are handled during mapping.
  *
  * Possible values:
- * - "ignore" (default): Legacy behavior: if constructor parameters match all source mappings and non-constructor mapping is disabled
- * - "auto": generates mappings for non-constructor target properties by matching source properties by name and type.
- * - "strict": only non-constructor target properties that are explicitly declared in @Mapping will be mapped.
+ * - "explicit" (default): only non-constructor target properties that are explicitly declared in @Mapping will be mapped.
+ * - "matching": generates mappings for non-constructor target properties by matching source properties by name.
+ * - "all": all non-constructor target properties will be mapped. Throws exceptions if no matching source property is found.
  */
-object NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION : Option<String>("konvert.non-constructor-properties-mapping", "ignore")
-
-/**
- * If set to false (default), the processor will fail with an error if a target property is not mapped.
- * If set to true, unmapped target properties will be silently ignored.
- *
- * This applies only to properties considered for mapping – depending on the current mapping mode.
- */
-object IGNORE_UNMAPPED_TARGET_PROPERTIES_OPTION : Option<Boolean>("konvert.ignore-unmapped-target-properties", false)
+object NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION : Option<NonConstructorPropertiesMapping>(
+    key = "konvert.non-constructor-properties-mapping",
+    defaultValue = NonConstructorPropertiesMapping.EXPLICIT
+)
