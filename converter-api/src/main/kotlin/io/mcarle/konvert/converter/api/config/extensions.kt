@@ -53,14 +53,11 @@ val Configuration.Companion.parseDeprecatedMetaInfFiles: Boolean
 /**
  * @see NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION
  */
-val Configuration.Companion.nonConstructorPropertiesMapping: String
-    get() = NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION.get(CURRENT) { it }
-
-/**
- * @see IGNORE_UNMAPPED_TARGET_PROPERTIES_OPTION
- */
-val Configuration.Companion.ignoreUnmappedTargetProperties: Boolean
-    get() = IGNORE_UNMAPPED_TARGET_PROPERTIES_OPTION.get(CURRENT, String::toBoolean)
+val Configuration.Companion.nonConstructorPropertiesMapping: NonConstructorPropertiesMapping
+    get() = NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION.get(CURRENT) { configString ->
+        NonConstructorPropertiesMapping.entries.firstOrNull { it.name.equals(configString, ignoreCase = true) }
+            ?: NonConstructorPropertiesMapping.EXPLICIT // Fallback to default: EXPLICIT
+    }
 
 /**
  * Reads the value for [Option.key] from the provided `options` or fallbacks to the [Option.defaultValue].

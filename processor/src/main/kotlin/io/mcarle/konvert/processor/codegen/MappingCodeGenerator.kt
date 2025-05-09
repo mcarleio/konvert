@@ -15,7 +15,6 @@ import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.enableConverters
 import io.mcarle.konvert.converter.api.config.enforceNotNull
-import io.mcarle.konvert.converter.api.config.ignoreUnmappedTargetProperties
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.exceptions.IgnoredTargetNotIgnorableException
 import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
@@ -179,30 +178,19 @@ $className(${"⇥\n%L"}
     ): CodeBlock {
         val propertyCodeBlocks = targetProperties.mapNotNull { targetProperty ->
             val sourceProperty = determinePropertyMappingInfo(sourceProperties, targetProperty)
-            if (sourceProperty == null) {
-                if (!Configuration.ignoreUnmappedTargetProperties) {
-                    throw PropertyMappingNotExistingException(targetProperty, sourceProperties)
-                } else {
-                    logger.warn(
-                        "Ignoring unmapped target property `${targetProperty.simpleName.asString()}`  due to configuration 'konvert.ignore-unmapped-target-properties=true'",
-                        targetProperty
-                    )
-                    null
-                }
+            val convertedValue = convertValue(
+                source = sourceProperty,
+                targetTypeRef = targetProperty.type,
+                valueParamIsNullable = false,
+                valueParamHasDefault = true
+            )
+            if (convertedValue != null) {
+                CodeBlock.of("$targetVarName.${sourceProperty.targetName}·=·%L", convertedValue)
             } else {
-                val convertedValue = convertValue(
-                    source = sourceProperty,
-                    targetTypeRef = targetProperty.type,
-                    valueParamIsNullable = false,
-                    valueParamHasDefault = true
-                )
-                if (convertedValue != null) {
-                    CodeBlock.of("$targetVarName.${sourceProperty.targetName}·=·%L", convertedValue)
-                } else {
-                    null
-                }
+                null
             }
         }
+
         val setterCodeBlocks = targetSetters.mapNotNull { targetSetter ->
             val sourceProperty = determinePropertyMappingInfo(sourceProperties, targetSetter)
             val convertedValue = convertValue(
@@ -234,8 +222,10 @@ $className(${"⇥\n%L"}
     private fun determinePropertyMappingInfo(
         propertyMappings: List<PropertyMappingInfo>,
         ksPropertyDeclaration: KSPropertyDeclaration
-    ): PropertyMappingInfo? = propertyMappings.firstOrNull {
-        it.targetName == ksPropertyDeclaration.simpleName.asString()
+    ): PropertyMappingInfo {
+        return propertyMappings.firstOrNull {
+            it.targetName == ksPropertyDeclaration.simpleName.asString()
+        } ?: throw PropertyMappingNotExistingException(ksPropertyDeclaration, propertyMappings)
     }
 
     private fun determinePropertyMappingInfo(
