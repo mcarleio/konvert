@@ -7,7 +7,7 @@ plugins {
 
 val konvertVersion = "0.1.0-SNAPSHOT"
 
-val jUnitVersion = "5.12.2"
+val jUnitVersion = "5.13.0"
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
