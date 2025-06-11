@@ -1,23 +1,60 @@
+import com.vanniktech.maven.publish.KotlinJvm
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
     `java-library`
-    `maven-publish`
+    id("com.vanniktech.maven.publish")
     signing
 }
 
 group = "io.mcarle"
 version = System.getenv("RELEASE_VERSION") ?: "0.1.0-SNAPSHOT"
 
-publishing {
+mavenPublishing {
+    configure(KotlinJvm())
+
     if (System.getenv("CI") != null) {
-        repositories {
-            maven {
-                name = "OSSRH"
-                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-                credentials {
-                    username = System.getenv("OSSRH_USERNAME")
-                    password = System.getenv("OSSRH_PASSWORD")
-                }
+        publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+        signAllPublications()
+    }
+
+    val artifactId = if (project.name.contains("konvert")) {
+        project.name
+    } else {
+        "konvert-${project.name}"
+    }
+    coordinates(null, artifactId)
+
+    pom {
+        name.set(artifactId)
+        description.set("Konvert is a KSP to generate mapping code between types")
+        url.set("https://github.com/mcarleio/konvert")
+
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
             }
+        }
+        developers {
+            developer {
+                name.set("Marcel Carlé")
+                url.set("https://mcarle.io")
+            }
+        }
+        scm {
+            connection.set("scm:git:git://github.com/mcarleio/konvert.git")
+            developerConnection.set("scm:git:ssh://github.com:mcarleio/konvert.git")
+            url.set("https://github.com/mcarleio/konvert")
+        }
+
+        inceptionYear.set("2023")
+    }
+}
+
+publishing {
+    if (System.getenv("CI") != null && System.getenv("GITHUB_TOKEN") != null) {
+        repositories {
             maven {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/mcarleio/konvert")
@@ -27,56 +64,5 @@ publishing {
                 }
             }
         }
-    }
-    publications {
-        create<MavenPublication>("maven") {
-
-            if (project.name.contains("konvert")) {
-                artifactId = project.name
-            } else {
-                artifactId = "konvert-${project.name}"
-            }
-
-            from(components["java"])
-
-            pom {
-                name.set(artifactId)
-                description.set("Konvert is a KSP to generate mapping code between types")
-                url.set("https://github.com/mcarleio/konvert")
-
-                licenses {
-                    license {
-                        name.set("The Apache License, Version 2.0")
-                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-                    }
-                }
-                developers {
-                    developer {
-                        name.set("Marcel Carlé")
-                        url.set("https://mcarle.io")
-                    }
-                }
-                scm {
-                    connection.set("scm:git:git://github.com/mcarleio/konvert.git")
-                    developerConnection.set("scm:git:ssh://github.com:mcarleio/konvert.git")
-                    url.set("https://github.com/mcarleio/konvert")
-                }
-
-                inceptionYear.set("2023")
-            }
-
-        }
-    }
-}
-
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
-
-if (System.getenv("CI") != null) {
-    signing {
-        useInMemoryPgpKeys(System.getenv("SIGN_KEYID"), System.getenv("SIGN_KEY"), System.getenv("SIGN_KEY_PASS"))
-        sign(publishing.publications["maven"])
     }
 }
