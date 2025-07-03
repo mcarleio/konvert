@@ -8,11 +8,7 @@ import com.google.devtools.ksp.symbol.Variance
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ksp.toTypeName
-import io.mcarle.konvert.converter.api.AbstractTypeConverter
-import io.mcarle.konvert.converter.api.TypeConverter
-import io.mcarle.konvert.converter.api.TypeConverterRegistry
-import io.mcarle.konvert.converter.api.classDeclaration
-import io.mcarle.konvert.converter.api.isNullable
+import io.mcarle.konvert.converter.api.*
 
 internal const val ITERABLE = "kotlin.collections.Iterable"
 internal const val MUTABLEITERABLE = "kotlin.collections.MutableIterable"
@@ -105,20 +101,14 @@ abstract class IterableToXConverter(
 
         val args = mutableListOf<Any>()
 
-        val mapSourceContentCode = when {
-            genericSourceType == genericTargetType -> fieldName
-            needsNotNullAssertionOperator(genericSourceType, genericTargetType) -> {
-                listTypeChanged = true
-                "$fieldName$nc.map·{·it!!·}"
-            }
-
-            genericSourceType == genericTargetType.makeNotNullable() -> {
+        val mapSourceContentCode = when (genericSourceType) {
+            genericTargetType -> fieldName
+            genericTargetType.makeNotNullable() -> {
                 if (genericTargetVariance == Variance.INVARIANT) {
                     castNeeded = true
                 }
                 fieldName
             }
-
             else -> {
                 listTypeChanged = true
                 args += typeConverter.convert("it", genericSourceType, genericTargetType)
