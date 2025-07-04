@@ -42,7 +42,7 @@ class EnumToEnumConverterITest : ConverterITest() {
             sourceTypeName = targetTypeName,
             targetTypeName = sourceTypeName,
             converter = EnumToEnumConverter(),
-            expectedResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectedResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             additionalCode = this.generateAdditionalCode()
         )
     }

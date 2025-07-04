@@ -101,7 +101,7 @@ class TargetClass(
     fun failOnAnnotationOnClassWithGenerics() {
         val (_, result) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -129,7 +129,7 @@ class TargetClass<T>(
     fun failOnAnnotationOnClassWithoutCompanion() {
         val (_, result) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -155,7 +155,7 @@ class TargetClass(
     fun failOnAnnotationOnCompanionOfAnnotationClass() {
         val (_, result) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -183,7 +183,7 @@ annotation class TargetClass(
     fun failOnAnnotationOnCompanionOfClassWithGenerics() {
         val (_, result) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -211,7 +211,7 @@ class TargetClass<T>(
     fun failOnAnnotatingAnObject() {
         val (_, result) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
