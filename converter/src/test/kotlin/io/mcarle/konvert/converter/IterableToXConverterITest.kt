@@ -5,12 +5,14 @@ import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.utils.ConverterITest
 import io.mcarle.konvert.converter.utils.SourceToTargetTypeNamePair
 import io.mcarle.konvert.converter.utils.VerificationData
+import io.mcarle.konvert.processor.generatedSourceFor
 import kotlinx.collections.immutable.persistentHashSetOf
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments.arguments
@@ -111,11 +113,59 @@ class IterableToXConverterITest : ConverterITest() {
         )
     }
 
+    @Test
+    fun issue161() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(
+                SameTypeConverter(),
+                IterableToListConverter()
+            ),
+            code = SourceFile.kotlin(
+                "issue161.kt",
+                """
+                    import io.mcarle.konvert.api.Konfig
+                    import io.mcarle.konvert.api.KonvertFrom
+
+                    data class SourceParent(val children: List<SourceChild?>)
+                    data class SourceChild(val value: String?)
+
+                    data class TargetParent(val children: List<TargetChild>) {
+                        @KonvertFrom(
+                            SourceParent::class,
+                            options = [ Konfig(key = "konvert.enforce-not-null", value = "true") ],
+                        )
+                        companion object
+                    }
+                    data class TargetChild(val value: String) {
+                        @KonvertFrom(
+                            SourceChild::class,
+                            options = [ Konfig(key = "konvert.enforce-not-null", value = "true") ],
+                        )
+                        companion object
+                    }
+                """.trimIndent()
+            )
+        )
+
+        assertSourceEquals("""
+            public fun TargetParent.Companion.fromSourceParent(sourceParent: SourceParent): TargetParent = TargetParent(
+              children = sourceParent.children.map { it?.let { TargetChild.fromSourceChild(sourceChild = it) }!! }
+            )
+        """.trimIndent(), compilation.generatedSourceFor("TargetParentKonverter.kt"))
+
+        assertSourceEquals("""
+            public fun TargetChild.Companion.fromSourceChild(sourceChild: SourceChild): TargetChild = TargetChild(
+              value = sourceChild.value!!
+            )
+        """.trimIndent(), compilation.generatedSourceFor("TargetChildKonverter.kt"))
+
+    }
+
     private fun generateAdditionalCode(): List<SourceFile> = listOf(
         SourceFile.kotlin(
             name = "MyTypealiases.kt",
             contents =
-            """
+                """
 typealias MyString = String
 typealias ReallyMyInt = Int
 typealias MyInt = ReallyMyInt
