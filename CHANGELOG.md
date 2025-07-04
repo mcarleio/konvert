@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug fixes
+* fix iterable mapping generating illegal code in specific cases [#161](https://github.com/mcarleio/konvert/issues/161) (thanks to [@felhag](https://github.com/felhag)) [#162](https://github.com/mcarleio/konvert/pull/162)
+
 ## [4.1.0]
 
 ### Bug fixes
