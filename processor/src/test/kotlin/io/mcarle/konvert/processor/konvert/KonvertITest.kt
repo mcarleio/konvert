@@ -958,12 +958,12 @@ interface SomeConverter {
 
         assertSourceEquals(
             """
-            import b.SomeClass
-            import a.SomeClass as A
+            import a.SomeClass as ASomeClass
+            import b.SomeClass as BSomeClass
 
             public object SomeConverterImpl : SomeConverter {
-              override fun toSomeClass(source: A?): SomeClass? = source?.let {
-                SomeClass().also { someClass ->
+              override fun toSomeClass(source: ASomeClass?): BSomeClass? = source?.let {
+                BSomeClass().also { someClass ->
                   someClass.property = source.property
                 }
               }

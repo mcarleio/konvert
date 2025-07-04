@@ -143,7 +143,9 @@ object KonverterCodeGenerator {
     }
 
     private fun isAlias(typeReference: KSTypeReference, type: KSType): Boolean {
-        return typeReference.toString().takeWhile { it != '<' } != type.makeNotNullable().toString().takeWhile { it != '<' }
+        // Waiting for solution of https://github.com/google/ksp/issues/2391
+        // to be able to identify import alias
+        return typeReference.toString().takeWhile { it != '<' }.removeSuffix("?") != type.makeNotNullable().toString().takeWhile { it != '<' }
     }
 
     private fun retrieveCodeBuilder(
