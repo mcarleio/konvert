@@ -975,4 +975,42 @@ class TargetClass {
         )
     }
 
+    @Test
+    fun determineConstructorWithParameterBeingIgnoredWhichHasADefaultValueWhileHavingAnotherNonMatchingConstructor_issue160() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "code.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(TargetClass::class, mappings = [
+    Mapping(target = "property", ignore = true)
+])
+data class SourceClass(var id: Int)
+data class TargetClass(var property: Double? = null, var id: Int) {
+    constructor(
+        other: String,
+    ) : this(
+        id = other.toInt(),
+    )
+}
+                    """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
+              id = id
+            )
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
 }
