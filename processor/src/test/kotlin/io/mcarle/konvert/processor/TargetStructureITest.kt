@@ -337,7 +337,6 @@ class TargetClass {
             """
             public fun SourceClass.toTargetClass(): TargetClass = TargetClass().also { targetClass ->
               targetClass.targetProperty = property
-              targetClass.property = property
             }
             """.trimIndent(),
             extensionFunctionCode
@@ -355,9 +354,7 @@ class TargetClass {
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
-@KonvertTo(TargetClass::class, mappings=[
-    Mapping(target="property1", source = "property1")
-])
+@KonvertTo(TargetClass::class)
 class SourceClass(
     val property1: String,
     val property2: String,
