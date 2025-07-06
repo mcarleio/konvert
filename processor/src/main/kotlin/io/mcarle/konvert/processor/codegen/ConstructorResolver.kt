@@ -77,7 +77,6 @@ object ConstructorResolver {
         if (props.size >= parameters.filter { !it.hasDefault }.size) {
             return parameters.all { parameter ->
                 props.any { property ->
-//                    property.targetName == parameter.name?.asString() && !property.ignore
                     property.targetName == parameter.name?.asString() && (!property.ignore || parameter.hasDefault)
                 }
             }

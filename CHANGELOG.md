@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.1.2]
+
+### Bug fixes
+* fix target constructor determination to allow use of a constructor with an ignored target property if the parameter has a default value [#160](https://github.com/mcarleio/konvert/issues/160)
+
+## [4.1.1]
+
 ### Bug fixes
 * fix iterable mapping generating illegal code in specific cases [#161](https://github.com/mcarleio/konvert/issues/161) (thanks to [@felhag](https://github.com/felhag)) [#162](https://github.com/mcarleio/konvert/pull/162)
 
@@ -305,7 +312,11 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v4.1.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v4.1.2...HEAD
+
+[4.1.2]: https://github.com/mcarleio/konvert/compare/v4.1.1...v4.1.2
+
+[4.1.1]: https://github.com/mcarleio/konvert/compare/v4.1.0...v4.1.1
 
 [4.1.0]: https://github.com/mcarleio/konvert/compare/v4.0.1...v4.1.0
 
