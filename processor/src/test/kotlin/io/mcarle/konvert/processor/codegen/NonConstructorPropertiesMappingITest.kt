@@ -10,10 +10,6 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * @author milan.machain@gmail.com
- * @since 2025-04-08
- */
 @Suppress("RedundantVisibilityModifier")
 @OptIn(ExperimentalCompilerApi::class)
 class NonConstructorPropertiesMappingITest : KonverterITest() {
@@ -25,7 +21,6 @@ class NonConstructorPropertiesMappingITest : KonverterITest() {
             expectResultCode = KotlinCompilation.ExitCode.OK,
             options = mapOf(
                 "konvert.non-constructor-properties-mapping" to "auto",
-                "konvert.ignore-unmapped-target-properties" to "true"
             ),
             code = SourceFile.kotlin(
                 name = "TestFooBarMapperKonverter.kt",
@@ -72,8 +67,7 @@ interface FooBarMapper {
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.OK,
             options = mapOf(
-                "konvert.non-constructor-properties-mapping" to "strict",
-                "konvert.ignore-unmapped-target-properties" to "false"
+                "konvert.non-constructor-properties-mapping" to "explicit",
             ),
             code = SourceFile.kotlin(
                 name = "StrictConstructorOnly.kt",
@@ -105,8 +99,7 @@ interface ConstructorOnlyMapper {
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.OK,
             options = mapOf(
-                "konvert.non-constructor-properties-mapping" to "strict",
-                "konvert.ignore-unmapped-target-properties" to "true"
+                "konvert.non-constructor-properties-mapping" to "explicit",
             ),
             code = SourceFile.kotlin(
                 name = "StrictExplicit.kt",
@@ -126,12 +119,7 @@ class Bar(val id: String) {
     var extra: String? = null
 }
 
-@Konverter(
-    options = [
-        Konfig("konvert.non-constructor-properties-mapping", "strict"),
-        Konfig("konvert.ignore-unmapped-target-properties", "true")
-    ]
-)
+@Konverter
 interface StrictExplicitMapper {
     @Konvert(
         mappings = [Mapping(target = "description", source = "description")]
@@ -154,8 +142,7 @@ interface StrictExplicitMapper {
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.OK,
             options = mapOf(
-                "konvert.non-constructor-properties-mapping" to "strict",
-                "konvert.ignore-unmapped-target-properties" to "true"
+                "konvert.non-constructor-properties-mapping" to "auto",
             ),
             code = SourceFile.kotlin(
                 name = "StrictFallback.kt",
@@ -193,8 +180,7 @@ interface FallbackMapper {
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.OK,
             options = mapOf(
-                "konvert.non-constructor-properties-mapping" to "strict",
-                "konvert.ignore-unmapped-target-properties" to "true"
+                "konvert.non-constructor-properties-mapping" to "explicit",
             ),
             code = SourceFile.kotlin(
                 name = "StrictMappingOnConstructor.kt",
@@ -230,8 +216,7 @@ interface ConstructorMappedMapper {
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
             options = mapOf(
-                "konvert.non-constructor-properties-mapping" to "auto",
-                "konvert.ignore-unmapped-target-properties" to "false"
+                "konvert.non-constructor-properties-mapping" to "all",
             ),
             code = SourceFile.kotlin(
                 name = "AutoFails.kt",
@@ -254,7 +239,7 @@ interface AutoFailsMapper {
         )
 
         assertTrue(
-            compilationResult.messages.contains("PropertyMappingNotExistingException"),
+            compilationResult.messages.contains("Missing mappings for properties: extra"),
             "Expected failure due to unmapped 'extra' property:\n${compilationResult.messages}"
         )
     }
@@ -266,8 +251,7 @@ interface AutoFailsMapper {
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.OK,
             options = mapOf(
-                "konvert.non-constructor-properties-mapping" to "ignore",
-                "konvert.ignore-unmapped-target-properties" to "true"
+                "konvert.non-constructor-properties-mapping" to "auto",
             ),
             code = SourceFile.kotlin(
                 name = "IgnoreWithConstructorMapping.kt",
@@ -305,8 +289,7 @@ interface IgnoreCtorMapper {
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.OK,
             options = mapOf(
-                "konvert.non-constructor-properties-mapping" to "ignore",
-                "konvert.ignore-unmapped-target-properties" to "true"
+                "konvert.non-constructor-properties-mapping" to "auto",
             ),
             code = SourceFile.kotlin(
                 name = "IgnoreFallback.kt",
@@ -345,8 +328,7 @@ interface IgnoreTriggersAlsoMapper {
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
             options = mapOf(
-                "konvert.non-constructor-properties-mapping" to "strict",
-                "konvert.ignore-unmapped-target-properties" to "false"
+                "konvert.non-constructor-properties-mapping" to "explicit",
             ),
             code = SourceFile.kotlin(
                 name = "StrictFailsMissingSource.kt",
@@ -385,8 +367,7 @@ interface StrictMissingSourceMapper {
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.OK,
             options = mapOf(
-                "konvert.non-constructor-properties-mapping" to "strict",
-                "konvert.ignore-unmapped-target-properties" to "true"
+                "konvert.non-constructor-properties-mapping" to "explicit",
             ),
             code = SourceFile.kotlin(
                 name = "StrictMultipleNonConstructorProperties.kt",

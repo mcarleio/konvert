@@ -113,11 +113,12 @@ object PARSE_DEPRECATED_META_INF_FILES_OPTION : Option<Boolean>("konvert.parseDe
  * Controls how properties outside the constructor (non-constructor properties and setters) are handled during mapping.
  *
  * Possible values:
- * - "explicit" (default): only non-constructor target properties that are explicitly declared in @Mapping will be mapped.
- * - "matching": generates mappings for non-constructor target properties by matching source properties by name.
+ * - "auto" (default): behaves like "implicit" if no `@Mapping`s (other than ignoring ones) are present, otherwise behaves like "explicit".
+ * - "implicit": generates mappings for every non-constructor target property for which a matching source property exists.
+ * - "explicit": only non-constructor target properties that are explicitly declared within `@Mapping` will be mapped.
  * - "all": all non-constructor target properties will be mapped. Throws exceptions if no matching source property is found.
  */
 object NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION : Option<NonConstructorPropertiesMapping>(
     key = "konvert.non-constructor-properties-mapping",
-    defaultValue = NonConstructorPropertiesMapping.EXPLICIT
+    defaultValue = NonConstructorPropertiesMapping.AUTO
 )

@@ -56,7 +56,7 @@ val Configuration.Companion.parseDeprecatedMetaInfFiles: Boolean
 val Configuration.Companion.nonConstructorPropertiesMapping: NonConstructorPropertiesMapping
     get() = NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION.get(CURRENT) { configString ->
         NonConstructorPropertiesMapping.entries.firstOrNull { it.name.equals(configString, ignoreCase = true) }
-            ?: NonConstructorPropertiesMapping.EXPLICIT // Fallback to default: EXPLICIT
+            ?: NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION.defaultValue
     }
 
 /**
