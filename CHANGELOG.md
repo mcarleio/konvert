@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New features
+
+* New option `konvert.non-constructor-properties-mapping` to define how non-constructor target properties should be mapped: [#124](https://github.com/mcarleio/konvert/issues/124) (thanks to [@kosoj](https://github.com/kosoj) for idea and initial work [#138](https://github.com/mcarleio/konvert/pull/138))
+  * `auto` (default): Behaves like `implicit` if no explicit mappings are present, otherwise behaves like `explicit`.
+  * `explicit`: Only non-constructor target properties explicitly declared in mappings are mapped.
+  * `implicit`: Maps all non-constructor target properties with a matching source property or explicit mapping.
+  * `all`: All non-constructor target properties must be mapped, otherwise an exception is thrown.
+
+* New option `konvert.invalid-mapping-strategy` to define how invalid mappings should be handled:
+  * `warn` (default): Logs a warning and ignores invalid mappings.
+  * `fail`: Throws an exception when an invalid mapping is encountered.
+
+
 ## [4.1.2]
 
 ### Bug fixes
@@ -24,19 +37,6 @@ All notable changes to this project will be documented in this file.
   * values in records are now identified as sources
   * getter functions are now identified as sources
   * setter functions are now identified as targets
-
-### Added
-* Support for configurable mapping of non-constructor target properties:
-   * New option `konvert.non-constructor-properties-mapping` with values:
-      * `ignore` (default): only constructor parameters are mapped
-      * `auto`: all mutable properties matched by name will be mapped via `.also {}` block
-      * `strict`: only properties explicitly listed via `@Mapping(...)` are considered
-   * New option `konvert.ignore-unmapped-target-properties`:
-      * `false` (default): triggers `PropertyMappingNotExistingException` if any target property is not mapped
-      * `true`: unmapped target properties are ignored
-* Fallback mechanism: in `strict` mode, when target class has no constructor, all mutable properties are considered and a warning is logged.
-* New integration tests covering all combinations of options and edge cases
-* Updated documentation in `docs/options/index.adoc` with usage details and examples
 
 ## [4.0.1]
 

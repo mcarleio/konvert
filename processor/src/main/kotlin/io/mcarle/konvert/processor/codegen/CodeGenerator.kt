@@ -9,13 +9,15 @@ import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.InvalidMappingStrategy
 import io.mcarle.konvert.converter.api.config.NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION
 import io.mcarle.konvert.converter.api.config.NonConstructorPropertiesMapping
 import io.mcarle.konvert.converter.api.config.enforceNotNull
+import io.mcarle.konvert.converter.api.config.invalidMappingStrategy
 import io.mcarle.konvert.converter.api.config.nonConstructorPropertiesMapping
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
-import io.mcarle.konvert.processor.exceptions.KonvertException
+import io.mcarle.konvert.processor.exceptions.InvalidMappingException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 import io.mcarle.konvert.processor.sourcedata.DefaultSourceDataExtractionStrategy
@@ -37,75 +39,94 @@ class CodeGenerator constructor(
         mappingCodeParentDeclaration: KSDeclaration,
         additionalSourceParameters: List<KSValueParameter>
     ): CodeBlock {
-        try {
-            if (context.paramName != null) {
-                val existingTypeConverter = TypeConverterRegistry
-                    .firstOrNull {
-                        it.matches(context.source, context.target) && it !is AnnotatedConverter
-                    }
-
-                if (existingTypeConverter != null) {
-                    return CodeBlock.of(
-                        "return·%L",
-                        existingTypeConverter.convert(context.paramName, context.source, context.target)
-                    )
+        if (context.paramName != null && mappings.isEmpty()) {
+            val existingTypeConverter = TypeConverterRegistry
+                .firstOrNull {
+                    it.matches(context.source, context.target) && it !is AnnotatedConverter
                 }
+
+            if (existingTypeConverter != null) {
+                return CodeBlock.of(
+                    "return·%L",
+                    existingTypeConverter.convert(context.paramName, context.source, context.target)
+                )
             }
+        }
 
-            if (context.source.isNullable() && !context.target.isNullable() && !Configuration.enforceNotNull) {
-                throw NotNullOperatorNotEnabledException(context.paramName, context.source, context.target)
+        if (context.source.isNullable() && !context.target.isNullable() && !Configuration.enforceNotNull) {
+            throw NotNullOperatorNotEnabledException(context.paramName, context.source, context.target)
+        }
+
+        val sourceDataList =
+            sourceDataExtractionStrategy.extract(resolver, context.sourceClassDeclaration, mappingCodeParentDeclaration)
+        val targetData = targetDataExtractionStrategy.extract(resolver, context.targetClassDeclaration, mappingCodeParentDeclaration)
+
+        val sourceProperties = PropertyMappingResolver(logger).determinePropertyMappings(
+            mappingParamName = context.paramName,
+            mappings = mappings,
+            additionalSourceParameters = additionalSourceParameters,
+            sourceDataList = sourceDataList
+        )
+
+        val constructor = ConstructorResolver.determineConstructor(
+            targetData = targetData,
+            sourceProperties = sourceProperties,
+            constructorTypes = enforcedConstructorTypes
+        )
+
+        val constructorParameters = constructor.parameters
+
+        verifyAvailableMappingsForConstructorParameters(sourceProperties, constructorParameters)
+
+        verifyTargetExists(mappings, constructorParameters, targetData.varProperties, targetData.setter)
+
+        val effectiveNonConstructorPropertiesMappingMode = determineNonConstructorPropertiesMappingMode(
+            targetData,
+            sourceProperties
+        )
+
+        val variablesWithoutConstructorParameters = obtainTargetNonConstructorProperties(
+            sourceProperties,
+            constructorParameters,
+            targetData,
+            effectiveNonConstructorPropertiesMappingMode
+        )
+
+        val remainingSetters = obtainTargetNonConstructorSetters(
+            variablesWithoutConstructorParameters,
+            sourceProperties,
+            constructorParameters,
+            targetData,
+            effectiveNonConstructorPropertiesMappingMode
+        )
+
+        return MappingCodeGenerator(logger).generateMappingCode(
+            context,
+            sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
+            constructor,
+            variablesWithoutConstructorParameters.map { it.property },
+            remainingSetters.toList()
+        )
+    }
+
+    private fun verifyTargetExists(
+        mappings: List<Mapping>,
+        constructorParameters: List<KSValueParameter>,
+        varProperties: List<TargetDataExtractionStrategy.TargetVarProperty>,
+        setter: List<TargetDataExtractionStrategy.TargetSetter>
+    ) {
+        val mappingsWithMissingTargets = mappings.filter {
+            it.target !in varProperties.map { it.name }
+                && it.target !in setter.map { it.name }
+                && it.target !in constructorParameters.mapNotNull { it.name?.asString() }
+        }
+        if (mappingsWithMissingTargets.isNotEmpty()) {
+            when (Configuration.invalidMappingStrategy) {
+                InvalidMappingStrategy.WARN -> mappingsWithMissingTargets.forEach {
+                    logger.warn("Ignoring the mapping $it as the target field '${it.target}' does not exist.")
+                }
+                InvalidMappingStrategy.FAIL -> throw InvalidMappingException.missingTarget(mappingsWithMissingTargets)
             }
-
-            val sourceDataList =
-                sourceDataExtractionStrategy.extract(resolver, context.sourceClassDeclaration, mappingCodeParentDeclaration)
-            val targetData = targetDataExtractionStrategy.extract(resolver, context.targetClassDeclaration, mappingCodeParentDeclaration)
-
-            val sourceProperties = PropertyMappingResolver.determinePropertyMappings(
-                mappingParamName = context.paramName,
-                mappings = mappings,
-                additionalSourceParameters = additionalSourceParameters,
-                sourceDataList = sourceDataList
-            )
-
-            val constructor = ConstructorResolver.determineConstructor(
-                targetData = targetData,
-                sourceProperties = sourceProperties,
-                constructorTypes = enforcedConstructorTypes
-            )
-
-            val constructorParameters = constructor.parameters
-
-            verifyAvailableMappingsForConstructorParameters(sourceProperties, constructorParameters)
-
-            val effectiveNonConstructorPropertiesMappingMode = determineNonConstructorPropertiesMappingMode(
-                targetData,
-                sourceProperties
-            )
-
-            val variablesWithoutConstructorParameters = obtainTargetNonConstructorProperties(
-                sourceProperties,
-                constructorParameters,
-                targetData,
-                effectiveNonConstructorPropertiesMappingMode
-            )
-
-            val remainingSetters = obtainTargetNonConstructorSetters(
-                variablesWithoutConstructorParameters,
-                sourceProperties,
-                constructorParameters,
-                targetData,
-                effectiveNonConstructorPropertiesMappingMode
-            )
-
-            return MappingCodeGenerator(logger).generateMappingCode(
-                context,
-                sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
-                constructor,
-                variablesWithoutConstructorParameters.map { it.property },
-                remainingSetters.toList()
-            )
-        } catch (e: Exception) {
-            throw KonvertException(context.source, context.target, e)
         }
     }
 
@@ -125,7 +146,7 @@ class CodeGenerator constructor(
                 } else {
                     NonConstructorPropertiesMapping.EXPLICIT
                 }.also {
-                    logger.info(
+                    logger.logging(
                         "${NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION.key} resolved to: $it",
                         targetData.classDeclaration
                     )

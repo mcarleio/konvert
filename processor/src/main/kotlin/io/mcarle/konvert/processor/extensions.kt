@@ -12,6 +12,10 @@ import io.mcarle.konvert.api.NotAllowedParameterCombinationException
 import io.mcarle.konvert.api.TypeConverterName
 import io.mcarle.konvert.api.validate
 import io.mcarle.konvert.converter.api.classDeclaration
+import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.InvalidMappingStrategy
+import io.mcarle.konvert.converter.api.config.invalidMappingStrategy
+import io.mcarle.konvert.processor.exceptions.InvalidMappingException
 
 fun Iterable<Mapping>.validated(reference: KSNode, logger: KSPLogger) = filter { annotation ->
     try {
@@ -22,14 +26,22 @@ fun Iterable<Mapping>.validated(reference: KSNode, logger: KSPLogger) = filter {
         logger.warn(e.message!!, reference)
         false
     } catch (e: NotAllowedParameterCombinationException) {
-        // Only warn
-        logger.warn(e.message!!, reference)
-        true
+        when (Configuration.invalidMappingStrategy) {
+            InvalidMappingStrategy.WARN -> {
+                // Only warn
+                logger.warn(e.message!!, reference)
+                true
+            }
+            InvalidMappingStrategy.FAIL -> throw InvalidMappingException.incompatibleParameters(e)
+        }
     }
 }.also {
     groupBy { it.target }.onEach { (target, mappings) ->
         if (mappings.size > 1) {
-            logger.warn("Multiple mappings for target=$target", reference)
+            when (Configuration.invalidMappingStrategy) {
+                InvalidMappingStrategy.WARN -> logger.warn("Multiple mappings for target=$target", reference)
+                InvalidMappingStrategy.FAIL -> throw InvalidMappingException.duplicateTarget(mappings)
+            }
         }
     }
 }

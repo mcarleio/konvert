@@ -60,6 +60,15 @@ val Configuration.Companion.nonConstructorPropertiesMapping: NonConstructorPrope
     }
 
 /**
+ * @see INVALID_MAPPING_STRATEGY_OPTION
+ */
+val Configuration.Companion.invalidMappingStrategy: InvalidMappingStrategy
+    get() = INVALID_MAPPING_STRATEGY_OPTION.get(CURRENT) { configString ->
+        InvalidMappingStrategy.entries.firstOrNull { it.name.equals(configString, ignoreCase = true) }
+            ?: INVALID_MAPPING_STRATEGY_OPTION.defaultValue
+    }
+
+/**
  * Reads the value for [Option.key] from the provided `options` or fallbacks to the [Option.defaultValue].
  */
 inline fun <T> Option<T>.get(configuration: Configuration, mapping: (String) -> T): T {

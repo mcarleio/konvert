@@ -32,14 +32,16 @@ abstract class KonverterITest {
         otherConverters: List<TypeConverter> = emptyList(),
         expectResultCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
         options: Map<String, String> = emptyMap(),
-        code: SourceFile
+        code: SourceFile,
+        verbose: Boolean = false
     ): Pair<KotlinCompilation, JvmCompilationResult> {
         return compileWith(
             enabledConverters = enabledConverters,
             otherConverters = otherConverters,
             expectResultCode = expectResultCode,
             options = options,
-            code = arrayOf(code)
+            code = arrayOf(code),
+            verbose = verbose
         )
     }
 
@@ -48,11 +50,12 @@ abstract class KonverterITest {
         otherConverters: List<TypeConverter> = emptyList(),
         expectResultCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
         options: Map<String, String> = emptyMap(),
-        code: Array<SourceFile>
+        code: Array<SourceFile>,
+        verbose: Boolean = false
     ): Pair<KotlinCompilation, JvmCompilationResult> {
         TypeConverterRegistry.reinitConverterList(*enabled(*enabledConverters.toTypedArray()), *otherConverters.toTypedArray())
 
-        return compile(expectResultCode, options, *code)
+        return compile(expectResultCode, options, verbose, *code)
     }
 
     protected fun enabled(vararg converter: TypeConverter): Array<out TypeConverter> {
@@ -66,9 +69,10 @@ abstract class KonverterITest {
     private fun compile(
         expectResultCode: KotlinCompilation.ExitCode,
         options: Map<String, String>,
+        verbose: Boolean,
         vararg sourceFiles: SourceFile
     ): Pair<KotlinCompilation, JvmCompilationResult> {
-        val compilation = prepareCompilation(options, sourceFiles.toList())
+        val compilation = prepareCompilation(verbose, options, sourceFiles.toList())
 
         val result = compilation.compile()
         assertEquals(expectResultCode, result.exitCode)
@@ -76,22 +80,25 @@ abstract class KonverterITest {
         return compilation to result
     }
 
-    private fun prepareCompilation(options: Map<String, String>, sourceFiles: List<SourceFile>) = KotlinCompilation()
-        .apply {
-            workingDir = temporaryFolder
-            inheritClassPath = true
-            symbolProcessorProviders = mutableListOf(KonvertProcessorProvider())
-            sources = sourceFiles
-            verbose = false
-            languageVersion = "1.9"
-            jvmTarget = JvmTarget.JVM_17.description
-            kspProcessorOptions += options.toMutableMap().apply {
-                putIfAbsent(ADD_GENERATED_KONVERTER_ANNOTATION_OPTION.key, "$addGeneratedKonverterAnnotation")
-                putIfAbsent(GENERATED_MODULE_SUFFIX_OPTION.key, generatedModuleSuffix)
-                putIfAbsent(ENFORCE_NOT_NULL_OPTION.key, "$enforceNotNull")
-            }
-            kspWithCompilation = true
+    private fun prepareCompilation(
+        verboseCompilation: Boolean,
+        options: Map<String, String>,
+        sourceFiles: List<SourceFile>
+    ) = KotlinCompilation().apply {
+        workingDir = temporaryFolder
+        inheritClassPath = true
+        symbolProcessorProviders = mutableListOf(KonvertProcessorProvider())
+        sources = sourceFiles
+        verbose = verboseCompilation
+        languageVersion = "1.9"
+        jvmTarget = JvmTarget.JVM_17.description
+        kspProcessorOptions += options.toMutableMap().apply {
+            putIfAbsent(ADD_GENERATED_KONVERTER_ANNOTATION_OPTION.key, "$addGeneratedKonverterAnnotation")
+            putIfAbsent(GENERATED_MODULE_SUFFIX_OPTION.key, generatedModuleSuffix)
+            putIfAbsent(ENFORCE_NOT_NULL_OPTION.key, "$enforceNotNull")
         }
+        kspWithCompilation = true
+    }
 
     protected fun assertSourceEquals(@Language("kotlin") expected: String, generatedCode: String) {
         assertEquals(

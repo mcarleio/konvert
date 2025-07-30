@@ -16,6 +16,7 @@ import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
 import io.mcarle.konvert.converter.api.config.KONVERTER_GENERATE_CLASS_OPTION
 import io.mcarle.konvert.converter.api.config.KONVERTER_USE_REFLECTION_OPTION
 import io.mcarle.konvert.processor.KonverterITest
+import io.mcarle.konvert.processor.assertDoesNotContain
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
@@ -25,7 +26,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -1422,7 +1422,7 @@ interface Mapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        assertFalse { mapperCode.contains("@GeneratedKonverter") }
+        assertDoesNotContain(mapperCode, "@GeneratedKonverter")
 
         assertSourceEquals(
             """
@@ -1469,7 +1469,7 @@ interface Mapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        assertFalse { mapperCode.contains("@GeneratedKonverter") }
+        assertDoesNotContain(mapperCode, "@GeneratedKonverter")
 
         assertSourceEquals(
             """
@@ -1514,7 +1514,7 @@ interface Mapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        assertFalse { mapperCode.contains("@GeneratedKonverter") }
+        assertDoesNotContain(mapperCode, "@GeneratedKonverter")
 
         assertSourceEquals(
             """

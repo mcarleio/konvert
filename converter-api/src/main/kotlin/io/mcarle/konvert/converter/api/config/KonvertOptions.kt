@@ -113,12 +113,35 @@ object PARSE_DEPRECATED_META_INF_FILES_OPTION : Option<Boolean>("konvert.parseDe
  * Controls how properties outside the constructor (non-constructor properties and setters) are handled during mapping.
  *
  * Possible values:
- * - "auto" (default): behaves like "implicit" if no `@Mapping`s (other than ignoring ones) are present, otherwise behaves like "explicit".
- * - "implicit": generates mappings for every non-constructor target property for which a matching source property exists.
- * - "explicit": only non-constructor target properties that are explicitly declared within `@Mapping` will be mapped.
- * - "all": all non-constructor target properties will be mapped. Throws exceptions if no matching source property is found.
+ * - "auto" (default)
+ * - "implicit"
+ * - "explicit"
+ * - "all"
+ *
+ * @see NonConstructorPropertiesMapping
+ * @since 4.2.0
  */
 object NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION : Option<NonConstructorPropertiesMapping>(
     key = "konvert.non-constructor-properties-mapping",
     defaultValue = NonConstructorPropertiesMapping.AUTO
+)
+
+/**
+ * Controls how Konvert reacts when it encounters an invalid mapping.
+ * A mapping is invalid when:
+ * - it defines a source property that is not present
+ * - it defines a target property that is not present
+ * - it defines incompatible parameters (e.g. source and ignore=true)
+ * - there are multiple mappings for the same target
+ *
+ * Possible values:
+ * - "warn" (default)
+ * - "fail"
+ *
+ * @see InvalidMappingStrategy
+ * @since 4.2.0
+ */
+object INVALID_MAPPING_STRATEGY_OPTION : Option<InvalidMappingStrategy>(
+    key = "konvert.invalid-mapping-strategy",
+    defaultValue = InvalidMappingStrategy.WARN
 )
