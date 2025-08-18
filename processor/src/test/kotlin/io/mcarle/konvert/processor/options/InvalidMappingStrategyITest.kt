@@ -82,6 +82,67 @@ class Target(val id: String)
     }
 
     @Test
+    fun `warn mode logs a warning message when a not allowed parameter combination is used in a mapping`() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.OK,
+            options = mapOf(
+                INVALID_MAPPING_STRATEGY_OPTION.key to InvalidMappingStrategy.WARN.name,
+            ),
+            code = SourceFile.kotlin(
+                name = "test.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(Target::class, mappings = [
+    Mapping(target = "id", constant = "\"bla\"", expression = "\"blub\""),
+])
+class Source(val id: String)
+class Target(val id: String)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(
+            compilationResult.messages,
+            "Not allowed parameter combination for target=id: [constant, expression]"
+        )
+    }
+
+    @Test
+    fun `warn mode logs a warning message when multiple mappings for the same target are defined`() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.OK,
+            options = mapOf(
+                INVALID_MAPPING_STRATEGY_OPTION.key to InvalidMappingStrategy.WARN.name,
+            ),
+            code = SourceFile.kotlin(
+                name = "test.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(Target::class, mappings = [
+    Mapping(target = "id", constant = "\"bla\""),
+    Mapping(target = "id", source = "id"),
+])
+class Source(val id: String)
+class Target(val id: String)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(
+            compilationResult.messages,
+            "Multiple mappings for target=id"
+        )
+    }
+
+    @Test
     fun `fail mode fails compilation when mapping defines unknown source`() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
@@ -146,6 +207,67 @@ class Target(val id: String)
         assertContains(
             compilationResult.messages,
             "The referenced target field(s) [does_not_exist] do not exist"
+        )
+    }
+
+    @Test
+    fun `fail mode fails compilation when a not allowed parameter combination is used in a mapping`() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            options = mapOf(
+                INVALID_MAPPING_STRATEGY_OPTION.key to InvalidMappingStrategy.FAIL.name,
+            ),
+            code = SourceFile.kotlin(
+                name = "test.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(Target::class, mappings = [
+    Mapping(target = "id", constant = "\"bla\"", expression = "\"blub\""),
+])
+class Source(val id: String)
+class Target(val id: String)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(
+            compilationResult.messages,
+            "Not allowed parameter combination for target=id: [constant, expression]"
+        )
+    }
+
+    @Test
+    fun `fail mode fails compilation when multiple mappings for the same target are defined`() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            options = mapOf(
+                INVALID_MAPPING_STRATEGY_OPTION.key to InvalidMappingStrategy.FAIL.name,
+            ),
+            code = SourceFile.kotlin(
+                name = "test.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(Target::class, mappings = [
+    Mapping(target = "id", constant = "\"bla\""),
+    Mapping(target = "id", source = "id"),
+])
+class Source(val id: String)
+class Target(val id: String)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(
+            compilationResult.messages,
+            "There are multiple mappings for the same target: [@io.mcarle.konvert.api.Mapping(target=id, source=, constant=\"bla\", expression=, ignore=false, enable=[]), @io.mcarle.konvert.api.Mapping(target=id, source=id, constant=, expression=, ignore=false, enable=[])]"
         )
     }
 

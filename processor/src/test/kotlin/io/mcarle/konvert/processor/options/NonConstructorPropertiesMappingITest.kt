@@ -342,6 +342,71 @@ class Target(val id: String) {
     }
 
     @Test
+    fun `explicit mode uses setters defined setter`() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.OK,
+            options = mapOf(
+                NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION.key to NonConstructorPropertiesMapping.EXPLICIT.name
+            ),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "test.kt",
+                    contents =
+                        """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(Target::class, mappings = [
+    Mapping(target = "extra", source = "description")
+])
+class Source(val id: String) {
+    var description: String? = null
+}
+                    """.trimIndent()
+                ),
+                SourceFile.java(
+                    name = "Target.java",
+                    contents =
+                        """
+public class Target {
+    private String id;
+    private String description;
+    private String extra;
+
+    public Target(String id) {
+        this.id = id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getExtra() {
+        return extra;
+    }
+
+    public void setExtra(String extra) {
+        this.extra = extra;
+    }
+}
+                    """.trimIndent()
+                )
+            )
+        )
+
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertContains(extensionFunctionCode, "target.extra = description")
+        assertDoesNotContain(extensionFunctionCode, "target.description")
+    }
+
+    @Test
     fun `all mode fails when a target non-constructor property has no mapping`() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
@@ -370,6 +435,64 @@ class Target(val id: String) {
         )
 
         assertContains(compilationResult.messages, "Missing mappings for properties: extra.")
+    }
+
+    @Test
+    fun `all mode fails when a target non-constructor setter has no mapping`() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            options = mapOf(
+                NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION.key to NonConstructorPropertiesMapping.ALL.name
+            ),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    name = "test.kt",
+                    contents =
+                        """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(Target::class)
+class Source(val id: String) {
+    var description: String? = null
+}
+                    """.trimIndent()
+                ),
+                SourceFile.java(
+                    name = "Target.java",
+                    contents = """
+public class Target {
+    private String id;
+    private String description;
+    private String extra;
+
+    public Target(String id) {
+        this.id = id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getExtra() {
+        return extra;
+    }
+
+    public void setExtra(String extra) {
+        this.extra = extra;
+    }
+}
+                    """.trimIndent()
+                )
+            )
+        )
+
+        assertContains(compilationResult.messages, "Missing mappings for setters: extra.")
     }
 
     @Test

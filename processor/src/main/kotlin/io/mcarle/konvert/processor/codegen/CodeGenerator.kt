@@ -12,13 +12,11 @@ import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.InvalidMappingStrategy
 import io.mcarle.konvert.converter.api.config.NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION
 import io.mcarle.konvert.converter.api.config.NonConstructorPropertiesMapping
-import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.config.invalidMappingStrategy
 import io.mcarle.konvert.converter.api.config.nonConstructorPropertiesMapping
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.exceptions.InvalidMappingException
-import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 import io.mcarle.konvert.processor.sourcedata.DefaultSourceDataExtractionStrategy
 import io.mcarle.konvert.processor.targetdata.DefaultTargetDataExtractionStrategy
@@ -53,12 +51,7 @@ class CodeGenerator constructor(
             }
         }
 
-        if (context.source.isNullable() && !context.target.isNullable() && !Configuration.enforceNotNull) {
-            throw NotNullOperatorNotEnabledException(context.paramName, context.source, context.target)
-        }
-
-        val sourceDataList =
-            sourceDataExtractionStrategy.extract(resolver, context.sourceClassDeclaration, mappingCodeParentDeclaration)
+        val sourceDataList = sourceDataExtractionStrategy.extract(resolver, context.sourceClassDeclaration, mappingCodeParentDeclaration)
         val targetData = targetDataExtractionStrategy.extract(resolver, context.targetClassDeclaration, mappingCodeParentDeclaration)
 
         val sourceProperties = PropertyMappingResolver(logger).determinePropertyMappings(
@@ -176,15 +169,16 @@ class CodeGenerator constructor(
         val propertiesToSourceProperty = remainingProperties
             .associateWith { variable ->
                 when (effectiveMappingMode) {
-                    NonConstructorPropertiesMapping.AUTO -> throw RuntimeException("Did not resolve mapping mode ${NonConstructorPropertiesMapping.AUTO}")
+                    NonConstructorPropertiesMapping.AUTO -> throw IllegalStateException("Did not resolve mapping mode ${NonConstructorPropertiesMapping.AUTO}")
                     NonConstructorPropertiesMapping.ALL,
                     NonConstructorPropertiesMapping.IMPLICIT -> sourceProperties.firstOrNull { it.targetName == variable.name }
                     NonConstructorPropertiesMapping.EXPLICIT -> sourceProperties.firstOrNull { it.targetName == variable.name && it.isBasedOnAnnotation }
                 }
             }
 
-        if (effectiveMappingMode == NonConstructorPropertiesMapping.ALL && propertiesToSourceProperty.containsValue(null)) {
-            val missingMappingsForProperties = propertiesToSourceProperty.filterValues { it == null }.map { it.key.name }.joinToString()
+        val missingMappings = propertiesToSourceProperty.filterValues { it == null }
+        if (effectiveMappingMode == NonConstructorPropertiesMapping.ALL && missingMappings.isNotEmpty()) {
+            val missingMappingsForProperties = missingMappings.map { it.key.name }.joinToString()
             throw RuntimeException(
                 "With `konvert.non-constructor-properties-mapping` being ${NonConstructorPropertiesMapping.ALL}, all target properties must have a matching source property. " +
                     "Missing mappings for properties: ${missingMappingsForProperties}."
@@ -214,15 +208,16 @@ class CodeGenerator constructor(
         val settersToSourceProperty = remainingSetters
             .associateWith { setter ->
                 when (effectiveMappingMode) {
-                    NonConstructorPropertiesMapping.AUTO -> throw RuntimeException("Did not resolve mapping mode ${NonConstructorPropertiesMapping.AUTO}")
+                    NonConstructorPropertiesMapping.AUTO -> throw IllegalStateException("Did not resolve mapping mode ${NonConstructorPropertiesMapping.AUTO}")
                     NonConstructorPropertiesMapping.ALL,
                     NonConstructorPropertiesMapping.IMPLICIT -> sourceProperties.firstOrNull { it.targetName == setter.name }
                     NonConstructorPropertiesMapping.EXPLICIT -> sourceProperties.firstOrNull { it.targetName == setter.name && it.isBasedOnAnnotation }
                 }
             }
 
-        if (effectiveMappingMode == NonConstructorPropertiesMapping.ALL && settersToSourceProperty.containsValue(null)) {
-            val missingMappingsForSetters = settersToSourceProperty.filterValues { it == null }.map { it.key.name }.joinToString()
+        val missingMappings = settersToSourceProperty.filterValues { it == null }
+        if (effectiveMappingMode == NonConstructorPropertiesMapping.ALL && missingMappings.isNotEmpty()) {
+            val missingMappingsForSetters = missingMappings.map { it.key.name }.joinToString()
             throw RuntimeException(
                 "With `konvert.non-constructor-properties-mapping` being ${NonConstructorPropertiesMapping.ALL}, all target setters must have a matching source property. " +
                     "Missing mappings for setters: ${missingMappingsForSetters}."

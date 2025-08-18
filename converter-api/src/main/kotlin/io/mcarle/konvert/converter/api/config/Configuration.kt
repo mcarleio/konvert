@@ -22,7 +22,7 @@ fun <T> withIsolatedConfiguration(environment: SymbolProcessorEnvironment, exec:
     return withIsolatedConfiguration(environment.options, exec)
 }
 
-private inline fun <T> withIsolatedConfiguration(options: Map<String, String>, exec: () -> T): T {
+internal inline fun <T> withIsolatedConfiguration(options: Map<String, String>, exec: () -> T): T {
     val previous = Configuration.CURRENT
     Configuration.CURRENT = Configuration(options.toMutableMap())
     try {

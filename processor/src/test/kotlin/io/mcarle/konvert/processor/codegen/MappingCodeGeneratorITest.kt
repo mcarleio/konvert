@@ -77,6 +77,70 @@ class TargetClass(
         assertContains(compilationResult.messages, NotNullOperatorNotEnabledException::class.qualifiedName!!)
     }
 
+    @Test
+    fun enforceNotNullDueToOptionalSourceIfEnabled() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konfig
+
+@Konverter(options = [
+    Konfig(key = "${ENFORCE_NOT_NULL_OPTION.key}", value = "true")
+])
+interface MyMapper {
+    fun map(source: SourceClass?): TargetClass
+}
+
+class SourceClass(val property: String)
+class TargetClass(var property: String)
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("MyMapperKonverter.kt")
+        println(extensionFunctionCode)
+
+        assertSourceEquals(
+            """
+            public object MyMapperImpl : MyMapper {
+              override fun map(source: SourceClass?): TargetClass = source?.let {
+                TargetClass(
+                  property = source.property
+                )
+              }!!
+            }
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
+    @Test
+    fun throwIfEnforceNotNullNotEnabledButRequiredDueToOptionalSource() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+@Konverter
+interface MyMapper {
+    fun map(source: SourceClass?): TargetClass
+}
+
+class SourceClass(val property: String)
+class TargetClass(var property: String)
+                """.trimIndent()
+            )
+        )
+        assertContains(compilationResult.messages, NotNullOperatorNotEnabledException::class.qualifiedName!!)
+    }
+
 
     @Test
     fun acceptMissingSourceValuesForConstructorParametersWithDefaultValue() {
