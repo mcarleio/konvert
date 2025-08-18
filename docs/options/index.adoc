@@ -212,6 +212,82 @@ a|Only effective if set globally. This setting defines if the deprecated META-IN
 
 Will be removed in one of the next releases.
 
+
+a|`*konvert.non-constructor-properties-mapping*`
+a|`auto`, `explicit`, `implicit`, `all`
+a|`auto`
+a|Controls how properties of the target class that are *not* part of the constructor (i.e., mutable properties, properties with setters, or properties defined outside the primary constructor) are mapped.
+
+* `auto` (default): If there are no `@Mapping` annotations (except those with `ignore = true`), behaves like `implicit`. If there are any `@Mapping` annotations, behaves like `explicit`.
+* `explicit`: Only non-constructor target properties that are explicitly declared via `@Mapping` will be mapped. All others are ignored, even if a matching source property exists.
+* `implicit`: All non-constructor target properties for which a matching source property exists (by name), or for which a `@Mapping` is defined, will be mapped. All others are ignored.
+* `all`: All non-constructor target properties must be mapped. If a property cannot be mapped (no matching source property and no `@Mapping`), an exception is thrown.
+
+4+a|
+[.pl-6]
+.Example
+[%collapsible]
+====
+[source,kotlin]
+----
+class Source(val id: String) {
+    var description: String? = null
+    var additional: String? = null
+}
+
+class Target(val id: String) {
+    var description: String? = null
+    var extra: String? = null
+}
+
+@Konverter
+interface MapperAuto {
+    fun map(source: Source): Target
+}
+
+@Konverter(options=[
+    Konfig(key="konvert.non-constructor-properties-mapping", value="implicit")
+])
+interface MapperImplicit {
+    fun map(source: Source): Target
+}
+
+@Konverter(options=[
+    Konfig(key="konvert.non-constructor-properties-mapping", value="explicit")
+])
+interface MapperExplicit {
+    fun map(source: Source): Target
+}
+
+@Konverter(options=[
+    Konfig(key="konvert.non-constructor-properties-mapping", value="all")
+])
+interface MapperAll {
+    fun map(source: Source): Target
+}
+----
+
+Will result in:
+
+- `MapperAuto` and `MapperImplicit` will generate the same code, which only maps `id` and `description` properties
+- `MapperExplicit` will only map `id`, as there are no `@Mapping` annotations defined
+- `MapperAll` will throw an exception, as `extra` has no matching source property and no `@Mapping` defined
+
+
+a|`*konvert.invalid-mapping-strategy*`
+a|`warn`, `fail`
+a|`warn`
+a|Determines how Konvert handles invalid mapping definitions.
+
+- `warn` (default): Konvert logs a warning for each invalid mapping, ignores it, and continues code generation.
+- `fail`: Konvert will throw an exception and fail the build
+
+An invalid mapping occurs when:
+
+- A mapping references a source property that does not exist in the source type.
+- A mapping references a target property that does not exist in the target type.
+- A mapping defines incompatible parameters (e.g., both `source` and `ignore = true`).
+- There are multiple mappings for the same target property.
 |===
 
 === `@Konverter` Options

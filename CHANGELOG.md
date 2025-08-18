@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New features
+
+* New option `konvert.non-constructor-properties-mapping` to define how non-constructor target properties should be mapped: [#124](https://github.com/mcarleio/konvert/issues/124) (thanks to [@kosoj](https://github.com/kosoj) for idea and initial work [#138](https://github.com/mcarleio/konvert/pull/138))
+  * `auto` (default): Behaves like `implicit` if no explicit mappings are present, otherwise behaves like `explicit`.
+  * `explicit`: Only non-constructor target properties explicitly declared in mappings are mapped.
+  * `implicit`: Maps all non-constructor target properties with a matching source property or explicit mapping.
+  * `all`: All non-constructor target properties must be mapped, otherwise an exception is thrown.
+
+* New option `konvert.invalid-mapping-strategy` to define how invalid mappings should be handled:
+  * `warn` (default): Logs a warning and ignores invalid mappings.
+  * `fail`: Throws an exception when an invalid mapping is encountered.
+
+
 ## [4.1.2]
 
 ### Bug fixes

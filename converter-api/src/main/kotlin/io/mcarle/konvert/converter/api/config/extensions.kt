@@ -51,6 +51,24 @@ val Configuration.Companion.parseDeprecatedMetaInfFiles: Boolean
     get() = PARSE_DEPRECATED_META_INF_FILES_OPTION.get(CURRENT, String::toBoolean)
 
 /**
+ * @see NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION
+ */
+val Configuration.Companion.nonConstructorPropertiesMapping: NonConstructorPropertiesMapping
+    get() = NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION.get(CURRENT) { configString ->
+        NonConstructorPropertiesMapping.entries.firstOrNull { it.name.equals(configString, ignoreCase = true) }
+            ?: NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION.defaultValue
+    }
+
+/**
+ * @see INVALID_MAPPING_STRATEGY_OPTION
+ */
+val Configuration.Companion.invalidMappingStrategy: InvalidMappingStrategy
+    get() = INVALID_MAPPING_STRATEGY_OPTION.get(CURRENT) { configString ->
+        InvalidMappingStrategy.entries.firstOrNull { it.name.equals(configString, ignoreCase = true) }
+            ?: INVALID_MAPPING_STRATEGY_OPTION.defaultValue
+    }
+
+/**
  * Reads the value for [Option.key] from the provided `options` or fallbacks to the [Option.defaultValue].
  */
 inline fun <T> Option<T>.get(configuration: Configuration, mapping: (String) -> T): T {

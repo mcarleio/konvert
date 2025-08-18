@@ -1,8 +1,10 @@
-package io.mcarle.konvert.processor
+package io.mcarle.konvert.processor.options
 
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.IterableToListConverter
 import io.mcarle.konvert.converter.SameTypeConverter
+import io.mcarle.konvert.processor.KonverterITest
+import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 

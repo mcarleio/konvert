@@ -108,3 +108,40 @@ object GENERATED_MODULE_SUFFIX_OPTION : Option<String>("konvert.generatedModuleS
  * Default: false
  */
 object PARSE_DEPRECATED_META_INF_FILES_OPTION : Option<Boolean>("konvert.parseDeprecatedMetaInfFiles", false)
+
+/**
+ * Controls how properties outside the constructor (non-constructor properties and setters) are handled during mapping.
+ *
+ * Possible values:
+ * - "auto" (default)
+ * - "implicit"
+ * - "explicit"
+ * - "all"
+ *
+ * @see NonConstructorPropertiesMapping
+ * @since 4.2.0
+ */
+object NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION : Option<NonConstructorPropertiesMapping>(
+    key = "konvert.non-constructor-properties-mapping",
+    defaultValue = NonConstructorPropertiesMapping.AUTO
+)
+
+/**
+ * Controls how Konvert reacts when it encounters an invalid mapping.
+ * A mapping is invalid when:
+ * - it defines a source property that is not present
+ * - it defines a target property that is not present
+ * - it defines incompatible parameters (e.g. source and ignore=true)
+ * - there are multiple mappings for the same target
+ *
+ * Possible values:
+ * - "warn" (default)
+ * - "fail"
+ *
+ * @see InvalidMappingStrategy
+ * @since 4.2.0
+ */
+object INVALID_MAPPING_STRATEGY_OPTION : Option<InvalidMappingStrategy>(
+    key = "konvert.invalid-mapping-strategy",
+    defaultValue = InvalidMappingStrategy.WARN
+)

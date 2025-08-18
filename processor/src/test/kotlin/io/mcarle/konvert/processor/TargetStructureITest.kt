@@ -307,44 +307,6 @@ class TargetClass(
     }
 
     @Test
-    fun setNotDefinedPropertiesOnEmptyConstructor() {
-        val (compilation) = compileWith(
-            enabledConverters = listOf(SameTypeConverter()),
-            code = SourceFile.kotlin(
-                name = "TestCode.kt",
-                contents =
-                    """
-import io.mcarle.konvert.api.KonvertTo
-import io.mcarle.konvert.api.Mapping
-
-@KonvertTo(TargetClass::class, mappings=[
-    Mapping(target="targetProperty", source = "property")
-])
-class SourceClass(
-    val property: String
-)
-class TargetClass {
-    var targetProperty: String = ""
-    var property: String = ""
-}
-                """.trimIndent()
-            )
-        )
-        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
-        println(extensionFunctionCode)
-
-        assertSourceEquals(
-            """
-            public fun SourceClass.toTargetClass(): TargetClass = TargetClass().also { targetClass ->
-              targetClass.targetProperty = property
-              targetClass.property = property
-            }
-            """.trimIndent(),
-            extensionFunctionCode
-        )
-    }
-
-    @Test
     fun setMutableProperties() {
         val (compilation) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
@@ -355,9 +317,7 @@ class TargetClass {
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
-@KonvertTo(TargetClass::class, mappings=[
-    Mapping(target="property1", source = "property1")
-])
+@KonvertTo(TargetClass::class)
 class SourceClass(
     val property1: String,
     val property2: String,
@@ -397,9 +357,7 @@ class TargetClass {
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
-@KonvertTo(TargetClass::class, mappings=[
-    Mapping(target="property1", source = "property1")
-])
+@KonvertTo(TargetClass::class)
 class SourceClass(
     val property1: String,
     val property2: String,

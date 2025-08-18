@@ -1,5 +1,6 @@
 package io.mcarle.konvert.processor.codegen
 
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -22,7 +23,9 @@ import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingExceptio
 import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy.TargetSetter
 import java.util.Locale
 
-class MappingCodeGenerator {
+class MappingCodeGenerator constructor(
+    private val logger: KSPLogger
+) {
 
     fun generateMappingCode(
         context: MappingContext,
@@ -187,6 +190,7 @@ $className(${"⇥\n%L"}
                 null
             }
         }
+
         val setterCodeBlocks = targetSetters.mapNotNull { targetSetter ->
             val sourceProperty = determinePropertyMappingInfo(sourceProperties, targetSetter)
             val convertedValue = convertValue(

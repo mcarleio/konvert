@@ -1,10 +1,17 @@
 package io.mcarle.konvert.processor.codegen
 
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.konvert.api.Mapping
+import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.InvalidMappingStrategy
+import io.mcarle.konvert.converter.api.config.invalidMappingStrategy
+import io.mcarle.konvert.processor.exceptions.InvalidMappingException
 import io.mcarle.konvert.processor.sourcedata.SourceDataExtractionStrategy
 
-object PropertyMappingResolver {
+class PropertyMappingResolver(
+    private val logger: KSPLogger,
+) {
     fun determinePropertyMappings(
         mappingParamName: String?,
         mappings: List<Mapping>,
@@ -59,22 +66,44 @@ object PropertyMappingResolver {
         mappings: List<Mapping>,
         sourceDataList: List<SourceDataExtractionStrategy.SourceData>,
         mappingParamName: String?
-    ) = mappings.filter { it.source.isNotEmpty() }.mapNotNull { annotation ->
-        sourceDataList.firstOrNull { property ->
-            property.name == annotation.source
-        }?.let { annotation to it }
-    }.map { (annotation, sourceData) ->
-        PropertyMappingInfo(
-            mappingParamName = mappingParamName,
-            sourceName = sourceData.name,
-            targetName = annotation.target,
-            constant = annotation.constant.takeIf { it.isNotEmpty() },
-            expression = annotation.expression.takeIf { it.isNotEmpty() },
-            ignore = annotation.ignore,
-            enableConverters = annotation.enable.toList(),
-            sourceData = sourceData,
-            isBasedOnAnnotation = true
-        )
+    ): List<PropertyMappingInfo> {
+
+        val missingSourceMappings = mappings
+            .filter { it.source.isNotEmpty() }
+            .filter { sourceDataList.none { property -> property.name == it.source } }
+
+        if (missingSourceMappings.isNotEmpty()) {
+            when (Configuration.invalidMappingStrategy) {
+                InvalidMappingStrategy.FAIL -> throw InvalidMappingException.missingSource(missingSourceMappings)
+                InvalidMappingStrategy.WARN -> {
+                    missingSourceMappings.forEach {
+                        logger.warn("Ignoring the mapping $it as the source field '${it.source}' does not exist.")
+                    }
+                }
+            }
+        }
+
+        return (mappings - missingSourceMappings)
+            .filter { it.source.isNotEmpty() }
+            .map { annotation ->
+                annotation to sourceDataList.first { property ->
+                    property.name == annotation.source
+                }
+            }
+            .map { (annotation, sourceData) ->
+                PropertyMappingInfo(
+                    mappingParamName = mappingParamName,
+                    sourceName = sourceData.name,
+                    targetName = annotation.target,
+                    constant = annotation.constant.takeIf { it.isNotEmpty() },
+                    expression = annotation.expression.takeIf { it.isNotEmpty() },
+                    ignore = annotation.ignore,
+                    enableConverters = annotation.enable.toList(),
+                    sourceData = sourceData,
+                    isBasedOnAnnotation = true
+                )
+            }
+
     }
 
     private fun getPropertyMappingsWithoutSource(
