@@ -1,16 +1,22 @@
 package io.mcarle.konvert.converter
 
+import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.utils.ConverterITest
 import io.mcarle.konvert.converter.utils.VerificationData
+import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
+import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMembers
 import kotlin.reflect.full.primaryConstructor
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
 @OptIn(ExperimentalCompilerApi::class)
@@ -44,6 +50,140 @@ class XToValueClassConverterITest : ConverterITest() {
         )
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = ["private", "protected", "internal"])
+    fun disallowNonPublicConstructorsTest(visibility: String) {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(
+                XToValueClassConverter(),
+                SameTypeConverter()
+            ),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                "Code.kt",
+                """
+                    import io.mcarle.konvert.api.KonvertTo
+
+                    @JvmInline
+                    value class Id $visibility constructor(val value: String)
+
+                    @KonvertTo(Target::class)
+                    data class Source(val id: String)
+                    data class Target(val id: Id)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(
+            compilationResult.messages,
+            NoMatchingTypeConverterException::class.qualifiedName + ""
+        )
+    }
+
+    @Test
+    fun doNotMatchOnNonValueClasses() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(
+                XToValueClassConverter(),
+                SameTypeConverter()
+            ),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                "Code.kt",
+                """
+                    import io.mcarle.konvert.api.KonvertTo
+
+                    data class Id(val value: String)
+
+                    @KonvertTo(Target::class)
+                    data class Source(val id: String)
+                    data class Target(val id: Id)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(
+            compilationResult.messages,
+            NoMatchingTypeConverterException::class.qualifiedName + ""
+        )
+    }
+
+    @Test
+    fun ignoreMultiParamConstructors() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(
+                XToValueClassConverter(),
+                StringToIntConverter()
+            ),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                "Code.kt",
+                """
+                    import io.mcarle.konvert.api.KonvertTo
+
+                    @JvmInline
+                    value class Id private constructor(val value: String) {
+                        constructor(year: Int, orderNo: Int? = null): this("${'$'}year-${'$'}orderNo")
+                    }
+
+                    @KonvertTo(Target::class)
+                    data class Source(val id: String)
+                    data class Target(val id: Id)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(
+            compilationResult.messages,
+            NoMatchingTypeConverterException::class.qualifiedName + ""
+        )
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun chooseConstructorBasedOnAvailableTypeConverterPriority(availableSameTypeConverter: Boolean) {
+        val (compilation) = compileWith(
+            enabledConverters = listOfNotNull(
+                XToValueClassConverter(),
+                if (availableSameTypeConverter) SameTypeConverter() else null,
+                IntToStringConverter()
+            ),
+            code = SourceFile.kotlin(
+                "Code.kt",
+                """
+                    import io.mcarle.konvert.api.KonvertTo
+
+                    @JvmInline
+                    value class Id(val value: String) {
+                        constructor(value: Int) : this(value.toString())
+                    }
+
+                    @KonvertTo(Target::class)
+                    data class Source(val id: Int)
+                    data class Target(val id: Id)
+                """.trimIndent()
+            )
+        )
+
+        if (availableSameTypeConverter) {
+            assertSourceEquals(
+                """
+                public fun Source.toTarget(): Target = Target(
+                  id = Id(id)
+                )
+                """.trimIndent(), compilation.generatedSourceFor("SourceKonverter.kt")
+            )
+        } else {
+            assertSourceEquals(
+                """
+                public fun Source.toTarget(): Target = Target(
+                  id = Id(id.toString())
+                )
+                """.trimIndent(), compilation.generatedSourceFor("SourceKonverter.kt")
+            )
+        }
+    }
+
     override fun verify(verificationData: VerificationData) {
         val sourceValues = verificationData.sourceVariables.mapIndexed { index, sourceVariable ->
             val sourceTypeName = sourceVariable.second
@@ -71,10 +211,10 @@ class XToValueClassConverterITest : ConverterITest() {
 
 
             val valueClassConstructor = (
-                verificationData.targetKClass.members
-                    .first { it.name == targetName }
-                    .returnType.classifier as KClass<*>
-                )
+                    verificationData.targetKClass.members
+                        .first { it.name == targetName }
+                        .returnType.classifier as KClass<*>
+                    )
                 .primaryConstructor!!
 
 
@@ -84,7 +224,10 @@ class XToValueClassConverterITest : ConverterITest() {
                     targetValue?.let { it::class.declaredMembers.first { it.name == "value" }.call(targetValue) }
                 )
 
-                targetTypeName.startsWith("ValueClassWithAdditionalProperties") -> assertEquals(valueClassConstructor.call("123"), targetValue)
+                targetTypeName.startsWith("ValueClassWithAdditionalProperties") -> assertEquals(
+                    valueClassConstructor.call("123"),
+                    targetValue
+                )
                 targetTypeName.startsWith("ValueClassWithNullable") -> assertEquals(valueClassConstructor.call("123"), targetValue)
                 targetTypeName.startsWith("SimpleValueClass") -> assertEquals(valueClassConstructor.call("123"), targetValue)
             }

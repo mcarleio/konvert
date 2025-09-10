@@ -6,6 +6,7 @@ import io.mcarle.konvert.converter.utils.ConverterITest
 import io.mcarle.konvert.converter.utils.VerificationData
 import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -63,6 +64,34 @@ class ValueClassToXConverterITest : ConverterITest() {
 
                     @JvmInline
                     value class Id($visibility val value: String)
+
+                    @KonvertTo(Target::class)
+                    data class Source(val id: Id)
+                    data class Target(val id: String)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(
+            compilationResult.messages,
+            NoMatchingTypeConverterException::class.qualifiedName + ""
+        )
+    }
+
+    @Test
+    fun doNotMatchOnNonValueClasses() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(
+                ValueClassToXConverter(),
+                SameTypeConverter()
+            ),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                "Code.kt",
+                """
+                    import io.mcarle.konvert.api.KonvertTo
+
+                    data class Id(val value: String)
 
                     @KonvertTo(Target::class)
                     data class Source(val id: Id)
