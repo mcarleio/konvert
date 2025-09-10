@@ -13,15 +13,17 @@ fun <T> List<T>.toConverterTestArguments(typeNameExtractor: (T) -> Pair<String?,
     )
 }
 
-fun <T> List<T>.joinConverterTestArguments(vararg other: T) = Generator.cartesianProduct(this, other.toList()).flatMap {
-    val sourceTypeName = it.first()
-    val targetTypeName = it.last()
-    listOf(
-        Arguments.arguments(sourceTypeName, targetTypeName),
-        Arguments.arguments(sourceTypeName, "$targetTypeName?"),
-        Arguments.arguments("$sourceTypeName?", "$targetTypeName?")
-    )
-}
+fun <T> List<T>.cartesianProductWithNullableCombinations(vararg other: T) = Generator.cartesianProduct(this, other.toList())
+    .flatMap {
+        val sourceTypeName = it.first()
+        val targetTypeName = it.last()
+        listOf(
+            Arguments.arguments(sourceTypeName, targetTypeName),
+            Arguments.arguments(sourceTypeName, "$targetTypeName?"),
+            Arguments.arguments("$sourceTypeName?", "$targetTypeName"),
+            Arguments.arguments("$sourceTypeName?", "$targetTypeName?")
+        )
+    }
 
 fun <E : TypeConverter> List<E>.toConverterTestArgumentsWithType(typeNameExtractor: (E) -> Pair<String?, String?>) = this.flatMap {
     val (sourceTypeName, targetTypeName) = typeNameExtractor(it)

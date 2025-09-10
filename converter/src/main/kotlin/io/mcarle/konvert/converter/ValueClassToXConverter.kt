@@ -1,8 +1,12 @@
 package io.mcarle.konvert.converter
 
 import com.google.auto.service.AutoService
+import com.google.devtools.ksp.getDeclaredProperties
+import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
@@ -22,16 +26,14 @@ class ValueClassToXConverter : AbstractTypeConverter() {
             if (sourceClassDeclaration.classKind != ClassKind.CLASS) return@handleNullable false
             if (Modifier.VALUE !in sourceClassDeclaration.modifiers) return@handleNullable false
 
-            val propertyType = sourceClassDeclaration.primaryConstructor
-                ?.parameters
-                ?.singleOrNull()
-                ?.type
-                ?.resolve()
-                ?: return@handleNullable false
+            val primaryConstructor = sourceClassDeclaration.primaryConstructor ?: return@handleNullable false
+            val parameter = primaryConstructor.parameters.singleOrNull() ?: return@handleNullable false
+
+            if (!sourceClassDeclaration.isPropertyAccessible(parameter)) return@handleNullable false
 
             return@handleNullable TypeConverterRegistry.any {
                 it.matches(
-                    source = propertyType,
+                    source = parameter.type.resolve(),
                     target = target,
                 )
             }
@@ -68,4 +70,11 @@ class ValueClassToXConverter : AbstractTypeConverter() {
             }
         }
     }
+
+    private fun KSClassDeclaration.isPropertyAccessible(parameter: KSValueParameter): Boolean {
+        return this.getDeclaredProperties()
+            .single { it.simpleName == parameter.name }
+            .isPublic() // TODO: extend TypeConverter#matches to be able to provide more information to use isVisibleFrom here
+    }
 }
+
