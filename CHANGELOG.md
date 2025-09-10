@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.2.0]
+
+## Breaking Changes
+
+* The behavior when mapping non-constructor target properties has changed.
+  Previously, it was a bit ambiguous how non-constructor target properties were handled.
+  For example, it was enough to define a single mapping definition to generate mapping for all other non-constructor target properties.
+  This behavior is now controlled by the new option `konvert.non-constructor-properties-mapping` (see below).
+
 ### New features
 
 * New option `konvert.non-constructor-properties-mapping` to define how non-constructor target properties should be mapped: [#124](https://github.com/mcarleio/konvert/issues/124) (thanks to [@kosoj](https://github.com/kosoj) for idea and initial work [#138](https://github.com/mcarleio/konvert/pull/138))
@@ -325,7 +334,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v4.1.2...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v4.2.0...HEAD
+
+[4.2.0]: https://github.com/mcarleio/konvert/compare/v4.1.2...v4.2.0
 
 [4.1.2]: https://github.com/mcarleio/konvert/compare/v4.1.1...v4.1.2
 
