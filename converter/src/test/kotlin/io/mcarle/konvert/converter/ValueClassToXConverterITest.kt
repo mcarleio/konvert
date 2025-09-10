@@ -1,15 +1,19 @@
 package io.mcarle.konvert.converter
 
+import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.utils.ConverterITest
 import io.mcarle.konvert.converter.utils.VerificationData
+import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
 @OptIn(ExperimentalCompilerApi::class)
@@ -23,7 +27,7 @@ class ValueClassToXConverterITest : ConverterITest() {
             "SimpleValueClass",
             "ValueClassWithNullable",
             "ValueClassWithAdditionalProperties"
-        ).joinConverterTestArguments(
+        ).cartesianProductWithNullableCombinations(
             "String",
             "Int",
         )
@@ -43,9 +47,40 @@ class ValueClassToXConverterITest : ConverterITest() {
         )
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = ["private", "protected", "internal"])
+    fun disallowNonPublicPropertiesTest(visibility: String) {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(
+                ValueClassToXConverter(),
+                SameTypeConverter()
+            ),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = SourceFile.kotlin(
+                "Code.kt",
+                """
+                    import io.mcarle.konvert.api.KonvertTo
+
+                    @JvmInline
+                    value class Id($visibility val value: String)
+
+                    @KonvertTo(Target::class)
+                    data class Source(val id: Id)
+                    data class Target(val id: String)
+                """.trimIndent()
+            )
+        )
+
+        assertContains(
+            compilationResult.messages,
+            NoMatchingTypeConverterException::class.qualifiedName + ""
+        )
+    }
+
     override fun verify(verificationData: VerificationData) {
         val sourceValues = verificationData.sourceVariables.mapIndexed { index, sourceVariable ->
             val sourceTypeName = sourceVariable.second
+            val targetTypeName = verificationData.targetVariables[index].second
 
             val valueClassConstructor = (
                 verificationData.sourceKClass.members
@@ -55,24 +90,10 @@ class ValueClassToXConverterITest : ConverterITest() {
                 .primaryConstructor!!
 
             when {
-                sourceTypeName.startsWith("ValueClassWithAdditionalProperties") ->
-                    if (sourceTypeName.endsWith("?") && verificationData.targetVariables[index].second.endsWith("?")) {
-                        null
-                    } else {
-                        valueClassConstructor.call("123")
-                    }
-                sourceTypeName.startsWith("ValueClassWithNullable") ->
-                    if (sourceTypeName.endsWith("?") && verificationData.targetVariables[index].second.endsWith("?")) {
-                        valueClassConstructor.call(null)
-                    } else {
-                        valueClassConstructor.call("123")
-                    }
-                sourceTypeName.startsWith("SimpleValueClass") ->
-                    if (sourceTypeName.endsWith("?") && verificationData.targetVariables[index].second.endsWith("?")) {
-                        null
-                    } else {
-                        valueClassConstructor.call("123")
-                    }
+                sourceTypeName.endsWith("?") && targetTypeName.endsWith("?") -> null
+                sourceTypeName.startsWith("ValueClassWithAdditionalProperties") -> valueClassConstructor.call("123")
+                sourceTypeName.startsWith("ValueClassWithNullable") -> valueClassConstructor.call("123")
+                sourceTypeName.startsWith("SimpleValueClass") -> valueClassConstructor.call("123")
                 else -> null
             }
         }
