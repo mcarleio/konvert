@@ -31,9 +31,10 @@ class ValueClassToXConverter : AbstractTypeConverter() {
 
             if (!sourceClassDeclaration.isPropertyAccessible(parameter)) return@handleNullable false
 
+            val parameterType = parameter.type.resolve()
             return@handleNullable TypeConverterRegistry.any {
                 it.matches(
-                    source = parameter.type.resolve(),
+                    source = parameterType,
                     target = target,
                 )
             }
