@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.3.0]
+
 ### New features
 
 * Two new type converters, which handle `value class` mappings, i.e., to map from/to e.g. String to/from value class with a String inside: 
@@ -20,8 +22,6 @@ All notable changes to this project will be documented in this file.
   @KonvertTo(DomainClass::class)
   class AdapterClass(id: String)
   ```
-
-     
 
 ## [4.2.0]
 
@@ -353,7 +353,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v4.2.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v4.3.0...HEAD
+
+[4.3.0]: https://github.com/mcarleio/konvert/compare/v4.2.0...v4.3.0
 
 [4.2.0]: https://github.com/mcarleio/konvert/compare/v4.1.2...v4.2.0
 
