@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New features
+
+* Two new type converters, which handle `value class` mappings, i.e., to map from/to e.g. String to/from value class with a String inside: 
+   * `ValueClassToXConverter`
+   * `XToValueClassConverter`
+
+  The following example now works out-of-the-box and generates the approprate mappings:
+  ```kotlin
+  @JvmInline value class DataId(val id: String)
+
+  @KonvertTo(AdapterClass::class)
+  class DomainClass(id: DataId)
+  
+  @KonvertTo(DomainClass::class)
+  class AdapterClass(id: String)
+  ```
+
+     
+
 ## [4.2.0]
 
 ## Breaking Changes
