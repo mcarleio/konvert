@@ -5,6 +5,7 @@ import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.Visibility
 import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.NoParamDefinedException
@@ -63,3 +64,14 @@ fun Konfig.Companion.from(annotation: KSAnnotation) = Konfig(
 )
 
 fun KSValueParameter.typeClassDeclaration(): KSClassDeclaration? = this.type.resolve().classDeclaration()
+
+fun Visibility.isMorePrivateThan(other: Visibility): Boolean {
+    return when (this) {
+        Visibility.PUBLIC -> false
+        Visibility.JAVA_PACKAGE -> other == Visibility.PUBLIC
+        Visibility.INTERNAL -> other == Visibility.PUBLIC || other == Visibility.JAVA_PACKAGE
+        Visibility.PROTECTED -> other != Visibility.LOCAL && other != Visibility.PRIVATE
+        Visibility.LOCAL -> other != Visibility.PRIVATE
+        Visibility.PRIVATE -> true
+    }
+}
