@@ -3,7 +3,7 @@ package io.mcarle.konvert.processor.exceptions
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.Visibility
 
-class UnaccessibleDueToVisibilityClassException(
+class InaccessibleDueToVisibilityClassException(
     visibility: Visibility,
     classDeclaration: KSClassDeclaration
 ) : RuntimeException(

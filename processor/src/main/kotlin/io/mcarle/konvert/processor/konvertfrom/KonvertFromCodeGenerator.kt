@@ -12,9 +12,9 @@ import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.codegen.MappingContext
+import io.mcarle.konvert.processor.exceptions.InaccessibleDueToVisibilityClassException
 import io.mcarle.konvert.processor.exceptions.KonvertException
-import io.mcarle.konvert.processor.exceptions.UnaccessibleDueToVisibilityClassException
-import io.mcarle.konvert.processor.isMorePrivateThan
+import io.mcarle.konvert.processor.isEqualOrMoreRestrictedThan
 import io.mcarle.konvert.processor.validated
 
 object KonvertFromCodeGenerator {
@@ -88,29 +88,30 @@ object KonvertFromCodeGenerator {
         val targetClassVisibility = targetClassDeclaration.getVisibility()
         val targetCompanionVisibility = targetCompanionDeclaration.getVisibility()
 
-        val (morePrivateVisibility, morePrivateClassDeclaration) = if (targetCompanionVisibility.isMorePrivateThan(targetClassVisibility)) {
-            if (sourceVisibility.isMorePrivateThan(targetCompanionVisibility)) {
-                Pair(sourceVisibility, sourceClassDeclaration)
+        val (moreRestrictedVisibility, moreRestrictedClassDeclaration) =
+            if (targetCompanionVisibility.isEqualOrMoreRestrictedThan(targetClassVisibility)) {
+                if (sourceVisibility.isEqualOrMoreRestrictedThan(targetCompanionVisibility)) {
+                    sourceVisibility to sourceClassDeclaration
+                } else {
+                    targetCompanionVisibility to targetCompanionDeclaration
+                }
             } else {
-                Pair(targetCompanionVisibility, targetCompanionDeclaration)
+                if (sourceVisibility.isEqualOrMoreRestrictedThan(targetClassVisibility)) {
+                    sourceVisibility to sourceClassDeclaration
+                } else {
+                    targetClassVisibility to targetClassDeclaration
+                }
             }
-        } else {
-            if (sourceVisibility.isMorePrivateThan(targetClassVisibility)) {
-                Pair(sourceVisibility, sourceClassDeclaration)
-            } else {
-                Pair(targetClassVisibility, targetClassDeclaration)
-            }
-        }
 
-        return when (morePrivateVisibility) {
+        return when (moreRestrictedVisibility) {
             Visibility.PUBLIC -> arrayOf(KModifier.PUBLIC)
             Visibility.JAVA_PACKAGE,
             Visibility.INTERNAL -> arrayOf(KModifier.INTERNAL)
             Visibility.PROTECTED,
             Visibility.LOCAL,
-            Visibility.PRIVATE -> throw UnaccessibleDueToVisibilityClassException(
-                visibility = morePrivateVisibility,
-                classDeclaration = morePrivateClassDeclaration
+            Visibility.PRIVATE -> throw InaccessibleDueToVisibilityClassException(
+                visibility = moreRestrictedVisibility,
+                classDeclaration = moreRestrictedClassDeclaration
             )
         }
     }

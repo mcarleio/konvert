@@ -4,6 +4,7 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.processor.KonverterITest
+import io.mcarle.konvert.processor.exceptions.InaccessibleDueToVisibilityClassException
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.params.ParameterizedTest
@@ -18,7 +19,7 @@ class KonvertFromVisibilityITest : KonverterITest() {
 
     companion object {
         @JvmStatic
-        private fun allCombinations(): IGenerator<List<String>> = Generator.cartesianProduct(
+        private fun possibleCombinations(): IGenerator<List<String>> = Generator.cartesianProduct(
             // source class
             listOf(
                 "public", "private", "internal", "", "java:public", "java:",
@@ -60,10 +61,10 @@ class KonvertFromVisibilityITest : KonverterITest() {
         }
 
         @JvmStatic
-        fun validCombinations(): List<Arguments> = allCombinations().filterValid(true).toParameters()
+        fun validCombinations(): List<Arguments> = possibleCombinations().filterValid(true).toParameters()
 
         @JvmStatic
-        fun invalidCombinations(): List<Arguments> = allCombinations().filterValid(false).toParameters()
+        fun invalidCombinations(): List<Arguments> = possibleCombinations().filterValid(false).toParameters()
     }
 
     @ParameterizedTest
@@ -135,7 +136,7 @@ $targetClassVisibility class TargetClass(val property: String) {
 
     @ParameterizedTest
     @MethodSource("invalidCombinations")
-    fun invalidCombinationsReportedWithUnaccessibleDueToVisibilityClassException(
+    fun invalidCombinationsReportedWithInaccessibleDueToVisibilityClassException(
         sourceClassVisibility: String,
         targetClassVisibility: String,
         targetClassCompanionVisibility: String
@@ -185,7 +186,7 @@ $targetClassVisibility class TargetClass(val property: String?) {
             )
         )
 
-        assertContains(compilationResult.messages, "UnaccessibleDueToVisibilityClassException")
+        assertContains(compilationResult.messages, "${InaccessibleDueToVisibilityClassException::class.simpleName}")
     }
 
 }

@@ -12,9 +12,9 @@ import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.codegen.MappingContext
+import io.mcarle.konvert.processor.exceptions.InaccessibleDueToVisibilityClassException
 import io.mcarle.konvert.processor.exceptions.KonvertException
-import io.mcarle.konvert.processor.exceptions.UnaccessibleDueToVisibilityClassException
-import io.mcarle.konvert.processor.isMorePrivateThan
+import io.mcarle.konvert.processor.isEqualOrMoreRestrictedThan
 import io.mcarle.konvert.processor.validated
 
 object KonvertToCodeGenerator {
@@ -79,27 +79,22 @@ object KonvertToCodeGenerator {
         val sourceVisibility = sourceClassDeclaration.getVisibility()
         val targetVisibility = targetClassDeclaration.getVisibility()
 
-        val morePrivateClassDeclaration = if (sourceVisibility.isMorePrivateThan(targetVisibility)) {
-            sourceClassDeclaration
-        } else {
-            targetClassDeclaration
-        }
+        val (moreRestrictedVisibility, moreRestrictedClassDeclaration) =
+            if (sourceVisibility.isEqualOrMoreRestrictedThan(targetVisibility)) {
+                sourceVisibility to sourceClassDeclaration
+            } else {
+                targetVisibility to targetClassDeclaration
+            }
 
-        val visibility = if (morePrivateClassDeclaration === sourceClassDeclaration) {
-            sourceVisibility
-        } else {
-            targetVisibility
-        }
-
-        return when (visibility) {
+        return when (moreRestrictedVisibility) {
             Visibility.PUBLIC -> arrayOf(KModifier.PUBLIC)
             Visibility.JAVA_PACKAGE,
             Visibility.INTERNAL -> arrayOf(KModifier.INTERNAL)
             Visibility.PROTECTED,
             Visibility.LOCAL,
-            Visibility.PRIVATE -> throw UnaccessibleDueToVisibilityClassException(
-                visibility = visibility,
-                classDeclaration = morePrivateClassDeclaration
+            Visibility.PRIVATE -> throw InaccessibleDueToVisibilityClassException(
+                visibility = moreRestrictedVisibility,
+                classDeclaration = moreRestrictedClassDeclaration
             )
         }
     }

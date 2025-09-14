@@ -65,7 +65,9 @@ fun Konfig.Companion.from(annotation: KSAnnotation) = Konfig(
 
 fun KSValueParameter.typeClassDeclaration(): KSClassDeclaration? = this.type.resolve().classDeclaration()
 
-fun Visibility.isMorePrivateThan(other: Visibility): Boolean {
+fun Visibility.isEqualOrMoreRestrictedThan(other: Visibility): Boolean {
+    if (this == other) return true
+
     return when (this) {
         Visibility.PUBLIC -> false
         Visibility.JAVA_PACKAGE -> other == Visibility.PUBLIC

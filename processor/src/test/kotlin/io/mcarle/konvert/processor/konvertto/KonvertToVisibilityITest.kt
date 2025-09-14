@@ -4,7 +4,7 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.SameTypeConverter
 import io.mcarle.konvert.processor.KonverterITest
-import io.mcarle.konvert.processor.exceptions.UnaccessibleDueToVisibilityClassException
+import io.mcarle.konvert.processor.exceptions.InaccessibleDueToVisibilityClassException
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.params.ParameterizedTest
@@ -135,7 +135,7 @@ $visibilityModifier class TargetClass(val property: String)
 
     @ParameterizedTest
     @ValueSource(strings = ["source", "target", "both"])
-    fun throwUnaccessibleDueToVisibilityClassExceptionWhenPrivateVisibility(privateSelector: String) {
+    fun throwInaccessibleDueToVisibilityClassExceptionWhenPrivateVisibility(privateSelector: String) {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
@@ -155,12 +155,12 @@ ${if (privateSelector != "source") "private" else ""} class TargetClass(val prop
         if (privateSelector == "target") {
             assertContains(
                 compilationResult.messages,
-                "${UnaccessibleDueToVisibilityClassException::class.simpleName}: The class TargetClass is not accessible due to its PRIVATE visibility"
+                "${InaccessibleDueToVisibilityClassException::class.simpleName}: The class TargetClass is not accessible due to its PRIVATE visibility"
             )
         } else {
             assertContains(
                 compilationResult.messages,
-                "${UnaccessibleDueToVisibilityClassException::class.simpleName}: The class SourceClass is not accessible due to its PRIVATE visibility"
+                "${InaccessibleDueToVisibilityClassException::class.simpleName}: The class SourceClass is not accessible due to its PRIVATE visibility"
             )
         }
     }
