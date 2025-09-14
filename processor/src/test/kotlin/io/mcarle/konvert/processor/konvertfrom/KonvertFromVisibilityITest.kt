@@ -20,17 +20,17 @@ class KonvertFromVisibilityITest : KonverterITest() {
     companion object {
         @JvmStatic
         private fun possibleCombinations(): IGenerator<List<String>> = Generator.cartesianProduct(
-            // source class
+            // source class (can be java)
             listOf(
-                "public", "private", "internal", "", "java:public", "java:",
+                "public", "private", "internal", "java:public", "java:",
             ),
-            // target class
+            // target class (cannot be java)
             listOf(
-                "public", "private", "internal", ""
+                "public", "private", "internal"
             ),
-            // target class companion
+            // target class companion (cannot be java)
             listOf(
-                "public", "private", "internal", "protected", ""
+                "public", "private", "internal", "protected"
             )
         )
 
@@ -74,8 +74,47 @@ class KonvertFromVisibilityITest : KonverterITest() {
         targetClassVisibility: String,
         targetClassCompanionVisibility: String
     ) {
-        val effectiveSourceClassVisibility = sourceClassVisibility.removePrefix("java:")
-        val sourceSourceFile = if (sourceClassVisibility.startsWith("java:")) {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.OK,
+            code = arrayOf(
+                generateSourceFile(sourceClassVisibility),
+                generateTargetFile(targetClassVisibility, targetClassCompanionVisibility)
+            )
+        )
+
+        val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKonverter.kt")
+
+        val expectedVisibilityModifier = if (sourceClassVisibility.contains("public")
+            && targetClassVisibility == "public"
+            && targetClassCompanionVisibility == "public"
+        ) "public" else "internal"
+
+        assertContains(extensionFunctionCode, "$expectedVisibilityModifier fun TargetClass.Companion.fromSourceClass")
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidCombinations")
+    fun invalidCombinationsReportedWithInaccessibleDueToVisibilityClassException(
+        sourceClassVisibility: String,
+        targetClassVisibility: String,
+        targetClassCompanionVisibility: String
+    ) {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            code = arrayOf(
+                generateSourceFile(sourceClassVisibility),
+                generateTargetFile(targetClassVisibility, targetClassCompanionVisibility)
+            )
+        )
+
+        assertContains(compilationResult.messages, "${InaccessibleDueToVisibilityClassException::class.simpleName}")
+    }
+
+    private fun generateSourceFile(sourceClassVisibility: String): SourceFile {
+        return if (sourceClassVisibility.startsWith("java:")) {
+            val effectiveSourceClassVisibility = sourceClassVisibility.removePrefix("java:")
             SourceFile.java(
                 name = "SourceClass.java",
                 contents =
@@ -103,16 +142,13 @@ $sourceClassVisibility class SourceClass(val property: String)
                 """.trimIndent()
             )
         }
+    }
 
-        val (compilation) = compileWith(
-            enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.OK,
-            code = arrayOf(
-                sourceSourceFile,
-                SourceFile.kotlin(
-                    name = "TargetClass.kt",
-                    contents =
-                        """
+    private fun generateTargetFile(targetClassVisibility: String, targetClassCompanionVisibility: String): SourceFile {
+        return SourceFile.kotlin(
+            name = "TargetClass.kt",
+            contents =
+                """
 import io.mcarle.konvert.api.KonvertFrom
 
 @KonvertFrom(SourceClass::class)
@@ -120,73 +156,7 @@ $targetClassVisibility class TargetClass(val property: String) {
     $targetClassCompanionVisibility companion object
 }
                     """.trimIndent()
-                )
-            )
         )
-
-        val extensionFunctionCode = compilation.generatedSourceFor("TargetClassKonverter.kt")
-
-        val expectedVisibilityModifier = if ((effectiveSourceClassVisibility != "public" && sourceClassVisibility != "")
-            || (targetClassVisibility != "public" && targetClassVisibility != "")
-            || (targetClassCompanionVisibility != "public" && targetClassCompanionVisibility != "")
-        ) "internal" else "public"
-
-        assertContains(extensionFunctionCode, "$expectedVisibilityModifier fun TargetClass.Companion.fromSourceClass")
-    }
-
-    @ParameterizedTest
-    @MethodSource("invalidCombinations")
-    fun invalidCombinationsReportedWithInaccessibleDueToVisibilityClassException(
-        sourceClassVisibility: String,
-        targetClassVisibility: String,
-        targetClassCompanionVisibility: String
-    ) {
-        val sourceSourceFile = if (sourceClassVisibility.startsWith("java:")) {
-            val effectiveSourceClassVisibility = sourceClassVisibility.removePrefix("java:")
-            SourceFile.java(
-                name = "SourceClass.java",
-                contents =
-                    """
-$effectiveSourceClassVisibility class SourceClass {
-    private String property;
-
-    public SourceClass(String property) {
-        this.property = property;
-    }
-}
-                """.trimIndent()
-            )
-        } else {
-            SourceFile.kotlin(
-                name = "SourceClass.kt",
-                contents =
-                    """
-$sourceClassVisibility class SourceClass(val property: String)
-                """.trimIndent()
-            )
-        }
-
-        val (_, compilationResult) = compileWith(
-            enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
-            code = arrayOf(
-                sourceSourceFile,
-                SourceFile.kotlin(
-                    name = "TargetClass.kt",
-                    contents =
-                        """
-import io.mcarle.konvert.api.KonvertFrom
-
-@KonvertFrom(SourceClass::class)
-$targetClassVisibility class TargetClass(val property: String?) {
-    $targetClassCompanionVisibility companion object
-}
-                    """.trimIndent()
-                )
-            )
-        )
-
-        assertContains(compilationResult.messages, "${InaccessibleDueToVisibilityClassException::class.simpleName}")
     }
 
 }

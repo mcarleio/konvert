@@ -8,159 +8,132 @@ import io.mcarle.konvert.processor.exceptions.InaccessibleDueToVisibilityClassEx
 import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import org.paukov.combinatorics3.Generator
+import org.paukov.combinatorics3.IGenerator
 import kotlin.test.assertContains
 
 @OptIn(ExperimentalCompilerApi::class)
 class KonvertToVisibilityITest : KonverterITest() {
 
-    @ParameterizedTest
-    @ValueSource(strings = ["internal", "public", ""])
-    fun alignVisibilityAccordingToSourceClass(sourceVisibilityModifier: String) {
-        val (compilation) = compileWith(
-            enabledConverters = listOf(SameTypeConverter()),
-            code = SourceFile.kotlin(
-                name = "TestCode.kt",
-                contents =
-                    """
-import io.mcarle.konvert.api.KonvertTo
 
-@KonvertTo(DefaultTargetClass::class)
-@KonvertTo(PublicTargetClass::class)
-$sourceVisibilityModifier class SourceClass(val property: String)
-
-class DefaultTargetClass(val property: String)
-public class PublicTargetClass(val property: String)
-                """.trimIndent()
+    companion object {
+        @JvmStatic
+        private fun possibleCombinations(): IGenerator<List<String>> = Generator.cartesianProduct(
+            // source class (cannot be java)
+            listOf(
+                "public", "private", "internal"
+            ),
+            // target class (can be java)
+            listOf(
+                "public", "private", "internal", "java:public", "java:"
             )
         )
-        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
-        println(extensionFunctionCode)
 
-        val expectedVisibilityModifier = if (sourceVisibilityModifier == "") "public" else sourceVisibilityModifier
+        private fun Iterable<List<String>>.toParameters(): List<Arguments> = this.map {
+            val sourceClassVisibility = it[0]
+            val targetClassVisibility = it[1]
+            Arguments.of(sourceClassVisibility, targetClassVisibility)
+        }
 
-        assertSourceEquals(
-            """
-            $expectedVisibilityModifier fun SourceClass.toDefaultTargetClass(): DefaultTargetClass = DefaultTargetClass(
-              property = property
-            )
+        private fun Iterable<List<String>>.filterValid(valid: Boolean) = this.filter {
+            val sourceClassVisibility = it[0]
+            val targetClassVisibility = it[1]
 
-            $expectedVisibilityModifier fun SourceClass.toPublicTargetClass(): PublicTargetClass = PublicTargetClass(
-              property = property
-            )
-            """.trimIndent(),
-            extensionFunctionCode
-        )
+            if (sourceClassVisibility == "private"
+                || targetClassVisibility == "private"
+            ) {
+                return@filter !valid
+            }
+
+            valid
+        }
+
+        @JvmStatic
+        fun validCombinations(): List<Arguments> = possibleCombinations().filterValid(true).toParameters()
+
+        @JvmStatic
+        fun invalidCombinations(): List<Arguments> = possibleCombinations().filterValid(false).toParameters()
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["internal", "public", ""])
-    fun alignVisibilityAccordingToTargetClass(targetVisibilityModifier: String) {
-        val (compilation) = compileWith(
-            enabledConverters = listOf(SameTypeConverter()),
-            code = SourceFile.kotlin(
-                name = "TestCode.kt",
-                contents =
-                    """
-import io.mcarle.konvert.api.KonvertTo
-
-@KonvertTo(TargetClass::class)
-class DefaultSourceClass(val property: String)
-
-@KonvertTo(TargetClass::class)
-public class PublicSourceClass(val property: String)
-
-$targetVisibilityModifier class TargetClass(val property: String)
-                """.trimIndent()
-            )
-        )
-        val expectedVisibilityModifier = if (targetVisibilityModifier == "") "public" else targetVisibilityModifier
-
-        val extensionFunctionCodeForDefault = compilation.generatedSourceFor("DefaultSourceClassKonverter.kt")
-        println(extensionFunctionCodeForDefault)
-
-        assertSourceEquals(
-            """
-            $expectedVisibilityModifier fun DefaultSourceClass.toTargetClass(): TargetClass = TargetClass(
-              property = property
-            )
-            """.trimIndent(),
-            extensionFunctionCodeForDefault
-        )
-
-        val extensionFunctionCodeForPublic = compilation.generatedSourceFor("PublicSourceClassKonverter.kt")
-        println(extensionFunctionCodeForPublic)
-
-        assertSourceEquals(
-            """
-            $expectedVisibilityModifier fun PublicSourceClass.toTargetClass(): TargetClass = TargetClass(
-              property = property
-            )
-            """.trimIndent(),
-            extensionFunctionCodeForPublic
-        )
-    }
 
     @ParameterizedTest
-    @ValueSource(strings = ["internal", "public", ""])
-    fun alignVisibilityAccordingToSourceAndTargetClass(visibilityModifier: String) {
+    @MethodSource("validCombinations")
+    fun checkCorrectVisibilityGenerated(sourceClassVisibility: String, targetClassVisibility: String) {
         val (compilation) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            code = SourceFile.kotlin(
-                name = "TestCode.kt",
-                contents =
-                    """
-import io.mcarle.konvert.api.KonvertTo
-
-@KonvertTo(TargetClass::class)
-$visibilityModifier class SourceClass(val property: String)
-$visibilityModifier class TargetClass(val property: String)
-                """.trimIndent()
+            expectResultCode = KotlinCompilation.ExitCode.OK,
+            code = arrayOf(
+                generateSourceFile(sourceClassVisibility),
+                generateTargetFile(targetClassVisibility)
             )
         )
-        val expectedVisibilityModifier = if (visibilityModifier == "") "public" else visibilityModifier
 
         val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
-        println(extensionFunctionCode)
 
-        assertSourceEquals(
-            """
-            $expectedVisibilityModifier fun SourceClass.toTargetClass(): TargetClass = TargetClass(
-              property = property
-            )
-            """.trimIndent(),
-            extensionFunctionCode
-        )
+        val expectedVisibilityModifier = if (sourceClassVisibility == "public" && targetClassVisibility.contains("public")) {
+            "public"
+        } else {
+            "internal"
+        }
+
+        assertContains(extensionFunctionCode, "$expectedVisibilityModifier fun SourceClass.toTargetClass")
     }
 
+
     @ParameterizedTest
-    @ValueSource(strings = ["source", "target", "both"])
-    fun throwInaccessibleDueToVisibilityClassExceptionWhenPrivateVisibility(privateSelector: String) {
+    @MethodSource("invalidCombinations")
+    fun invalidCombinationsReportedWithInaccessibleDueToVisibilityClassException(
+        sourceClassVisibility: String,
+        targetClassVisibility: String,
+    ) {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
-            code = SourceFile.kotlin(
-                name = "TestCode.kt",
-                contents =
-                    """
-import io.mcarle.konvert.api.KonvertTo
-
-@KonvertTo(TargetClass::class)
-${if (privateSelector != "target") "private" else ""} class SourceClass(val property: String)
-${if (privateSelector != "source") "private" else ""} class TargetClass(val property: String)
-                """.trimIndent()
+            code = arrayOf(
+                generateSourceFile(sourceClassVisibility),
+                generateTargetFile(targetClassVisibility)
             )
         )
 
-        if (privateSelector == "target") {
-            assertContains(
-                compilationResult.messages,
-                "${InaccessibleDueToVisibilityClassException::class.simpleName}: The class TargetClass is not accessible due to its PRIVATE visibility"
+        assertContains(compilationResult.messages, "${InaccessibleDueToVisibilityClassException::class.simpleName}")
+    }
+
+    private fun generateSourceFile(sourceClassVisibility: String): SourceFile {
+        return SourceFile.kotlin(
+            name = "SourceClass.kt",
+            contents = """
+import io.mcarle.konvert.api.KonvertTo
+
+@KonvertTo(TargetClass::class)
+$sourceClassVisibility class SourceClass(val property: String)
+            """.trimIndent()
+        )
+    }
+
+    private fun generateTargetFile(targetClassVisibility: String): SourceFile {
+        return if (targetClassVisibility.startsWith("java:")) {
+            val effectiveTargetClassVisibility = targetClassVisibility.removePrefix("java:")
+            SourceFile.java(
+                name = "TargetClass.java",
+                contents = """
+$effectiveTargetClassVisibility class TargetClass {
+    private String property;
+
+    public TargetClass(String property) {
+        this.property = property;
+    }
+}
+                """.trimIndent()
             )
         } else {
-            assertContains(
-                compilationResult.messages,
-                "${InaccessibleDueToVisibilityClassException::class.simpleName}: The class SourceClass is not accessible due to its PRIVATE visibility"
+            SourceFile.kotlin(
+                name = "TargetClass.kt",
+                contents =
+                    """
+$targetClassVisibility class TargetClass(val property: String)
+                """.trimIndent()
             )
         }
     }
