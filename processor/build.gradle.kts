@@ -21,6 +21,7 @@ dependencies {
 
     testImplementation(project(":annotations"))
     testImplementation(project(":converter"))
+    testImplementation("com.github.dpaukov:combinatoricslib3:${Versions.combinatoricslib3}")
     testImplementation("org.junit.jupiter:junit-jupiter-api:${Versions.jUnit}")
     testImplementation("org.junit.jupiter:junit-jupiter-params:${Versions.jUnit}")
     testImplementation(kotlinTest)

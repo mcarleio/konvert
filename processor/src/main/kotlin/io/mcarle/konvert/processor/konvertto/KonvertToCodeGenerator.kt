@@ -1,14 +1,20 @@
 package io.mcarle.konvert.processor.konvertto
 
+import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.Visibility
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.codegen.MappingContext
+import io.mcarle.konvert.processor.exceptions.InaccessibleDueToVisibilityClassException
 import io.mcarle.konvert.processor.exceptions.KonvertException
+import io.mcarle.konvert.processor.isEqualOrMoreRestrictedThan
 import io.mcarle.konvert.processor.validated
 
 object KonvertToCodeGenerator {
@@ -27,6 +33,7 @@ object KonvertToCodeGenerator {
 
             fileSpecBuilder.addFunction(
                 funBuilder = FunSpec.builder(data.mapFunctionName)
+                    .addModifiers(*determineModifiers(data.sourceClassDeclaration, data.targetClassDeclaration))
                     .returns(data.targetClassDeclaration.asStarProjectedType().toTypeName())
                     .receiver(data.sourceClassDeclaration.asStarProjectedType().toTypeName())
                     .addCode(
@@ -63,6 +70,33 @@ object KonvertToCodeGenerator {
                 "$packageName.${data.mapFunctionName}"
             }
         )
+    }
+
+    private fun determineModifiers(
+        sourceClassDeclaration: KSClassDeclaration,
+        targetClassDeclaration: KSClassDeclaration
+    ): Array<KModifier> {
+        val sourceVisibility = sourceClassDeclaration.getVisibility()
+        val targetVisibility = targetClassDeclaration.getVisibility()
+
+        val (moreRestrictedVisibility, moreRestrictedClassDeclaration) =
+            if (sourceVisibility.isEqualOrMoreRestrictedThan(targetVisibility)) {
+                sourceVisibility to sourceClassDeclaration
+            } else {
+                targetVisibility to targetClassDeclaration
+            }
+
+        return when (moreRestrictedVisibility) {
+            Visibility.PUBLIC -> arrayOf(KModifier.PUBLIC)
+            Visibility.JAVA_PACKAGE,
+            Visibility.INTERNAL -> arrayOf(KModifier.INTERNAL)
+            Visibility.PROTECTED,
+            Visibility.LOCAL,
+            Visibility.PRIVATE -> throw InaccessibleDueToVisibilityClassException(
+                visibility = moreRestrictedVisibility,
+                classDeclaration = moreRestrictedClassDeclaration
+            )
+        }
     }
 
 }
