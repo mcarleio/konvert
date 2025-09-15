@@ -4,21 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.3.1]
+
+### Bug fixes
+* respect source and target class visibilities for extension function generation (#180, #181)
+
 ## [4.3.0]
 
 ### New features
 
-* Two new type converters, which handle `value class` mappings, i.e., to map from/to e.g. String to/from value class with a String inside: 
+* Two new type converters, which handle `value class` mappings, i.e., to map from/to e.g. String to/from value class with a String inside:
    * `ValueClassToXConverter`
    * `XToValueClassConverter`
 
-  The following example now works out-of-the-box and generates the approprate mappings:
+  The following example now works out-of-the-box and generates the appropriate mappings:
   ```kotlin
   @JvmInline value class DataId(val id: String)
 
   @KonvertTo(AdapterClass::class)
   class DomainClass(id: DataId)
-  
+
   @KonvertTo(DomainClass::class)
   class AdapterClass(id: String)
   ```
@@ -35,15 +40,14 @@ All notable changes to this project will be documented in this file.
 ### New features
 
 * New option `konvert.non-constructor-properties-mapping` to define how non-constructor target properties should be mapped: [#124](https://github.com/mcarleio/konvert/issues/124) (thanks to [@kosoj](https://github.com/kosoj) for idea and initial work [#138](https://github.com/mcarleio/konvert/pull/138))
-  * `auto` (default): Behaves like `implicit` if no explicit mappings are present, otherwise behaves like `explicit`.
-  * `explicit`: Only non-constructor target properties explicitly declared in mappings are mapped.
-  * `implicit`: Maps all non-constructor target properties with a matching source property or explicit mapping.
-  * `all`: All non-constructor target properties must be mapped, otherwise an exception is thrown.
+   * `auto` (default): Behaves like `implicit` if no explicit mappings are present, otherwise behaves like `explicit`.
+   * `explicit`: Only non-constructor target properties explicitly declared in mappings are mapped.
+   * `implicit`: Maps all non-constructor target properties with a matching source property or explicit mapping.
+   * `all`: All non-constructor target properties must be mapped, otherwise an exception is thrown.
 
 * New option `konvert.invalid-mapping-strategy` to define how invalid mappings should be handled:
-  * `warn` (default): Logs a warning and ignores invalid mappings.
-  * `fail`: Throws an exception when an invalid mapping is encountered.
-
+   * `warn` (default): Logs a warning and ignores invalid mappings.
+   * `fail`: Throws an exception when an invalid mapping is encountered.
 
 ## [4.1.2]
 
@@ -62,9 +66,9 @@ All notable changes to this project will be documented in this file.
 
 ### Improvements
 * Improve Java support and compatibility [#125](https://github.com/mcarleio/konvert/issues/125)
-  * values in records are now identified as sources
-  * getter functions are now identified as sources
-  * setter functions are now identified as targets
+   * values in records are now identified as sources
+   * getter functions are now identified as sources
+   * setter functions are now identified as targets
 
 ## [4.0.1]
 
@@ -141,7 +145,6 @@ Update to Kotlin 1.9.22 and KSP 1.0.16
 
   Old functionality is still available by defining the new option `konvert.konverter.use-reflection` to `true` (default is `false`)
 
-
 ## [2.4.0]<a id='2.4.0'></a>
 
 ### New features
@@ -202,7 +205,7 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ### New features
 * override implemented interface functions (simply calling `super`) to add the `@GeneratedKonverter` annotation
-  * this enables to load them on startup when processing entries in `META-INF/io.mcarle.konvert.api.Konvert`
+   * this enables to load them on startup when processing entries in `META-INF/io.mcarle.konvert.api.Konvert`
 
 ### Bug fixes
 * add `Impl` suffix to classes in `META-INF/io.mcarle.konvert.api.Konvert` (i.e. do not reference the interface, but the implementing class/object)
@@ -214,19 +217,19 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 * functions in `@Konverter` are now allowed to have a nullable source parameter [[4bf1c97](https://github.com/mcarleio/konvert/commit/4bf1c974fd51bdd341a5f17078cfd45b982c83ef)]
 * use more imports instead of fully qualified names [[1a40238](https://github.com/mcarleio/konvert/commit/1a40238138728fd390e6a60c670bbd5579e9156e)]
 * enable (re-) usage of generated konverter from other modules or libraries [[5d358ea](https://github.com/mcarleio/konvert/commit/5d358ea1f986b3fa78e72a4bcf1a1536471c5d24)]
-  * therefore, generate META-INF files containing all generated functions
-  * add `@GeneratedKonverter` annotation to all generated functions
-  * and add a new option `konvert.add-generated-konverter-annotation` to disable this feature
+   * therefore, generate META-INF files containing all generated functions
+   * add `@GeneratedKonverter` annotation to all generated functions
+   * and add a new option `konvert.add-generated-konverter-annotation` to disable this feature
 
 ### Breaking Changes for custom `TypeConverter`
 * changed return type of the function `convert` from `String` to `CodeBlock` [[cc3cadd](https://github.com/mcarleio/konvert/commit/cc3caddca7323e1ff8fad0df4e5944e75b86ad2c)]
-  * The simplest migration is to wrap your result `String` in a `CodeBlock` like this:
-    ```kotlin
-    fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
-        // ... do your stuff ...
-        return CodeBlock.of("your conversion code")
-    }
-    ```
+   * The simplest migration is to wrap your result `String` in a `CodeBlock` like this:
+     ```kotlin
+     fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
+         // ... do your stuff ...
+         return CodeBlock.of("your conversion code")
+     }
+     ```
 
 ## [1.5.1]
 
@@ -247,11 +250,11 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ### New features
 * add new modules:
-  * The module `plugin-api` can be used to extend the `processor` at certain points
-  * The modules `injectors/spring-injector` and `injectors/cdi-injector` which use the `plugin-api` to
-    add annotations like `@Component` or `@RequestScoped` to the generated types from `@Konverter`
-    * The modules `injectors/spring-annotations` and `injectors/cdi-annotations` so that the user can define the exact annotations
-  * The modules `injectors/koin-injector` and `injectors/koin-annotations` (thanks to [@jakoss](https://github.com/jakoss) [#4](https://github.com/mcarleio/konvert/pull/4))
+   * The module `plugin-api` can be used to extend the `processor` at certain points
+   * The modules `injectors/spring-injector` and `injectors/cdi-injector` which use the `plugin-api` to
+     add annotations like `@Component` or `@RequestScoped` to the generated types from `@Konverter`
+      * The modules `injectors/spring-annotations` and `injectors/cdi-annotations` so that the user can define the exact annotations
+   * The modules `injectors/koin-injector` and `injectors/koin-annotations` (thanks to [@jakoss](https://github.com/jakoss) [#4](https://github.com/mcarleio/konvert/pull/4))
 * add new option `konvert.generated-filename-suffix` to define the trailing part of the generated filename
 
 ### Bug fixes
@@ -353,7 +356,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v4.3.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v4.3.1...HEAD
+
+[4.3.1]: https://github.com/mcarleio/konvert/compare/v4.3.0...v4.3.1
 
 [4.3.0]: https://github.com/mcarleio/konvert/compare/v4.2.0...v4.3.0
 
