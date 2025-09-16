@@ -21,7 +21,8 @@ class GeneratedKonverterLoaderFromMetaInfITest : KonverterITest() {
             code = emptyArray(),
             options = mapOf(
                 PARSE_DEPRECATED_META_INF_FILES_OPTION.key to "true"
-            )
+            ),
+            enableKsp2 = false
         )
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertTypeConverter>()
@@ -47,7 +48,8 @@ class GeneratedKonverterLoaderFromMetaInfITest : KonverterITest() {
             code = emptyArray(),
             options = mapOf(
                 PARSE_DEPRECATED_META_INF_FILES_OPTION.key to "true"
-            )
+            ),
+            enableKsp2 = false
         )
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertToTypeConverter>()
@@ -68,7 +70,8 @@ class GeneratedKonverterLoaderFromMetaInfITest : KonverterITest() {
             code = emptyArray(),
             options = mapOf(
                 PARSE_DEPRECATED_META_INF_FILES_OPTION.key to "true"
-            )
+            ),
+            enableKsp2 = false
         )
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertFromTypeConverter>()

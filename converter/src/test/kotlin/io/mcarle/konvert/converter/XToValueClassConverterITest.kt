@@ -58,7 +58,7 @@ class XToValueClassConverterITest : ConverterITest() {
                 XToValueClassConverter(),
                 SameTypeConverter()
             ),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 "Code.kt",
                 """
@@ -87,7 +87,7 @@ class XToValueClassConverterITest : ConverterITest() {
                 XToValueClassConverter(),
                 SameTypeConverter()
             ),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 "Code.kt",
                 """
@@ -115,7 +115,7 @@ class XToValueClassConverterITest : ConverterITest() {
                 XToValueClassConverter(),
                 StringToIntConverter()
             ),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 "Code.kt",
                 """

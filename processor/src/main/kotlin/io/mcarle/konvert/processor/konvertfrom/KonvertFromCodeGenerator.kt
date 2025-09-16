@@ -1,8 +1,8 @@
 package io.mcarle.konvert.processor.konvertfrom
 
 import com.google.devtools.ksp.getVisibility
-import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.Visibility
 import com.squareup.kotlinpoet.FunSpec
@@ -19,10 +19,14 @@ import io.mcarle.konvert.processor.validated
 
 object KonvertFromCodeGenerator {
 
-    fun generate(data: KonvertFromData, resolver: Resolver, logger: KSPLogger) = withIsolatedConfiguration(data.annotationData.options) {
+    fun generate(
+        data: KonvertFromData,
+        resolver: Resolver,
+        environment: SymbolProcessorEnvironment
+    ) = withIsolatedConfiguration(data.annotationData.options) {
         try {
             val mapper = CodeGenerator(
-                logger = logger,
+                logger = environment.logger,
                 resolver = resolver
             )
 
@@ -45,7 +49,7 @@ object KonvertFromCodeGenerator {
                     .receiver(data.targetCompanionDeclaration.asStarProjectedType().toTypeName())
                     .addCode(
                         mapper.generateCode(
-                            mappings = data.annotationData.mappings.validated(data.sourceClassDeclaration, logger),
+                            mappings = data.annotationData.mappings.validated(data.sourceClassDeclaration, environment.logger),
                             enforcedConstructorTypes = data.annotationData.constructor,
                             context = MappingContext(
                                 sourceClassDeclaration = data.sourceClassDeclaration,
