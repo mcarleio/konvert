@@ -78,7 +78,7 @@ class ValueClassToXConverterITest : ConverterITest() {
                 ValueClassToXConverter(),
                 SameTypeConverter()
             ),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 "Code.kt",
                 """
@@ -107,7 +107,7 @@ class ValueClassToXConverterITest : ConverterITest() {
                 ValueClassToXConverter(),
                 SameTypeConverter()
             ),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 "Code.kt",
                 """

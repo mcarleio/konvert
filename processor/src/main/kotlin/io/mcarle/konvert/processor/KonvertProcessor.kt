@@ -70,9 +70,9 @@ class KonvertProcessor(
     private fun generateMappingCode(resolver: Resolver, converterData: List<AnnotatedConverterData>) {
         converterData.forEach {
             when (it) {
-                is KonvertToData -> KonvertToCodeGenerator.generate(it, resolver, logger)
-                is KonvertFromData -> KonvertFromCodeGenerator.generate(it, resolver, logger)
-                is KonverterData -> KonverterCodeGenerator.generate(it, resolver, logger)
+                is KonvertToData -> KonvertToCodeGenerator.generate(it, resolver, environment)
+                is KonvertFromData -> KonvertFromCodeGenerator.generate(it, resolver, environment)
+                is KonverterData -> KonverterCodeGenerator.generate(it, resolver, environment)
             }
         }
     }

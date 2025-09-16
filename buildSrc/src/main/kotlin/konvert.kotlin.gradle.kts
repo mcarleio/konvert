@@ -29,3 +29,9 @@ tasks.withType<KotlinCompile>().configureEach {
     compilerOptions.jvmTarget = JvmTarget.JVM_17
     compilerOptions.javaParameters = true
 }
+
+
+tasks.test {
+    // increase memory for KSP2
+    maxHeapSize = "2048m"
+}

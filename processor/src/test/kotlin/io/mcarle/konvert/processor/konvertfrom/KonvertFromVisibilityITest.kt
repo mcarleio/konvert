@@ -102,7 +102,7 @@ class KonvertFromVisibilityITest : KonverterITest() {
     ) {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = arrayOf(
                 generateSourceFile(sourceClassVisibility),
                 generateTargetFile(targetClassVisibility, targetClassCompanionVisibility)
@@ -126,7 +126,7 @@ $effectiveSourceClassVisibility class SourceClass {
         this.property = property;
     }
 
-    @org.jetbrains.annotations.NotNull
+    @ksp.org.jetbrains.annotations.NotNull
     public String getProperty() {
         return property;
     }
