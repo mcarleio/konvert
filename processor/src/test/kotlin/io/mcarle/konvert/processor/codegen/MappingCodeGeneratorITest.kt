@@ -57,7 +57,7 @@ class TargetClass(
     fun throwIfEnforceNotNullNotEnabledButRequired() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -121,7 +121,7 @@ class TargetClass(var property: String)
     fun throwIfEnforceNotNullNotEnabledButRequiredDueToOptionalSource() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
@@ -248,7 +248,7 @@ class TargetClass(
     fun throwWhenTargetIgnoredButIsNotIgnorable() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =

@@ -410,7 +410,7 @@ public class Target {
     fun `all mode fails when a target non-constructor property has no mapping`() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             options = mapOf(
                 NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION.key to NonConstructorPropertiesMapping.ALL.name
             ),
@@ -441,7 +441,7 @@ class Target(val id: String) {
     fun `all mode fails when a target non-constructor setter has no mapping`() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             options = mapOf(
                 NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION.key to NonConstructorPropertiesMapping.ALL.name
             ),

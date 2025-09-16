@@ -146,7 +146,7 @@ class Target(val id: String)
     fun `fail mode fails compilation when mapping defines unknown source`() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             options = mapOf(
                 INVALID_MAPPING_STRATEGY_OPTION.key to InvalidMappingStrategy.FAIL.name,
             ),
@@ -180,7 +180,7 @@ class Target(val id: String)
     fun `fail mode fails compilation when mapping defines unknown target`() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             options = mapOf(
                 INVALID_MAPPING_STRATEGY_OPTION.key to InvalidMappingStrategy.FAIL.name,
             ),
@@ -214,7 +214,7 @@ class Target(val id: String)
     fun `fail mode fails compilation when a not allowed parameter combination is used in a mapping`() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             options = mapOf(
                 INVALID_MAPPING_STRATEGY_OPTION.key to InvalidMappingStrategy.FAIL.name,
             ),
@@ -244,7 +244,7 @@ class Target(val id: String)
     fun `fail mode fails compilation when multiple mappings for the same target are defined`() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
-            expectResultCode = KotlinCompilation.ExitCode.COMPILATION_ERROR,
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
             options = mapOf(
                 INVALID_MAPPING_STRATEGY_OPTION.key to InvalidMappingStrategy.FAIL.name,
             ),

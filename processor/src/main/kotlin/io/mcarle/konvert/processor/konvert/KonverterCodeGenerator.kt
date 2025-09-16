@@ -2,6 +2,7 @@ package io.mcarle.konvert.processor.konvert
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.squareup.kotlinpoet.FunSpec
@@ -27,10 +28,14 @@ object KonverterCodeGenerator {
         ServiceLoader.load(KonverterInjector::class.java, this::class.java.classLoader).toList()
     }
 
-    fun generate(data: KonverterData, resolver: Resolver, logger: KSPLogger) = withIsolatedConfiguration(data.annotationData.options) {
+    fun generate(
+        data: KonverterData,
+        resolver: Resolver,
+        environment: SymbolProcessorEnvironment
+    ) = withIsolatedConfiguration(data.annotationData.options) {
         withCurrentKonverterInterface(data.konverterInterface) {
             val mapper = CodeGenerator(
-                logger = logger,
+                logger = environment.logger,
                 resolver = resolver
             )
 
@@ -78,7 +83,7 @@ object KonverterCodeGenerator {
                                     if (!konvertData.isAbstract) {
                                         generateSuperCall(konvertData)
                                     } else {
-                                        generateMappingCode(mapper, konvertData, targetClassImportName, logger)
+                                        generateMappingCode(mapper, konvertData, targetClassImportName, environment.logger)
                                     }
                                 },
                             priority = konvertData.priority,
@@ -135,7 +140,9 @@ object KonverterCodeGenerator {
     }
 
     private fun isAlias(typeReference: KSTypeReference, type: KSType): Boolean {
-        return typeReference.toString().takeWhile { it != '<' } != type.makeNotNullable().toString().takeWhile { it != '<' }
+        // Waiting for solution of https://github.com/google/ksp/issues/2391
+        // to be able to identify import alias
+        return typeReference.toString().takeWhile { it != '<' }.removeSuffix("?") != type.makeNotNullable().toString().takeWhile { it != '<' }
     }
 
     private fun retrieveCodeBuilder(
