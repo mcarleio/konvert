@@ -1,5 +1,4 @@
 import com.vanniktech.maven.publish.KotlinJvm
-import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
     `java-library`
@@ -14,7 +13,7 @@ mavenPublishing {
     configure(KotlinJvm())
 
     if (System.getenv("CI") != null) {
-        publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+        publishToMavenCentral()
         signAllPublications()
     }
 
