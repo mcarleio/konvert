@@ -22,15 +22,15 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
       - name: Build
-        run: ./gradlew build -x test
+        run: ./gradlew build --no-daemon -x test
       - name: Publish locally
         run: unset CI && ./gradlew publishToMavenLocal
       - name: Test example project with gradle
-        run: ./gradlew -p ./example build
+        run: ./gradlew -p ./example build --no-daemon
 #      - name: Test example project with maven
 #        run: cd example && mvn --batch-mode --update-snapshots package
       - name: Test
-        run: ./gradlew test check -PrunAllTests
+        run: ./gradlew test check -PrunAllTests --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g"
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
