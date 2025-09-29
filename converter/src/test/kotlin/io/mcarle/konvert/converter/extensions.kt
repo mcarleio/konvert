@@ -2,7 +2,6 @@ package io.mcarle.konvert.converter
 
 import io.mcarle.konvert.converter.api.TypeConverter
 import org.junit.jupiter.params.provider.Arguments
-import org.paukov.combinatorics3.Generator
 
 fun <T> List<T>.toConverterTestArguments(typeNameExtractor: (T) -> Pair<String?, String?>) = this.flatMap {
     val (sourceTypeName, targetTypeName) = typeNameExtractor(it)
@@ -12,18 +11,6 @@ fun <T> List<T>.toConverterTestArguments(typeNameExtractor: (T) -> Pair<String?,
         Arguments.arguments("$sourceTypeName?", "$targetTypeName?")
     )
 }
-
-fun <T> List<T>.cartesianProductWithNullableCombinations(vararg other: T) = Generator.cartesianProduct(this, other.toList())
-    .flatMap {
-        val sourceTypeName = it.first()
-        val targetTypeName = it.last()
-        listOf(
-            Arguments.arguments(sourceTypeName, targetTypeName),
-            Arguments.arguments(sourceTypeName, "$targetTypeName?"),
-            Arguments.arguments("$sourceTypeName?", "$targetTypeName"),
-            Arguments.arguments("$sourceTypeName?", "$targetTypeName?")
-        )
-    }
 
 fun <E : TypeConverter> List<E>.toConverterTestArgumentsWithType(typeNameExtractor: (E) -> Pair<String?, String?>) = this.flatMap {
     val (sourceTypeName, targetTypeName) = typeNameExtractor(it)

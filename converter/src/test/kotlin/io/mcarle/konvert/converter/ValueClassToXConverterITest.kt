@@ -25,20 +25,42 @@ class ValueClassToXConverterITest : ConverterITest() {
 
         @JvmStatic
         fun sourceAndTargets(): List<Arguments> = listOf(
-            "SimpleValueClass",
-            "ValueClassWithNullable",
-            "ValueClassWithAdditionalProperties"
-        ).cartesianProductWithNullableCombinations(
-            "String",
-            "Int",
+            //            source,             target,  enforceNotNull
+            Arguments.of("SimpleValueClass", "String", false),
+            Arguments.of("SimpleValueClass", "String?", false),
+            Arguments.of("SimpleValueClass?", "String", true),
+            Arguments.of("SimpleValueClass?", "String?", false),
+            Arguments.of("SimpleValueClass", "Int", false),
+            Arguments.of("SimpleValueClass", "Int?", false),
+            Arguments.of("SimpleValueClass?", "Int", true),
+            Arguments.of("SimpleValueClass?", "Int?", false),
+
+            Arguments.of("ValueClassWithNullable", "String", true), // enforceNotNull because value class property is nullable
+            Arguments.of("ValueClassWithNullable", "String?", false),
+            Arguments.of("ValueClassWithNullable?", "String", true),
+            Arguments.of("ValueClassWithNullable?", "String?", false),
+            Arguments.of("ValueClassWithNullable", "Int", true), // enforceNotNull because value class property is nullable
+            Arguments.of("ValueClassWithNullable", "Int?", false),
+            Arguments.of("ValueClassWithNullable?", "Int", true),
+            Arguments.of("ValueClassWithNullable?", "Int?", false),
+
+            Arguments.of("ValueClassWithAdditionalProperties", "String", false),
+            Arguments.of("ValueClassWithAdditionalProperties", "String?", false),
+            Arguments.of("ValueClassWithAdditionalProperties?", "String", true),
+            Arguments.of("ValueClassWithAdditionalProperties?", "String?", false),
+            Arguments.of("ValueClassWithAdditionalProperties", "Int", false),
+            Arguments.of("ValueClassWithAdditionalProperties", "Int?", false),
+            Arguments.of("ValueClassWithAdditionalProperties?", "Int", true),
+            Arguments.of("ValueClassWithAdditionalProperties?", "Int?", false),
         )
 
     }
 
     @ParameterizedTest
     @MethodSource("sourceAndTargets")
-    fun converterTest(sourceTypeName: String, targetTypeName: String) {
-        enforceNotNull = true
+    fun converterTest(sourceTypeName: String, targetTypeName: String, enforceNotNull: Boolean) {
+        this.enforceNotNull = enforceNotNull
+
         executeTest(
             sourceTypeName = sourceTypeName,
             targetTypeName = targetTypeName,

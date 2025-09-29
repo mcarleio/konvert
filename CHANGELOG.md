@@ -4,16 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug fixes
+* do not require `konvert.enforce-not-null` for mapping to value class when source and target are nullable [#189](https://github.com/mcarleio/konvert/issues/189)
+
 ## [4.3.1]
 
 ### Bug fixes
-* respect source and target class visibilities for extension function generation (#180, #181)
+* respect source and target class visibilities for extension function generation [#180](https://github.com/mcarleio/konvert/issues/180)
 
 ## [4.3.0]
 
 ### New features
 
-* Two new type converters, which handle `value class` mappings, i.e., to map from/to e.g. String to/from value class with a String inside:
+* Two new type converters, which handle `value class` mappings, i.e., to map from/to e.g. String to/from value class with a String inside: [#178](https://github.com/mcarleio/konvert/issues/178)
    * `ValueClassToXConverter`
    * `XToValueClassConverter`
 
@@ -160,7 +163,6 @@ Update to Kotlin 1.9.22 and KSP 1.0.16
 
 ### Bug fixes:
 * ignore private and extension functions in `@Konverter` annotated interfaces [#30](https://github.com/mcarleio/konvert/issues/30)
-
 
 ## [2.3.1]
 

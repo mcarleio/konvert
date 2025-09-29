@@ -26,29 +26,15 @@ class XToValueClassConverter : AbstractTypeConverter() {
         if (targetClassDeclaration.classKind != ClassKind.CLASS) return false
         if (Modifier.VALUE !in targetClassDeclaration.modifiers) return false
 
-        val sourceForTypeConverter = if (source.isNullable() && target.isNullable()) {
-            source.makeNotNullable()
-        } else {
-            source
-        }
-
         return targetClassDeclaration
             .availableConstructors()
-            .any { constructor ->
-                val parameterType = constructor.parameters.first().type.resolve()
-                TypeConverterRegistry.any {
-                    it.matches(
-                        source = sourceForTypeConverter,
-                        target = parameterType,
-                    )
-                }
-            }
+            .any { constructor -> findMatchingTypeConverter(constructor, source, target) != null }
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
         val targetClassDeclaration = requireNotNull(target.classDeclaration())
 
-        val (constructor, typeConverter) = extractBestConstructor(targetClassDeclaration, source)
+        val (constructor, typeConverter) = extractBestConstructor(source, target)
         val propertyType = constructor.parameters.first().type.resolve()
 
         return if (source.isNullable() && target.isNullable()) {
@@ -81,22 +67,30 @@ class XToValueClassConverter : AbstractTypeConverter() {
      * extracts the best matching constructor based on the registered TypeConverters priorities
      */
     private fun extractBestConstructor(
-        targetClassDeclaration: KSClassDeclaration,
-        source: KSType
+        source: KSType,
+        target: KSType
     ): Pair<KSFunctionDeclaration, TypeConverter> {
-        return targetClassDeclaration
+        return requireNotNull(target.classDeclaration())
             .availableConstructors()
-            .associateWith { constructor ->
-                val parameterType = constructor.parameters.first().type.resolve()
-                TypeConverterRegistry.firstOrNull {
-                    it.matches(
-                        source = source,
-                        target = parameterType,
-                    )
-                }
-            }
+            .associateWith { constructor -> findMatchingTypeConverter(constructor, source, target) }
             .filterValueNotNull()
             .minBy { it.second.priority }
+    }
+
+    private fun findMatchingTypeConverter(constructor: KSFunctionDeclaration, source: KSType, target: KSType): TypeConverter? {
+        val sourceForTypeConverter = if (source.isNullable() && target.isNullable()) {
+            source.makeNotNullable()
+        } else {
+            source
+        }
+
+        val parameterType = constructor.parameters.first().type.resolve()
+        return TypeConverterRegistry.firstOrNull {
+            it.matches(
+                source = sourceForTypeConverter,
+                target = parameterType,
+            )
+        }
     }
 
     private fun <K, V> Map<out K, V?>.filterValueNotNull(): List<Pair<K, V>> {
