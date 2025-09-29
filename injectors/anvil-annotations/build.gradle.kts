@@ -5,5 +5,5 @@ plugins {
 
 dependencies {
     api("com.squareup.anvil:annotations:2.4.9")
-    api("com.google.dagger:dagger:2.56.1")
+    api("com.google.dagger:dagger:2.57.2")
 }
