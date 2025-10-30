@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Improvements
+* Update to Kotlin 2.2.0 and KSP 2.0.2
+* Switch how `konvert` is being used in a maven project with KSP2 by using the new [ksp-maven-plugin](https://github.com/mcarleio/ksp-maven-plugin).
+
+## [4.3.2]
+
 ### Bug fixes
 * do not require `konvert.enforce-not-null` for mapping to value class when source and target are nullable [#189](https://github.com/mcarleio/konvert/issues/189)
 
@@ -358,7 +364,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v4.3.1...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v4.3.2...HEAD
+
+[4.3.2]: https://github.com/mcarleio/konvert/compare/v4.3.1...v4.3.2
 
 [4.3.1]: https://github.com/mcarleio/konvert/compare/v4.3.0...v4.3.1
 
