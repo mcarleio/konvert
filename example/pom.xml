@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <kotlin.version>1.9.23</kotlin.version>
+        <kotlin.version>2.2.0</kotlin.version>
         <konvert.version>0.1.0-SNAPSHOT</konvert.version>
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.source>17</maven.compiler.source>
@@ -65,21 +65,32 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <apiVersion>2.2</apiVersion>
+                    <languageVersion>2.2</languageVersion>
                     <jvmTarget>17</jvmTarget>
-                    <compilerPlugins>
-                        <plugin>ksp</plugin>
-                    </compilerPlugins>
-                    <pluginOptions>
-                        <!-- This is how you globally define options to Konvert -->
-                        <option>ksp:apoption=konvert.konverter.generate-class=true</option>
-                    </pluginOptions>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>io.mcarle</groupId>
+                <artifactId>ksp-maven-plugin</artifactId>
+                <version>2.3.0-1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>ksp</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <jvmTarget>17</jvmTarget>
+                    <languageVersion>2.2</languageVersion>
+                    <apiVersion>2.2</apiVersion>
+                    <processorOptions>
+                        <option>konvert.konverter.generate-class=true</option>
+                    </processorOptions>
                 </configuration>
                 <dependencies>
-                    <dependency>
-                        <groupId>com.dyescape</groupId>
-                        <artifactId>kotlin-maven-symbol-processing</artifactId>
-                        <version>1.6</version>
-                    </dependency>
                     <dependency>
                         <groupId>io.mcarle</groupId>
                         <artifactId>konvert</artifactId>
