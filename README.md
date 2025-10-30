@@ -10,71 +10,6 @@ This is a kotlin compiler plugin (using [KSP](https://github.com/google/ksp)) to
 
 ## Usage
 
-### Gradle
-
-To use `Konvert` with Gradle, you have to do the following steps:
-
-1. Add `konvert-api` as a dependency:
-   ```kotlin
-   dependencies {
-      implementation("io.mcarle:konvert-api:$konvertVersion")
-   }
-   ```
-
-2. Add the KSP plugin matching your Kotlin version:
-   ```kotlin
-   plugins {
-       id("com.google.devtools.ksp").version("2.0.21-1.0.27")
-   }
-   ```
-
-3. Add `konvert` as a `ksp` dependency:
-   ```kotlin
-   dependencies {
-      ksp("io.mcarle:konvert:$konvertVersion")
-   }
-   ```
-
-### Maven
-
-To use `Konvert` with Maven, you have to do the following steps:
-
-1. Add `konvert-api` as a dependency:
-   ```xml
-   <dependency>
-       <groupId>io.mcarle</groupId>
-       <artifactId>konvert-api</artifactId>
-       <version>${konvert.version}</version>
-   </dependency>
-   ```
-
-2. Add the `ksp-maven-plugin` with `Konvert` as a dependency:
-   ```xml
-   <plugin>
-       <groupId>io.mcarle</groupId>
-       <artifactId>ksp-maven-plugin</artifactId>
-       <version>2.3.0-1</version>
-       <executions>
-           <execution>
-               <goals>
-                   <goal>ksp</goal>
-               </goals>
-           </execution>
-       </executions>
-       <dependencies>
-           <dependency>
-               <groupId>io.mcarle</groupId>
-               <artifactId>konvert</artifactId>
-               <version>${konvert.version}</version>
-           </dependency>
-       </dependencies>
-   </plugin>
-   ```
-
-### Code
-
-For a simple example project have a look into the [example directory](example).
-
 There are three different ways to use `Konvert`:
 
 1. Using `@KonvertTo`:
@@ -120,6 +55,7 @@ There are three different ways to use `Konvert`:
          = PersonDto(firstName = person.firstName, lastName = person.lastName)
    }
    ```
+For a simple example project have a look into the [example directory](example).
 
 ### Type mappings
 
@@ -128,7 +64,7 @@ For simple type mappings, like from `Instant` to `Date`, there already is a type
 ```kotlin
 @KonvertTo(PersonDto::class)
 class Person(val name: String, val birthday: Instant)
-data class PersonDto(val name: String, val birthday: Date)
+class PersonDto(val name: String, val birthday: Date)
 ```
 
 This will generate the following extension function
@@ -161,7 +97,7 @@ You can configure specific mappings and rename the generated extension function 
    mapFunctionName = "asDto"
 )
 class Person(val firstName: String, val lastName: String)
-data class PersonDto(val givenName: String, val familyName: String)
+class PersonDto(val givenName: String, val familyName: String)
 ```
 
 This will generate the following extension function
@@ -178,6 +114,68 @@ the [documentation](https://mcarleio.github.io/konvert/)
 the KDocs of the [annotations](annotations/src/main/kotlin/io/mcarle/konvert/api),
 the [example project](example/src/main/kotlin/io/mcarle/konvert/example)
 or the [tests](processor/src/test/kotlin/io/mcarle/konvert/processor).
+
+
+## Gradle Setup
+
+To use `Konvert` with Gradle, you have to do the following steps:
+
+1. Add `konvert-api` as a dependency to use the annotations:
+   ```kotlin
+   dependencies {
+      implementation("io.mcarle:konvert-api:$konvertVersion")
+   }
+   ```
+
+2. Add the KSP plugin:
+   ```kotlin
+   plugins {
+       id("com.google.devtools.ksp").version("2.3.0")
+   }
+   ```
+
+3. Add `konvert` as a `ksp` dependency:
+   ```kotlin
+   dependencies {
+      ksp("io.mcarle:konvert:$konvertVersion")
+   }
+   ```
+
+## Maven Setup
+
+To use `Konvert` with Maven, you have to do the following steps:
+
+1. Add `konvert-api` as a dependency:
+   ```xml
+   <dependency>
+       <groupId>io.mcarle</groupId>
+       <artifactId>konvert-api</artifactId>
+       <version>${konvert.version}</version>
+   </dependency>
+   ```
+
+2. Use the [ksp-maven-plugin](https://github.com/mcarleio/ksp-maven-plugin) with `konvert` as a dependency:
+   ```xml
+   <plugin>
+       <groupId>io.mcarle</groupId>
+       <artifactId>ksp-maven-plugin</artifactId>
+       <version>2.3.0-1</version>
+       <executions>
+           <execution>
+               <goals>
+                   <goal>ksp</goal>
+               </goals>
+           </execution>
+       </executions>
+       <dependencies>
+           <dependency>
+               <groupId>io.mcarle</groupId>
+               <artifactId>konvert</artifactId>
+               <version>${konvert.version}</version>
+           </dependency>
+       </dependencies>
+   </plugin>
+   ```
 
 ## Further information
 
