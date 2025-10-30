@@ -48,23 +48,20 @@ To use `Konvert` with Maven, you have to do the following steps:
    </dependency>
    ```
 
-2. Configure the `kotlin-maven-plugin` to use `Konvert`:
+2. Add the `ksp-maven-plugin` with `Konvert` as a dependency:
    ```xml
    <plugin>
-       <groupId>org.jetbrains.kotlin</groupId>
-       <artifactId>kotlin-maven-plugin</artifactId>
-       <configuration>
-           <jvmTarget>17</jvmTarget>
-           <compilerPlugins>
-               <plugin>ksp</plugin>
-           </compilerPlugins>
-       </configuration>
+       <groupId>io.mcarle</groupId>
+       <artifactId>ksp-maven-plugin</artifactId>
+       <version>2.3.0-1</version>
+       <executions>
+           <execution>
+               <goals>
+                   <goal>ksp</goal>
+               </goals>
+           </execution>
+       </executions>
        <dependencies>
-           <dependency>
-               <groupId>com.dyescape</groupId>
-               <artifactId>kotlin-maven-symbol-processing</artifactId>
-               <version>1.6</version>
-           </dependency>
            <dependency>
                <groupId>io.mcarle</groupId>
                <artifactId>konvert</artifactId>
