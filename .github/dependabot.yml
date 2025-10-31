@@ -6,36 +6,14 @@
 version: 2
 updates:
 
-  # Update dependencies weekly
+  # Update konvert dependencies weekly
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
       interval: "weekly"
-
-  # Update dependencies in /injectors weekly, but ignore minor and patch updates
-  - package-ecosystem: "gradle"
-    directories: [ "/injectors/**" ]
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "*"
-        update-types: [ "version-update:semver-minor", "version-update:semver-patch" ]
-
-  # Update dependencies in /example weekly, but ignore io.mcarle:konvert* dependencies
-  - package-ecosystem: "maven"
-    directory: "/example"
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "io.mcarle:konvert*"
-
-  # Update dependencies in /example weekly, but ignore io.mcarle:konvert* dependencies
-  - package-ecosystem: "gradle"
-    directory: "/example"
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "io.mcarle:konvert*"
+    exclude-paths:
+      - "example/**"
+      - "injectors/**" # ignore updates in injectors modules
 
   # Update direct dependencies in /docs weekly
   - package-ecosystem: "bundler"
