@@ -4,13 +4,28 @@
 [![License][license-image]](LICENSE)
 [![Code Coverage][codecov-image]][codecov-url]
 
-This is a kotlin compiler plugin (using [KSP](https://github.com/google/ksp)) to generate mapping code from one class to another.
+This is Konvert, a Kotlin mapping code generator using [Kotlin Symbol Processing (KSP)](https://github.com/google/ksp).
+Designed specifically for Kotlin and its features, Konvert supports a wide range of use cases.
 
-> This README provides a basic overview, for more details have a look at the [documentation](https://mcarleio.github.io/konvert).
+Major features:
+* 🧩 supports **various class kinds** → `data`, `enum`, `value`, regular POJOs
+* 🔄 **Null-safe** by default
+* ⚙️ **Smart conversions** (`Int` → `String`, `Instant` → `Date`, …)
+   * 🔧 Define **reusable converters** with `@Konverter`
+   * 🔌 Extend via **SPI** for ultimate control
+* 🔗 **Collections & maps** — mapping of elements included
+* 🛠️ **Fine-grained** property mapping customization
+* ☕ 100% **Java interoperability**
+* ✨ Generates **clean, idiomatic Kotlin** code
+   * ⏱️ Generated at **compile time**
+   * 🚫 **Zero reflection**, **zero runtime overhead**
+* 📦 Works seamlessly with **Gradle** and **Maven**
+
+> ℹ️ This README provides a basic overview, for more details have a look at the [documentation](https://mcarleio.github.io/konvert).
 
 ## Usage
 
-There are three different ways to use `Konvert`:
+There are three different ways to use Konvert:
 
 1. Using `@KonvertTo`:
    ```kotlin
@@ -59,7 +74,7 @@ For a simple example project have a look into the [example directory](example).
 
 ### Type mappings
 
-For simple type mappings, like from `Instant` to `Date`, there already is a type converter provided with `Konvert`:
+For simple type mappings, like from `Instant` to `Date`, there already is a type converter provided with Konvert:
 
 ```kotlin
 @KonvertTo(PersonDto::class)
@@ -115,10 +130,9 @@ the KDocs of the [annotations](annotations/src/main/kotlin/io/mcarle/konvert/api
 the [example project](example/src/main/kotlin/io/mcarle/konvert/example)
 or the [tests](processor/src/test/kotlin/io/mcarle/konvert/processor).
 
-
 ## Gradle Setup
 
-To use `Konvert` with Gradle, you have to do the following steps:
+To use Konvert with Gradle, you have to do the following steps:
 
 1. Add `konvert-api` as a dependency to use the annotations:
    ```kotlin
@@ -143,9 +157,9 @@ To use `Konvert` with Gradle, you have to do the following steps:
 
 ## Maven Setup
 
-To use `Konvert` with Maven, you have to do the following steps:
+To use Konvert with Maven, you have to do the following steps:
 
-1. Add `konvert-api` as a dependency:
+1. Add `konvert-api` as a dependency to use the annotations:
    ```xml
    <dependency>
        <groupId>io.mcarle</groupId>
@@ -179,8 +193,37 @@ To use `Konvert` with Maven, you have to do the following steps:
 
 ## Further information
 
-* `Konvert` is primarily compiled and tested with JDK >=17. It should also work with anything below JDK 17, but is not guaranteed to.
-* `Konvert` is able to convert classes from and to classes written in Java (and probably also in other JVM languages).
+* Konvert is primarily compiled and tested with JDK >=17. It should also work with anything below JDK 17, but is not guaranteed to.
+* Konvert is able to convert classes from and to classes written in Java (and probably also in other JVM languages).
+
+### Alternatives
+
+There are some alternatives to Konvert that you might want to check out:
+
+* [Mappie](https://github.com/Mr-Mappie/mappie)
+
+  Mappie does not use KSP, but instead is a compiler plugin for Kotlin itself.
+  It uses reflection rather than String references to **define** the mappings,
+  but **replaces the reflection** code during compile time with idiomatic Kotlin code.
+
+* [MapStruct](https://mapstruct.org/)
+
+  MapStruct is a well known Java mapping library using annotation processing (see [kapt](https://kotlinlang.org/docs/kapt.html)).
+  Can be used in Kotlin projects, but does not support Kotlin specific features.
+
+* [kMapper](https://github.com/s0nicyouth/kmapper)
+
+  kMapper is also a KSP processor, but seems to only support mapping between Kotlin data classes.
+
+* [ShapeShift️](https://github.com/krud-dev/shapeshift)
+
+  ShapeShift uses reflection at runtime to map between classes.
+
+* **Code yourself** (with AI support)
+
+  Indeed, it sometimes can be faster, easier and more flexible to write mapping code manually.
+  With the help of AI tools nowadays, this repetitive task can be automated to a certain degree.
+
 
 ## Building
 
@@ -192,7 +235,7 @@ To build the project, simply run
 
 #### Run all tests
 
-By default, only a subset of available tests are executed, which should verify most of `Konvert`'s functionality.
+By default, only a subset of available tests are executed, which should verify most of Konvert's functionality.
 To run all tests, append the property `runAllTests`, e.g.:
 
 > gradle test -PrunAllTests
@@ -231,9 +274,12 @@ The [changelog](CHANGELOG.md) contains all notable changes.
     See the License for the specific language governing permissions and
     limitations under the License.
 
-
 [maven-image]: https://img.shields.io/maven-central/v/io.mcarle/konvert.svg
+
 [maven-url]: https://central.sonatype.com/artifact/io.mcarle/konvert/
+
 [license-image]: https://img.shields.io/github/license/mcarleio/konvert.svg
+
 [codecov-image]: https://img.shields.io/codecov/c/github/mcarleio/konvert.svg
+
 [codecov-url]: https://codecov.io/gh/mcarleio/konvert
