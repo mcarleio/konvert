@@ -1,5 +1,6 @@
 package io.mcarle.konvert.converter
 
+import io.mcarle.konvert.converter.api.config.ENFORCE_NOT_NULL_STRATEGY_OPTION
 import io.mcarle.konvert.converter.utils.ConverterITest
 import io.mcarle.konvert.converter.utils.VerificationData
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
@@ -10,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.Date
+import kotlin.test.Test
 
 @OptIn(ExperimentalCompilerApi::class)
 class SameTypeConverterITest : ConverterITest() {
@@ -118,6 +120,31 @@ class SameTypeConverterITest : ConverterITest() {
 
         this.validateGeneratedSourceCode(verificationData)
     }
+
+    @Test
+    fun converterUsesRequireNotNullForNullableToNonNull() {
+        enforceNotNull = true
+        enforceNotNullStrategy = "REQUIRE_NOT_NULL"
+
+        executeTest(
+            typeNamePairs = listOf("String?" to "String"),
+            converter = SameTypeConverter(),
+            verification = { verificationData ->
+                val code = verificationData.generatedCode
+                assertSourceEquals(
+                    """
+                    public object FooMapperImpl : FooMapper {
+                      override fun toYyy(it: Xxx): Yyy = Yyy(
+                        test0 = requireNotNull(it.test0) { "Value for 'it.test0' must not be null" }
+                      )
+                    }
+                    """.trimIndent(),
+                    code
+                )
+            }
+        )
+    }
+
 
 }
 

@@ -8,6 +8,7 @@ import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.ADD_GENERATED_KONVERTER_ANNOTATION_OPTION
 import io.mcarle.konvert.converter.api.config.ENFORCE_NOT_NULL_OPTION
+import io.mcarle.konvert.converter.api.config.ENFORCE_NOT_NULL_STRATEGY_OPTION
 import io.mcarle.konvert.converter.api.config.GENERATED_MODULE_SUFFIX_OPTION
 import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
@@ -24,6 +25,7 @@ abstract class KonverterITest {
     protected open var addGeneratedKonverterAnnotation = false
     protected open var generatedModuleSuffix = ""
     protected open var enforceNotNull = false
+    protected open var enforceNotNullStrategy: String = "ASSERTION_OPERATOR"
 
     fun compileWith(
         enabledConverters: List<TypeConverter>,
@@ -94,6 +96,7 @@ abstract class KonverterITest {
                     putIfAbsent(ADD_GENERATED_KONVERTER_ANNOTATION_OPTION.key, "$addGeneratedKonverterAnnotation")
                     putIfAbsent(GENERATED_MODULE_SUFFIX_OPTION.key, generatedModuleSuffix)
                     putIfAbsent(ENFORCE_NOT_NULL_OPTION.key, "$enforceNotNull")
+                    putIfAbsent(ENFORCE_NOT_NULL_STRATEGY_OPTION.key, enforceNotNullStrategy)
                 }
                 withCompilation = true
             }

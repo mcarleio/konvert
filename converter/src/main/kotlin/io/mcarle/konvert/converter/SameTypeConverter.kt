@@ -20,8 +20,6 @@ class SameTypeConverter : AbstractTypeConverter() {
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
-        return CodeBlock.of(
-            fieldName + appendNotNullAssertionOperatorIfNeeded(source, target)
-        )
+        return applyNotNullEnforcementIfNeeded(fieldName, source, target)
     }
 }

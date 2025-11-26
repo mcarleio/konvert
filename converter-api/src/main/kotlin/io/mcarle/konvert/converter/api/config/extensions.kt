@@ -9,6 +9,16 @@ val Configuration.Companion.enforceNotNull: Boolean
     get() = ENFORCE_NOT_NULL_OPTION.get(CURRENT, String::toBoolean)
 
 /**
+ * @see ENFORCE_NOT_NULL_STRATEGY_OPTION
+ */
+val Configuration.Companion.enforceNotNullStrategy: EnforceNotNullStrategy
+    get() = ENFORCE_NOT_NULL_STRATEGY_OPTION.get(CURRENT) { configString ->
+        EnforceNotNullStrategy.entries.firstOrNull {
+            it.name.equals(configString, ignoreCase = true)
+        } ?: ENFORCE_NOT_NULL_STRATEGY_OPTION.defaultValue
+    }
+
+/**
  * @see KONVERTER_GENERATE_CLASS_OPTION
  */
 val Configuration.Companion.konverterGenerateClass: Boolean
