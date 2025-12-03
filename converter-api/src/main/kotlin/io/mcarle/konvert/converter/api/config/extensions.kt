@@ -13,9 +13,14 @@ val Configuration.Companion.enforceNotNull: Boolean
  */
 val Configuration.Companion.enforceNotNullStrategy: EnforceNotNullStrategy
     get() = ENFORCE_NOT_NULL_STRATEGY_OPTION.get(CURRENT) { configString ->
-        EnforceNotNullStrategy.entries.firstOrNull {
-            it.name.equals(configString, ignoreCase = true)
-        } ?: ENFORCE_NOT_NULL_STRATEGY_OPTION.defaultValue
+        when (configString.lowercase()) {
+            "assertion-operator" -> EnforceNotNullStrategy.ASSERTION_OPERATOR
+            "require-not-null" -> EnforceNotNullStrategy.REQUIRE_NOT_NULL
+            else ->
+                EnforceNotNullStrategy.entries.firstOrNull {
+                    it.name.equals(configString, ignoreCase = true)
+                } ?: ENFORCE_NOT_NULL_STRATEGY_OPTION.defaultValue
+        }
     }
 
 /**

@@ -257,18 +257,29 @@ newKey·to·newValue
         }
         args += mapSourceContainerCode
 
-        val code = mapSourceContentCode + "%L" + appendNotNullAssertionOperatorIfNeeded(source, target)
+        val code = mapSourceContentCode + "%L"
 
-        return CodeBlock.of(
-            if (changedTypes || castNeeded(genericSourceKeyType, genericTargetKeyType)) {
-                args += target.toTypeName()
-                "($code·as·%T)" // encapsulate with braces
-            } else {
-                code
-            },
-            *args.toTypedArray()
+        val baseExpression = if (changedTypes || castNeeded(genericSourceKeyType, genericTargetKeyType)) {
+            args += target.toTypeName()
+            CodeBlock.of(
+                "($code·as·%T)",  // encapsulate with braces
+                *args.toTypedArray()
+            )
+        } else {
+            CodeBlock.of(
+                code,
+                *args.toTypedArray()
+            )
+        }
+
+        return applyNotNullEnforcementIfNeeded(
+            expression = baseExpression,
+            fieldName = fieldName,
+            source = source,
+            target = target
         )
     }
+
 
     private fun KSType.isExactlyTarget(): Boolean {
         return this.classDeclaration() == targetClassDeclaration

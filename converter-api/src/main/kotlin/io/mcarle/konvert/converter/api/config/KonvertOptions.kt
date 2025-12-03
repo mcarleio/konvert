@@ -22,7 +22,7 @@ object ENFORCE_NOT_NULL_OPTION : Option<Boolean>("konvert.enforce-not-null", fal
  * - "require-not-null"
  *
  * @see EnforceNotNullStrategy
- * @since 4.x.x //TODO
+ * @since 4.5.0
  */
 object ENFORCE_NOT_NULL_STRATEGY_OPTION : Option<EnforceNotNullStrategy>("konvert.enforce-not-null-strategy", EnforceNotNullStrategy.ASSERTION_OPERATOR)
 

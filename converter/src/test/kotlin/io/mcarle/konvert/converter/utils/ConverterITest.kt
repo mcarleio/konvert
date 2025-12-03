@@ -32,6 +32,7 @@ abstract class ConverterITest : KonverterITest() {
         additionalCode: List<SourceFile>,
         additionalConverter: Array<TypeConverter>,
         verification: (VerificationData) -> Unit,
+        options: Map<String, String> = emptyMap(),
     ): Pair<KotlinCompilation, JvmCompilationResult> {
         val sourceCode = generateSourceCode(sourceVariables)
         val targetCode = generateTargetCode(targetVariables)
@@ -40,7 +41,8 @@ abstract class ConverterITest : KonverterITest() {
         val compilation = compileWith(
             enabledConverters = enabled(converter, *additionalConverter).toList(),
             expectResultCode = expectedResultCode,
-            code = (listOf(sourceCode, targetCode, mapperCode) + additionalCode).toTypedArray()
+            code = (listOf(sourceCode, targetCode, mapperCode) + additionalCode).toTypedArray(),
+            options = options,
         )
 
         val generatedMapperCode = try {
@@ -82,7 +84,8 @@ abstract class ConverterITest : KonverterITest() {
         expectedResultCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
         additionalCode: List<SourceFile> = emptyList() ,
         additionalConverter: Array<TypeConverter> = emptyArray(),
-        verification: (VerificationData) -> Unit = this::verify
+        verification: (VerificationData) -> Unit = this::verify,
+        options: Map<String, String> = emptyMap(),
     ): Pair<KotlinCompilation, JvmCompilationResult> {
         val sourceTypeNamePairs = typeNamePairs.mapIndexed { index, pair -> "test$index" to pair.first }
         val targetTypeNamePairs = typeNamePairs.mapIndexed { index, pair -> "test$index" to pair.second }
@@ -93,7 +96,8 @@ abstract class ConverterITest : KonverterITest() {
             expectedResultCode = expectedResultCode,
             additionalCode = additionalCode,
             additionalConverter = additionalConverter,
-            verification = verification
+            verification = verification,
+            options = options
         )
     }
 
@@ -104,7 +108,8 @@ abstract class ConverterITest : KonverterITest() {
         expectedResultCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
         additionalCode: List<SourceFile> = emptyList(),
         additionalConverter: Array<TypeConverter> = emptyArray(),
-        verification: (VerificationData) -> Unit = this::verify
+        verification: (VerificationData) -> Unit = this::verify,
+        options: Map<String, String> = emptyMap(),
     ): Pair<KotlinCompilation, JvmCompilationResult> {
         return executeTest(
             typeNamePairs = listOf(sourceTypeName to targetTypeName),
@@ -112,7 +117,8 @@ abstract class ConverterITest : KonverterITest() {
             expectedResultCode = expectedResultCode,
             additionalCode = additionalCode,
             additionalConverter = additionalConverter,
-            verification = verification
+            verification = verification,
+            options = options
         )
     }
 

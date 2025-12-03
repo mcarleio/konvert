@@ -42,29 +42,33 @@ abstract class AbstractTypeConverter(name: String? = null) : TypeConverter {
      *   generates `requireNotNull(expression) { "Value for '<expression>' must not be null" }`
      */
     protected fun applyNotNullEnforcementIfNeeded(
-        fieldName: String,
+        expression: CodeBlock,
+        fieldName: String?,
         source: KSType,
         target: KSType
     ): CodeBlock {
         val needsNotNull = needsNotNullAssertionOperator(source, target)
         if (!needsNotNull) {
-            return CodeBlock.of("%L", fieldName)
+            return expression
         }
 
         if (!Configuration.enforceNotNull) {
-            return CodeBlock.of("%L", fieldName)
+            throw IllegalStateException(
+                "Not-null enforcement is required to map from nullable '$source' to non-nullable '$target', " +
+                    "but '${io.mcarle.konvert.converter.api.config.ENFORCE_NOT_NULL_OPTION.key}' is set to false."
+            )
         }
 
         return when (Configuration.enforceNotNullStrategy) {
             EnforceNotNullStrategy.ASSERTION_OPERATOR ->
-                CodeBlock.of("%L!!", fieldName)
+                CodeBlock.of("%L!!", expression)
 
-            EnforceNotNullStrategy.REQUIRE_NOT_NULL ->
-                CodeBlock.of(
-                    "requireNotNull(%L) { \"Value for '%L' must not be null\" }",
-                    fieldName,
-                    fieldName
-                )
+            EnforceNotNullStrategy.REQUIRE_NOT_NULL -> {
+                val message = fieldName
+                    ?.let { "Value for '$it' must not be null" }
+                    ?: "Value must not be null"
+                CodeBlock.of("requireNotNull(%L) { %S }", expression, message)
+            }
         }
     }
 

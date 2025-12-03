@@ -1,6 +1,8 @@
 package io.mcarle.konvert.converter
 
+import io.mcarle.konvert.converter.api.config.ENFORCE_NOT_NULL_OPTION
 import io.mcarle.konvert.converter.api.config.ENFORCE_NOT_NULL_STRATEGY_OPTION
+import io.mcarle.konvert.converter.api.config.EnforceNotNullStrategy
 import io.mcarle.konvert.converter.utils.ConverterITest
 import io.mcarle.konvert.converter.utils.VerificationData
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
@@ -11,14 +13,12 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.Date
-import kotlin.test.Test
 
 @OptIn(ExperimentalCompilerApi::class)
 class SameTypeConverterITest : ConverterITest() {
 
     companion object {
-        @JvmStatic
-        fun sourceAndTargets(): List<Arguments> = listOf(
+        private val baseTypes = listOf(
             "String",
             "Int",
             "UInt",
@@ -36,9 +36,15 @@ class SameTypeConverterITest : ConverterITest() {
             "Any",
             "List<String>",
             "List<String?>",
-        ).toConverterTestArguments {
-            it to it
-        }
+        )
+
+        @JvmStatic
+        fun sourceAndTargets(): List<Arguments> =
+            baseTypes.toConverterTestArguments { it to it }
+
+        @JvmStatic
+        fun nullableToNonNull(): List<Arguments> =
+            baseTypes.map { Arguments.of("$it?", it) }
     }
 
 
@@ -51,6 +57,40 @@ class SameTypeConverterITest : ConverterITest() {
             converter = SameTypeConverter()
         )
     }
+
+    @ParameterizedTest
+    @MethodSource("nullableToNonNull")
+    fun converterUsesRequireNotNullForNullableToNonNull(
+        sourceTypeName: String,
+        targetTypeName: String
+    ) {
+        val options = mapOf(
+            ENFORCE_NOT_NULL_OPTION.key to "true",
+            ENFORCE_NOT_NULL_STRATEGY_OPTION.key to EnforceNotNullStrategy.REQUIRE_NOT_NULL.name
+        )
+
+        executeTest(
+            sourceTypeName = sourceTypeName,
+            targetTypeName = targetTypeName,
+            converter = SameTypeConverter(),
+            options = options,
+            verification = { verificationData ->
+                val code = verificationData.generatedCode
+
+                assertSourceEquals(
+                    expected = """
+                    public object FooMapperImpl : FooMapper {
+                      override fun toYyy(it: Xxx): Yyy = Yyy(
+                        test0 = requireNotNull(it.test0) { "Value for 'it.test0' must not be null" }
+                      )
+                    }
+                """.trimIndent(),
+                    generatedCode = code
+                )
+            }
+        )
+    }
+
 
     private fun validateGeneratedSourceCode(
         verificationData: VerificationData
@@ -120,31 +160,5 @@ class SameTypeConverterITest : ConverterITest() {
 
         this.validateGeneratedSourceCode(verificationData)
     }
-
-    @Test
-    fun converterUsesRequireNotNullForNullableToNonNull() {
-        enforceNotNull = true
-        enforceNotNullStrategy = "REQUIRE_NOT_NULL"
-
-        executeTest(
-            typeNamePairs = listOf("String?" to "String"),
-            converter = SameTypeConverter(),
-            verification = { verificationData ->
-                val code = verificationData.generatedCode
-                assertSourceEquals(
-                    """
-                    public object FooMapperImpl : FooMapper {
-                      override fun toYyy(it: Xxx): Yyy = Yyy(
-                        test0 = requireNotNull(it.test0) { "Value for 'it.test0' must not be null" }
-                      )
-                    }
-                    """.trimIndent(),
-                    code
-                )
-            }
-        )
-    }
-
-
 }
 

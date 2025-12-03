@@ -18,8 +18,13 @@ class ToAnyConverter : AbstractTypeConverter() {
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
-        return CodeBlock.of(
-            fieldName + appendNotNullAssertionOperatorIfNeeded(source, target)
+        val expression = CodeBlock.of("%L", fieldName)
+
+        return applyNotNullEnforcementIfNeeded(
+            expression = expression,
+            fieldName = fieldName,
+            source = source,
+            target = target
         )
     }
 

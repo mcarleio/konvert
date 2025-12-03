@@ -12,7 +12,14 @@ enum class EnforceNotNullStrategy {
 
     /**
      * Use the Kotlin not-null assertion operator (`!!`).
+     *
+     * This strategy is kept for backwards compatibility and may no longer be the default
+     * in a future Konvert version. Prefer [REQUIRE_NOT_NULL] for clearer error messages.
      */
+    @Deprecated(
+        message = "ASSERTION_OPERATOR is kept for backwards compatibility and may no longer be the default in a future Konvert version. Prefer REQUIRE_NOT_NULL.",
+        replaceWith = ReplaceWith("EnforceNotNullStrategy.REQUIRE_NOT_NULL")
+    )
     ASSERTION_OPERATOR,
 
     /**
@@ -20,13 +27,3 @@ enum class EnforceNotNullStrategy {
      */
     REQUIRE_NOT_NULL
 }
-
-/**
- * Configuration key that controls how Konvert enforces non-nullability when
- * `konvert.enforce-not-null = true`.
- *
- * Possible values:
- *  - "assertion-operator" (default)
- *  - "require-not-null"
- */
-const val KONVERT_ENFORCE_NOT_NULL_STRATEGY: String = "konvert.enforce-not-null-strategy"

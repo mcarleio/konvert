@@ -30,9 +30,17 @@ class KonvertToTypeConverter constructor(
 
     override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
         val nc = if (source.isNullable()) "?" else ""
-        return CodeBlock.of(
-            "$fieldName$nc.%M()" + appendNotNullAssertionOperatorIfNeeded(source, target),
+        val expression = CodeBlock.of(
+            "%L$nc.%M()",
+            fieldName,
             MemberName(sourceClassDeclaration.packageName.asString(), mapFunctionName)
+        )
+
+        return applyNotNullEnforcementIfNeeded(
+            expression = expression,
+            fieldName = fieldName,
+            source = source,
+            target = target
         )
     }
 
