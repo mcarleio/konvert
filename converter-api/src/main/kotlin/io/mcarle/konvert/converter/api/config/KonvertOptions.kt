@@ -15,6 +15,18 @@ import java.util.UUID
 object ENFORCE_NOT_NULL_OPTION : Option<Boolean>("konvert.enforce-not-null", false)
 
 /**
+ * Controls how Konvert enforces non-nullability when [ENFORCE_NOT_NULL_OPTION] is enabled.
+ *
+ * Possible values:
+ * - "assertion-operator" (default)
+ * - "require-not-null"
+ *
+ * @see EnforceNotNullStrategy
+ * @since 4.5.0
+ */
+object ENFORCE_NOT_NULL_STRATEGY_OPTION : Option<EnforceNotNullStrategy>("konvert.enforce-not-null-strategy", EnforceNotNullStrategy.ASSERTION_OPERATOR)
+
+/**
  * When set to true, a class instead of an object is being generated during processing of @[io.mcarle.konvert.api.Konverter]
  *
  * Default: false

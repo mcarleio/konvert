@@ -31,14 +31,30 @@ class KonvertFromTypeConverter constructor(
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
-        return CodeBlock.of(
-            if (source.isNullable()) {
-                "$fieldName?.let·{ %T.%M($paramName·=·it) }"
-            } else {
-                "%T.%M($paramName·=·$fieldName)"
-            } + appendNotNullAssertionOperatorIfNeeded(source, target),
-            targetClassDeclaration.toClassName(),
-            MemberName(targetClassDeclaration.packageName.asString(), mapFunctionName)
+        val targetClassName = targetClassDeclaration.toClassName()
+        val memberName = MemberName(targetClassDeclaration.packageName.asString(), mapFunctionName)
+
+        val expression = if (source.isNullable()) {
+            CodeBlock.of(
+                "%L?.let·{ %T.%M($paramName·=·it) }",
+                fieldName,
+                targetClassName,
+                memberName
+            )
+        } else {
+            CodeBlock.of(
+                "%T.%M($paramName·=·%L)",
+                targetClassName,
+                memberName,
+                fieldName
+            )
+        }
+
+        return applyNotNullEnforcementIfNeeded(
+            expression = expression,
+            fieldName = fieldName,
+            source = source,
+            target = target
         )
     }
 }

@@ -31,11 +31,15 @@ abstract class XToEnumConverter(
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
-        val sourceNullable = source.isNullable()
-        val convertCode = convert(fieldName, if (sourceNullable) "?" else "", target.declaration.qualifiedName!!.asString())
+        val nc = if (source.isNullable()) "?" else ""
+        val enumFQ = target.declaration.qualifiedName!!.asString()
+        val expression = CodeBlock.of("%L", convert(fieldName, nc, enumFQ))
 
-        return CodeBlock.of(
-            convertCode + appendNotNullAssertionOperatorIfNeeded(source, target)
+        return applyNotNullEnforcementIfNeeded(
+            expression = expression,
+            fieldName = fieldName,
+            source = source,
+            target = target
         )
     }
 

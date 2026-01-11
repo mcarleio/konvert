@@ -123,16 +123,26 @@ abstract class IterableToXConverter(
         }
         args += mapSourceContainerCode
 
-        val code = mapSourceContentCode + "%L" + appendNotNullAssertionOperatorIfNeeded(source, target)
+        val code = mapSourceContentCode + "%L"
 
-        return CodeBlock.of(
-            if (castNeeded) {
-                args += target.toTypeName()
-                "($code·as·%T)" // encapsulate with braces
-            } else {
-                code
-            },
-            *args.toTypedArray()
+        val expression = if (castNeeded) {
+            args += target.toTypeName()
+            CodeBlock.of(
+                "($code·as·%T)",
+                *args.toTypedArray()
+            )
+        } else {
+            CodeBlock.of(
+                code,
+                *args.toTypedArray()
+            )
+        }
+
+        return applyNotNullEnforcementIfNeeded(
+            expression = expression,
+            fieldName = fieldName,
+            source = source,
+            target = target
         )
     }
 

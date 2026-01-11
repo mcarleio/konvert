@@ -13,8 +13,10 @@ import com.squareup.kotlinpoet.joinToCode
 import com.squareup.kotlinpoet.ksp.toClassName
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.EnforceNotNullStrategy
 import io.mcarle.konvert.converter.api.config.enableConverters
 import io.mcarle.konvert.converter.api.config.enforceNotNull
+import io.mcarle.konvert.converter.api.config.enforceNotNullStrategy
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.exceptions.IgnoredTargetNotIgnorableException
 import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
@@ -55,7 +57,16 @@ class MappingCodeGenerator constructor(
                 CodeBlock.of(code, constructorCode, propertyCode)
             } else {
                 if (Configuration.enforceNotNull) {
-                    CodeBlock.of("$code!!", constructorCode, propertyCode)
+                    when (Configuration.enforceNotNullStrategy) {
+                        EnforceNotNullStrategy.ASSERTION_OPERATOR ->
+                            CodeBlock.of("$code!!", constructorCode, propertyCode)
+
+                        EnforceNotNullStrategy.REQUIRE_NOT_NULL -> {
+                            val requireCode =
+                                "return·requireNotNull(${context.paramName})·{·\"${context.paramName}·must·not·be·null\"·}·.let·{\n⇥%L%L⇤\n}"
+                            CodeBlock.of(requireCode, constructorCode, propertyCode)
+                        }
+                    }
                 } else {
                     throw NotNullOperatorNotEnabledException(context.paramName, context.source, context.target)
                 }

@@ -30,11 +30,14 @@ abstract class DateToXConverter(
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
-        val sourceNullable = source.isNullable()
-        val convertCode = convert(fieldName, if (sourceNullable) "?" else "")
+        val nc = if (source.isNullable()) "?" else ""
+        val expression = CodeBlock.of("%L", convert(fieldName, nc))
 
-        return CodeBlock.of(
-            convertCode + appendNotNullAssertionOperatorIfNeeded(source, target)
+        return applyNotNullEnforcementIfNeeded(
+            expression = expression,
+            fieldName = fieldName,
+            source = source,
+            target = target
         )
     }
 

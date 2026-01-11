@@ -95,7 +95,15 @@ class KonvertTypeConverter constructor(
         } else {
             "%L.$mapFunctionName($paramName·=·$fieldName)"
         }
-        return CodeBlock.of(mappingCode + appendNotNullAssertionOperatorIfNeeded(source, target), *params.toTypedArray())
+
+        val expression = CodeBlock.of(mappingCode, *params.toTypedArray())
+
+        return applyNotNullEnforcementIfNeeded(
+            expression = expression,
+            fieldName = fieldName,
+            source = source,
+            target = target
+        )
     }
 
 }
