@@ -53,7 +53,7 @@ class TemporalToDateConverterITest : ConverterITest() {
                 else -> null
             }
         }
-        val sourceInstance = verificationData.sourceKClass.constructors.first().call(*sourceValues.toTypedArray())
+        val sourceInstance = verificationData.sourceKClass.constructors.first().call(*sourceValues.toTypedArray<Any?>())
 
         val targetInstance = verificationData.mapperFunction.call(verificationData.mapperInstance, sourceInstance)
 

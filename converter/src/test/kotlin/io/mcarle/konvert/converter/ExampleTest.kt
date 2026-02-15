@@ -3,7 +3,7 @@ package io.mcarle.konvert.converter
 import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import com.tschuchort.compiletesting.symbolProcessorProviders
+import com.tschuchort.compiletesting.configureKsp
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.processor.KonvertProcessorProvider
 import io.mcarle.konvert.processor.generatedSourceFor
@@ -73,40 +73,31 @@ interface FooMapper {
 
         TypeConverterRegistry.reinitConverterList(*TypeConverterRegistry.availableConverters.toTypedArray())
 
-        val compilation = compile(code)
+        val (compilation, compilationResult) = compile(code)
 
         val generatedMapperCode = compilation.generatedSourceFor("FooMapperKonverter.kt")
         println(generatedMapperCode)
 
-        val compilationResult = checkIfGeneratedMapperCompiles(compilation, generatedMapperCode)
-
         val mapperKClass = compilationResult.classLoader.loadClass("FooMapperImpl").kotlin
     }
 
-    private fun compile(vararg sourceFiles: SourceFile): KotlinCompilation {
+    private fun compile(vararg sourceFiles: SourceFile): Pair<KotlinCompilation, JvmCompilationResult> {
         val compilation = prepareCompilation(sourceFiles.toList())
 
         val result = compilation.compile()
         assertEquals(expected = KotlinCompilation.ExitCode.OK, actual = result.exitCode)
 
-        return compilation
-    }
-
-    private fun checkIfGeneratedMapperCompiles(compilation: KotlinCompilation, code: String): JvmCompilationResult {
-        compilation.symbolProcessorProviders = mutableListOf()
-        compilation.sources += SourceFile.kotlin("FooMapperKonverter.kt", code)
-
-        val result = compilation.compile()
-        assertEquals(expected = KotlinCompilation.ExitCode.OK, actual = result.exitCode)
-        return result
+        return compilation to result
     }
 
     private fun prepareCompilation(sourceFiles: List<SourceFile>) = KotlinCompilation()
         .apply {
+            configureKsp {
+                symbolProcessorProviders += KonvertProcessorProvider()
+                withCompilation = true
+            }
             workingDir = temporaryFolder
             inheritClassPath = true
-            languageVersion = "1.9"
-            symbolProcessorProviders = mutableListOf(KonvertProcessorProvider())
             jvmTarget = JvmTarget.JVM_17.description
             sources = sourceFiles
             verbose = false

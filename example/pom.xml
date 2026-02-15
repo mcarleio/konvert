@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <kotlin.version>2.2.0</kotlin.version>
+        <kotlin.version>2.3.10</kotlin.version>
         <konvert.version>0.1.0-SNAPSHOT</konvert.version>
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.source>17</maven.compiler.source>
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.12.2</version>
+            <version>6.0.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -74,7 +74,7 @@
             <plugin>
                 <groupId>io.mcarle</groupId>
                 <artifactId>ksp-maven-plugin</artifactId>
-                <version>2.3.0-1</version>
+                <version>2.3.5-1</version>
                 <executions>
                     <execution>
                         <goals>
@@ -107,7 +107,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.6.1</version>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
@@ -126,7 +126,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.3</version>
+                <version>3.5.4</version>
             </plugin>
 
         </plugins>

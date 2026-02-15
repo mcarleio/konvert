@@ -1,6 +1,5 @@
 package io.mcarle.konvert.processor.module
 
-import com.squareup.kotlinpoet.ksp.toClassName
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.PARSE_DEPRECATED_META_INF_FILES_OPTION
 import io.mcarle.konvert.processor.KonverterITest
@@ -16,7 +15,7 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
 
     @Test
     fun loadGeneratedKonvertTypeConverter() {
-        compileWith(enabledConverters = emptyList(), code = emptyArray(), enableKsp2 = false)
+        compileWith(enabledConverters = emptyList(), code = emptyArray())
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertTypeConverter>()
             .filter { it.alreadyGenerated }
@@ -71,7 +70,7 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
 
     @Test
     fun loadGeneratedKonvertToTypeConverter() {
-        compileWith(enabledConverters = emptyList(), code = emptyArray(), enableKsp2 = false)
+        compileWith(enabledConverters = emptyList(), code = emptyArray())
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertToTypeConverter>()
             .filter { it.alreadyGenerated }
@@ -86,7 +85,7 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
 
     @Test
     fun loadGeneratedKonvertFromTypeConverter() {
-        compileWith(enabledConverters = emptyList(), code = emptyArray(), enableKsp2 = false)
+        compileWith(enabledConverters = emptyList(), code = emptyArray())
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertFromTypeConverter>()
             .filter { it.alreadyGenerated }
@@ -107,8 +106,7 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
             code = emptyArray(),
             options = mapOf(
                 PARSE_DEPRECATED_META_INF_FILES_OPTION.key to "true"
-            ),
-            enableKsp2 = false
+            )
         )
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertTypeConverter>()
@@ -134,8 +132,7 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
             code = emptyArray(),
             options = mapOf(
                 PARSE_DEPRECATED_META_INF_FILES_OPTION.key to "true"
-            ),
-            enableKsp2 = false
+            )
         )
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertToTypeConverter>()
@@ -156,8 +153,7 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
             code = emptyArray(),
             options = mapOf(
                 PARSE_DEPRECATED_META_INF_FILES_OPTION.key to "true"
-            ),
-            enableKsp2 = false
+            )
         )
         val alreadyGeneratedKonverterList = TypeConverterRegistry
             .filterIsInstance<KonvertFromTypeConverter>()

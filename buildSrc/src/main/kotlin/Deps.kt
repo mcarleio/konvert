@@ -10,8 +10,8 @@ val DependencyHandler.kotlinCompilerEmbeddable get() = kotlin("compiler-embeddab
 
 val DependencyHandler.kotlinCompileTesting get() = "dev.zacsweers.kctfork:core:${Versions.kotlinCompileTesting}"
 val DependencyHandler.kotlinCompileTestingKsp get() = "dev.zacsweers.kctfork:ksp:${Versions.kotlinCompileTesting}"
-val DependencyHandler.symbolProcessing get() = "com.google.devtools.ksp:symbol-processing:${Versions.kotlin}-${Versions.ksp}"
-val DependencyHandler.symbolProcessingApi get() = "com.google.devtools.ksp:symbol-processing-api:${Versions.kotlin}-${Versions.ksp}"
+val DependencyHandler.symbolProcessing get() = "com.google.devtools.ksp:symbol-processing:${Versions.ksp}"
+val DependencyHandler.symbolProcessingApi get() = "com.google.devtools.ksp:symbol-processing-api:${Versions.ksp}"
 
 val DependencyHandler.autoServiceAnnotations get() = "com.google.auto.service:auto-service-annotations:${Versions.autoServiceAnnotations}"
 val DependencyHandler.autoServiceKsp get() = "dev.zacsweers.autoservice:auto-service-ksp:${Versions.autoServiceKsp}"
@@ -22,8 +22,8 @@ val DependencyHandler.kotlinPoet get() = "com.squareup:kotlinpoet:${Versions.kot
 val DependencyHandler.kotlinPoetKsp get() = "com.squareup:kotlinpoet-ksp:${Versions.kotlinPoet}"
 
 object Versions {
-    const val kotlin = "2.2.0" // has to match buildSrc/gradle.properties
-    const val ksp = "2.0.2"
+    const val kotlin = "2.3.10" // has to match buildSrc/gradle.properties
+    const val ksp = "2.3.5"
 
     /**
      * com.google.auto.service:auto-service-annotations
@@ -50,10 +50,10 @@ object Versions {
      */
     const val markdownGenerator = "1.3.1.1"
 
-    const val kotlinCompileTesting = "0.8.0"
+    const val kotlinCompileTesting = "0.12.1"
 
     const val kotlinxCollectionsImmutable = "0.4.0"
 
     const val kotlinPoet = "2.2.0"
-    const val jUnit = "5.13.4"
+    const val jUnit = "6.0.2"
 }

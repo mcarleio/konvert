@@ -1,7 +1,7 @@
 plugins {
     id("konvert.kotlin")
     id("konvert.mvn-publish")
-    id("com.google.devtools.ksp").version("${Versions.kotlin}-${Versions.ksp}")
+    id("com.google.devtools.ksp").version(Versions.ksp)
 }
 
 dependencies {

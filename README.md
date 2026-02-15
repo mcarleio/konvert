@@ -30,7 +30,7 @@ There are three different ways to use Konvert:
 1. Using `@KonvertTo`:
    ```kotlin
    @KonvertTo(PersonDto::class)
-   class Person(val firstName: String, val lastName: String)
+   data class Person(val firstName: String, val lastName: String)
    data class PersonDto(val firstName: String, val lastName: String)
    ```
    This will generate the following extension function
@@ -45,7 +45,7 @@ There are three different ways to use Konvert:
       @KonvertFrom(PersonDto::class)
       companion object
    }
-   data class PersonDto(val firstName: String, val lastName: String)
+   class PersonDto(val firstName: String, val lastName: String)
    ```
    This will generate the following extension function
    ```kotlin
@@ -144,7 +144,7 @@ To use Konvert with Gradle, you have to do the following steps:
 2. Add the KSP plugin:
    ```kotlin
    plugins {
-       id("com.google.devtools.ksp").version("2.3.0")
+       id("com.google.devtools.ksp").version("2.3.5")
    }
    ```
 
@@ -173,7 +173,7 @@ To use Konvert with Maven, you have to do the following steps:
    <plugin>
        <groupId>io.mcarle</groupId>
        <artifactId>ksp-maven-plugin</artifactId>
-       <version>2.3.0-1</version>
+       <version>2.3.5-1</version>
        <executions>
            <execution>
                <goals>
