@@ -71,7 +71,7 @@ interface FooMapper {
         """.trimIndent()
         )
 
-        TypeConverterRegistry.reinitConverterList(*TypeConverterRegistry.availableConverters.toTypedArray())
+        TypeConverterRegistry.reinitConverterList(*TypeConverterRegistry.availableConverters().toTypedArray())
 
         val (compilation, compilationResult) = compile(code)
 

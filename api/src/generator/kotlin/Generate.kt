@@ -38,7 +38,7 @@ fun buildConfigsCode(): String {
 }
 
 fun buildConvertersCode(): String {
-    return TypeConverterRegistry.availableConverters
+    return TypeConverterRegistry.availableConverters()
         .sortedBy { it.name }
         .joinToString("\n") {
             val constName = it::class.java.simpleName

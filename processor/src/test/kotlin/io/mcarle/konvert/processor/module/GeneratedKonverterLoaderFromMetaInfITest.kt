@@ -28,8 +28,8 @@ class GeneratedKonverterLoaderFromMetaInfITest : KonverterITest() {
         assertEquals(5, alreadyGeneratedKonverterList.size, "missing generated konverter")
         val converter = alreadyGeneratedKonverterList.last()
 
-        assertEquals("SomeTestClass", converter.sourceType.toClassName().simpleName)
-        assertEquals("SomeOtherTestClass", converter.targetType.toClassName().simpleName)
+        assertEquals("SomeTestClass", converter.sourceTypeName)
+        assertEquals("SomeOtherTestClass", converter.targetTypeName)
 
         assertEquals("toSomeOtherTestClassMETA_INF", converter.mapFunctionName)
         assertEquals("source", converter.paramName)
@@ -54,8 +54,8 @@ class GeneratedKonverterLoaderFromMetaInfITest : KonverterITest() {
         assertEquals(2, alreadyGeneratedKonverterList.size, "missing generated konverter")
         val converter = alreadyGeneratedKonverterList.last()
         assertEquals("toSomeOtherTestClassMETA_INF", converter.mapFunctionName)
-        assertEquals("SomeTestClass", converter.sourceClassDeclaration.simpleName.asString())
-        assertEquals("SomeOtherTestClass", converter.targetClassDeclaration.simpleName.asString())
+        assertEquals("SomeTestClass", converter.sourceClassName.asString())
+        assertEquals("SomeOtherTestClass", converter.targetClassName.asString())
         assertEquals(true, converter.enabledByDefault)
         assertEquals(2000, converter.priority)
     }
@@ -75,8 +75,8 @@ class GeneratedKonverterLoaderFromMetaInfITest : KonverterITest() {
         assertEquals(2, alreadyGeneratedKonverterList.size, "missing generated konverter")
         val converter = alreadyGeneratedKonverterList.last()
         assertEquals("fromSomeTestClassMETA_INF", converter.mapFunctionName)
-        assertEquals("SomeTestClass", converter.sourceClassDeclaration.simpleName.asString())
-        assertEquals("SomeOtherTestClass", converter.targetClassDeclaration.simpleName.asString())
+        assertEquals("SomeTestClass", converter.sourceClassName.asString())
+        assertEquals("SomeOtherTestClass", converter.targetClassName.asString())
         assertEquals("source", converter.paramName)
         assertEquals(true, converter.enabledByDefault)
         assertEquals(2000, converter.priority)

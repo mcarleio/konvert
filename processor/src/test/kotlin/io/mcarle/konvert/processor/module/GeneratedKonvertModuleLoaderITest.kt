@@ -21,8 +21,8 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
             .filter { it.alreadyGenerated }
         assertEquals(4, alreadyGeneratedKonverterList.size, "missing generated konverter")
         alreadyGeneratedKonverterList[0].let { converter ->
-            assertEquals("SomeTestClass", converter.sourceType.toClassName().simpleName)
-            assertEquals("SomeOtherTestClass", converter.targetType.toClassName().simpleName)
+            assertEquals("SomeTestClass", converter.sourceTypeName)
+            assertEquals("SomeOtherTestClass", converter.targetTypeName)
 
             assertEquals("toSomeOtherTestClass", converter.mapFunctionName)
             assertEquals("source", converter.paramName)
@@ -32,8 +32,8 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
             assertEquals(KonvertTypeConverter.ClassOrObject.OBJECT, converter.classKind)
         }
         alreadyGeneratedKonverterList[1].let { converter ->
-            assertEquals("SomeOtherTestClass", converter.sourceType.toClassName().simpleName)
-            assertEquals("SomeTestClass", converter.targetType.toClassName().simpleName)
+            assertEquals("SomeOtherTestClass", converter.sourceTypeName)
+            assertEquals("SomeTestClass", converter.targetTypeName)
 
             assertEquals("fromSomeOtherTestClass", converter.mapFunctionName)
             assertEquals("source", converter.paramName)
@@ -43,9 +43,8 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
             assertEquals(KonvertTypeConverter.ClassOrObject.OBJECT, converter.classKind)
         }
         alreadyGeneratedKonverterList[2].let { converter ->
-            // toClassName() would result in exception due to Resolver not initialized
-            assertEquals("List<SomeTestClass>", converter.sourceType.toString())
-            assertEquals("List<SomeOtherTestClass>", converter.targetType.toString())
+            assertEquals("List<SomeTestClass>", converter.sourceTypeName)
+            assertEquals("List<SomeOtherTestClass>", converter.targetTypeName)
 
             assertEquals("toSomeOtherTestClasses", converter.mapFunctionName)
             assertEquals("source", converter.paramName)
@@ -55,9 +54,8 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
             assertEquals(KonvertTypeConverter.ClassOrObject.OBJECT, converter.classKind)
         }
         alreadyGeneratedKonverterList[3].let { converter ->
-            // toClassName() would result in exception due to Resolver not initialized
-            assertEquals("List<SomeOtherTestClass>", converter.sourceType.toString())
-            assertEquals("List<SomeTestClass>", converter.targetType.toString())
+            assertEquals("List<SomeOtherTestClass>", converter.sourceTypeName)
+            assertEquals("List<SomeTestClass>", converter.targetTypeName)
 
             assertEquals("fromSomeOtherTestClasses", converter.mapFunctionName)
             assertEquals("source", converter.paramName)
@@ -77,8 +75,8 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
         assertEquals(1, alreadyGeneratedKonverterList.size, "missing generated konverter")
         val converter = alreadyGeneratedKonverterList.first()
         assertEquals("toSomeOtherTestClass", converter.mapFunctionName)
-        assertEquals("SomeTestClass", converter.sourceClassDeclaration.simpleName.asString())
-        assertEquals("SomeOtherTestClass", converter.targetClassDeclaration.simpleName.asString())
+        assertEquals("SomeTestClass", converter.sourceClassName.asString())
+        assertEquals("SomeOtherTestClass", converter.targetClassName.asString())
         assertEquals(true, converter.enabledByDefault)
         assertEquals(10, converter.priority)
     }
@@ -92,8 +90,8 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
         assertEquals(1, alreadyGeneratedKonverterList.size, "missing generated konverter")
         val converter = alreadyGeneratedKonverterList.first()
         assertEquals("fromSomeTestClass", converter.mapFunctionName)
-        assertEquals("SomeTestClass", converter.sourceClassDeclaration.simpleName.asString())
-        assertEquals("SomeOtherTestClass", converter.targetClassDeclaration.simpleName.asString())
+        assertEquals("SomeTestClass", converter.sourceClassName.asString())
+        assertEquals("SomeOtherTestClass", converter.targetClassName.asString())
         assertEquals("source", converter.paramName)
         assertEquals(true, converter.enabledByDefault)
         assertEquals(11, converter.priority)
@@ -114,8 +112,8 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
         assertEquals(5, alreadyGeneratedKonverterList.size, "missing generated konverter")
         val converter = alreadyGeneratedKonverterList.last()
 
-        assertEquals("SomeTestClass", converter.sourceType.toClassName().simpleName)
-        assertEquals("SomeOtherTestClass", converter.targetType.toClassName().simpleName)
+        assertEquals("SomeTestClass", converter.sourceTypeName)
+        assertEquals("SomeOtherTestClass", converter.targetTypeName)
 
         assertEquals("toSomeOtherTestClassMETA_INF", converter.mapFunctionName)
         assertEquals("source", converter.paramName)
@@ -140,8 +138,8 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
         assertEquals(2, alreadyGeneratedKonverterList.size, "missing generated konverter")
         val converter = alreadyGeneratedKonverterList.last()
         assertEquals("toSomeOtherTestClassMETA_INF", converter.mapFunctionName)
-        assertEquals("SomeTestClass", converter.sourceClassDeclaration.simpleName.asString())
-        assertEquals("SomeOtherTestClass", converter.targetClassDeclaration.simpleName.asString())
+        assertEquals("SomeTestClass", converter.sourceClassName.asString())
+        assertEquals("SomeOtherTestClass", converter.targetClassName.asString())
         assertEquals(true, converter.enabledByDefault)
         assertEquals(2000, converter.priority)
     }
@@ -161,8 +159,8 @@ class GeneratedKonvertModuleLoaderITest : KonverterITest() {
         assertEquals(2, alreadyGeneratedKonverterList.size, "missing generated konverter")
         val converter = alreadyGeneratedKonverterList.last()
         assertEquals("fromSomeTestClassMETA_INF", converter.mapFunctionName)
-        assertEquals("SomeTestClass", converter.sourceClassDeclaration.simpleName.asString())
-        assertEquals("SomeOtherTestClass", converter.targetClassDeclaration.simpleName.asString())
+        assertEquals("SomeTestClass", converter.sourceClassName.asString())
+        assertEquals("SomeOtherTestClass", converter.targetClassName.asString())
         assertEquals("source", converter.paramName)
         assertEquals(true, converter.enabledByDefault)
         assertEquals(2000, converter.priority)
