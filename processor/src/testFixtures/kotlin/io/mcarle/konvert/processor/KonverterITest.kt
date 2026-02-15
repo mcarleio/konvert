@@ -32,7 +32,6 @@ abstract class KonverterITest {
         options: Map<String, String> = emptyMap(),
         code: SourceFile,
         verbose: Boolean = false,
-        enableKsp2: Boolean = true,
     ): Pair<KotlinCompilation, JvmCompilationResult> {
         return compileWith(
             enabledConverters = enabledConverters,
@@ -41,7 +40,6 @@ abstract class KonverterITest {
             options = options,
             code = arrayOf(code),
             verbose = verbose,
-            enableKsp2 = enableKsp2,
         )
     }
 
@@ -52,11 +50,10 @@ abstract class KonverterITest {
         options: Map<String, String> = emptyMap(),
         code: Array<SourceFile>,
         verbose: Boolean = false,
-        enableKsp2: Boolean = true,
     ): Pair<KotlinCompilation, JvmCompilationResult> {
         TypeConverterRegistry.reinitConverterList(*enabled(*enabledConverters.toTypedArray()), *otherConverters.toTypedArray())
 
-        return compile(expectResultCode, options, verbose, enableKsp2, *code)
+        return compile(expectResultCode, options, verbose, *code)
     }
 
     protected fun enabled(vararg converter: TypeConverter): Array<out TypeConverter> {
@@ -71,10 +68,9 @@ abstract class KonverterITest {
         expectResultCode: KotlinCompilation.ExitCode,
         options: Map<String, String>,
         verbose: Boolean,
-        enableKsp2: Boolean,
         vararg sourceFiles: SourceFile,
     ): Pair<KotlinCompilation, JvmCompilationResult> {
-        val compilation = prepareCompilation(verbose, options, sourceFiles.toList(), enableKsp2)
+        val compilation = prepareCompilation(verbose, options, sourceFiles.toList())
 
         val result = compilation.compile()
         assertEquals(expectResultCode, result.exitCode)
@@ -85,10 +81,10 @@ abstract class KonverterITest {
     private fun prepareCompilation(
         verboseCompilation: Boolean,
         options: Map<String, String>,
-        sourceFiles: List<SourceFile>, enableKsp2: Boolean
+        sourceFiles: List<SourceFile>
     ) = KotlinCompilation()
         .apply {
-            configureKsp(useKsp2 = enableKsp2) {
+            configureKsp {
                 symbolProcessorProviders += KonvertProcessorProvider()
                 processorOptions += options.toMutableMap().apply {
                     putIfAbsent(ADD_GENERATED_KONVERTER_ANNOTATION_OPTION.key, "$addGeneratedKonverterAnnotation")
@@ -101,9 +97,6 @@ abstract class KonverterITest {
             inheritClassPath = true
             sources = sourceFiles
             verbose = verboseCompilation
-            if (!enableKsp2) {
-                languageVersion = "1.9"
-            }
             jvmTarget = JvmTarget.JVM_17.description
 
         }

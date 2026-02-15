@@ -2,13 +2,13 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "2.2.0"
-    id("com.google.devtools.ksp").version("2.2.0-2.0.2")
+    kotlin("jvm") version "2.3.10"
+    id("com.google.devtools.ksp").version("2.3.5")
 }
 
 val konvertVersion = "0.1.0-SNAPSHOT"
 
-val jUnitVersion = "5.13.4"
+val jUnitVersion = "6.0.2"
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
@@ -16,7 +16,7 @@ dependencies {
     implementation("io.mcarle:konvert-spring-annotations:$konvertVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jUnitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jUnitVersion")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:$jUnitVersion")
 
     // KSP to generate mapping code
     ksp("io.mcarle:konvert:$konvertVersion")

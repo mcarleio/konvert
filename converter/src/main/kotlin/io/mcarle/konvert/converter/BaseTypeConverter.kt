@@ -981,7 +981,7 @@ class NumberToUByteConverter : BaseTypeConverter(Number::class, UByte::class) {
 
 @AutoService(TypeConverter::class)
 class NumberToCharConverter : BaseTypeConverter(Number::class, Char::class) {
-    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toChar()"
+    override fun convert(fieldName: String, nc: String): String = "$fieldName$nc.toInt()$nc.toChar()"
 }
 
 @AutoService(TypeConverter::class)

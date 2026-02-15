@@ -126,7 +126,7 @@ $effectiveSourceClassVisibility class SourceClass {
         this.property = property;
     }
 
-    @ksp.org.jetbrains.annotations.NotNull
+    @org.jetbrains.annotations.NotNull
     public String getProperty() {
         return property;
     }
