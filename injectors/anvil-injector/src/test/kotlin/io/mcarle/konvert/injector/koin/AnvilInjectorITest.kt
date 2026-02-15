@@ -55,6 +55,7 @@ import kotlin.Unit
   replaces = arrayOf(),
   priority = ContributesBinding.Priority.NORMAL,
   ignoreQualifier = false,
+  rank = -2_147_483_648,
 )
 public class MapperImpl : Mapper {
   @Inject
@@ -114,6 +115,7 @@ import kotlin.Unit
   replaces = arrayOf(),
   priority = ContributesBinding.Priority.NORMAL,
   ignoreQualifier = false,
+  rank = -2_147_483_648,
 )
 @Singleton
 public class MapperImpl : Mapper {
