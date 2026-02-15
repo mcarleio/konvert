@@ -3,6 +3,7 @@ package io.mcarle.konvert.processor.konvert
 import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.ksp.toClassNameOrNull
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.AbstractTypeConverter
@@ -29,6 +30,9 @@ class KonvertTypeConverter constructor(
         CLASS,
         OBJECT;
     }
+
+    internal val sourceTypeName = sourceType.toClassNameOrNull()?.simpleName ?: sourceType.toString()
+    internal val targetTypeName = targetType.toClassNameOrNull()?.simpleName ?: targetType.toString()
 
     override val enabledByDefault: Boolean = true
 

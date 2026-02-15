@@ -22,6 +22,9 @@ class KonvertFromTypeConverter constructor(
     private val sourceType: KSType = sourceClassDeclaration.asStarProjectedType()
     private val targetType: KSType = targetClassDeclaration.asStarProjectedType()
 
+    internal val sourceClassName = sourceClassDeclaration.simpleName
+    internal val targetClassName = targetClassDeclaration.simpleName
+
     override val enabledByDefault: Boolean = true
 
     override fun matches(source: KSType, target: KSType): Boolean {

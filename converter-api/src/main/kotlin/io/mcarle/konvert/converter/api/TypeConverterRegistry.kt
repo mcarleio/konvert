@@ -9,12 +9,12 @@ object TypeConverterRegistry : Iterable<TypeConverter> {
     private val typeConverterList = sortedMapOf<Int, MutableList<TypeConverter>>()
     private val additionallyEnabledConverters = mutableListOf<TypeConverterName>()
 
-    val availableConverters by lazy {
-        ServiceLoader.load(TypeConverter::class.java, this::class.java.classLoader).toList()
+    init {
+        reinitConverterList(*availableConverters().toTypedArray())
     }
 
-    init {
-        reinitConverterList(*availableConverters.toTypedArray())
+    fun availableConverters(): List<TypeConverter> {
+        return ServiceLoader.load(TypeConverter::class.java, this::class.java.classLoader).toList()
     }
 
     /**
