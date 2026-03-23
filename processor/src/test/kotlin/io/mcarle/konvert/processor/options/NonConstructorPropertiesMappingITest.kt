@@ -26,10 +26,11 @@ class NonConstructorPropertiesMappingITest : KonverterITest() {
 
     @Test
     fun `auto (default) mode behaves like implicit when no mappings are declared`() {
+        verbose = true
+
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.OK,
-            verbose = true,
             code = SourceFile.kotlin(
                 name = "test.kt",
                 contents =
@@ -61,10 +62,11 @@ interface MyMapper {
 
     @Test
     fun `auto (default) mode behaves like implicit when only ignoring mappings are declared`() {
+        verbose = true
+
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.OK,
-            verbose = true,
             code = SourceFile.kotlin(
                 name = "test.kt",
                 contents =
@@ -97,10 +99,11 @@ class Target(val id: String) {
     @ParameterizedTest
     @ValueSource(strings = ["constant = \"null\"", "expression = \"null\"", "source = \"description\""])
     fun `auto (default) mode behaves like explicit when at least one non-ignoring mapping is declared`(mappingPart: String) {
+        verbose = true
+
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.OK,
-            verbose = true,
             code = SourceFile.kotlin(
                 name = "test.kt",
                 contents =
@@ -133,10 +136,11 @@ class Target(val id: String) {
     @ParameterizedTest
     @ValueSource(strings = ["constant = \"null\"", "expression = \"null\"", "source = \"description\""])
     fun `auto (default) mode behaves like explicit when only non-ignoring mappings are declared`(mappingPart: String) {
+        verbose = true
+
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
             expectResultCode = KotlinCompilation.ExitCode.OK,
-            verbose = true,
             code = SourceFile.kotlin(
                 name = "test.kt",
                 contents =

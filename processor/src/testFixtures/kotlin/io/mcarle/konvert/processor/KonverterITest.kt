@@ -4,6 +4,7 @@ import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.configureKsp
+import com.tschuchort.compiletesting.sourcesGeneratedBySymbolProcessor
 import io.mcarle.konvert.converter.api.TypeConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.ADD_GENERATED_KONVERTER_ANNOTATION_OPTION
@@ -24,6 +25,7 @@ abstract class KonverterITest {
     protected open var addGeneratedKonverterAnnotation = false
     protected open var generatedModuleSuffix = ""
     protected open var enforceNotNull = false
+    protected open var verbose = false
 
     fun compileWith(
         enabledConverters: List<TypeConverter>,
@@ -31,7 +33,6 @@ abstract class KonverterITest {
         expectResultCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
         options: Map<String, String> = emptyMap(),
         code: SourceFile,
-        verbose: Boolean = false,
     ): Pair<KotlinCompilation, JvmCompilationResult> {
         return compileWith(
             enabledConverters = enabledConverters,
@@ -39,7 +40,6 @@ abstract class KonverterITest {
             expectResultCode = expectResultCode,
             options = options,
             code = arrayOf(code),
-            verbose = verbose,
         )
     }
 
@@ -49,11 +49,10 @@ abstract class KonverterITest {
         expectResultCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
         options: Map<String, String> = emptyMap(),
         code: Array<SourceFile>,
-        verbose: Boolean = false,
     ): Pair<KotlinCompilation, JvmCompilationResult> {
         TypeConverterRegistry.reinitConverterList(*enabled(*enabledConverters.toTypedArray()), *otherConverters.toTypedArray())
 
-        return compile(expectResultCode, options, verbose, *code)
+        return compile(expectResultCode, options, *code)
     }
 
     protected fun enabled(vararg converter: TypeConverter): Array<out TypeConverter> {
@@ -67,19 +66,26 @@ abstract class KonverterITest {
     private fun compile(
         expectResultCode: KotlinCompilation.ExitCode,
         options: Map<String, String>,
-        verbose: Boolean,
         vararg sourceFiles: SourceFile,
     ): Pair<KotlinCompilation, JvmCompilationResult> {
-        val compilation = prepareCompilation(verbose, options, sourceFiles.toList())
+        val compilation = prepareCompilation(options, sourceFiles.toList())
 
         val result = compilation.compile()
+        if (verbose) {
+            result.sourcesGeneratedBySymbolProcessor
+                .filter { !it.name.contains("GeneratedModule") }
+                .forEach {
+                    println("${it.name}:")
+                    println(it.readText())
+                    println()
+                }
+        }
         assertEquals(expectResultCode, result.exitCode)
 
         return compilation to result
     }
 
     private fun prepareCompilation(
-        verboseCompilation: Boolean,
         options: Map<String, String>,
         sourceFiles: List<SourceFile>
     ) = KotlinCompilation()
@@ -96,7 +102,7 @@ abstract class KonverterITest {
             workingDir = temporaryFolder
             inheritClassPath = true
             sources = sourceFiles
-            verbose = verboseCompilation
+            verbose = this@KonverterITest.verbose
             jvmTarget = JvmTarget.JVM_17.description
 
         }
