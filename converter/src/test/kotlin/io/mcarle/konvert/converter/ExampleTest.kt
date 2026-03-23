@@ -76,7 +76,6 @@ interface FooMapper {
         val (compilation, compilationResult) = compile(code)
 
         val generatedMapperCode = compilation.generatedSourceFor("FooMapperKonverter.kt")
-        println(generatedMapperCode)
 
         val mapperKClass = compilationResult.classLoader.loadClass("FooMapperImpl").kotlin
     }

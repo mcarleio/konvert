@@ -19,11 +19,6 @@ abstract class ConverterITest : KonverterITest() {
     private val mapperFunctionName: String = "to$targetClassName"
     private val mapperFunctionParamName: String = "it"
 
-    /**
-     * Enables logging of generated code
-     */
-    private val log = true
-
     private fun executeTest(
         sourceVariables: List<VariableNameToTypeNamePair>,
         targetVariables: List<VariableNameToTypeNamePair>,
@@ -52,9 +47,6 @@ abstract class ConverterITest : KonverterITest() {
                 throw e
             }
             null
-        }
-        if (log && generatedMapperCode != null) {
-            println(generatedMapperCode)
         }
 
         if (compilation.second.exitCode == KotlinCompilation.ExitCode.OK) {

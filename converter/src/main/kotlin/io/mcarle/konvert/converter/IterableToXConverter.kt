@@ -8,7 +8,11 @@ import com.google.devtools.ksp.symbol.Variance
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ksp.toTypeName
-import io.mcarle.konvert.converter.api.*
+import io.mcarle.konvert.converter.api.AbstractTypeConverter
+import io.mcarle.konvert.converter.api.TypeConverter
+import io.mcarle.konvert.converter.api.TypeConverterRegistry
+import io.mcarle.konvert.converter.api.classDeclaration
+import io.mcarle.konvert.converter.api.isNullable
 
 internal const val ITERABLE = "kotlin.collections.Iterable"
 internal const val MUTABLEITERABLE = "kotlin.collections.MutableIterable"
@@ -73,8 +77,8 @@ abstract class IterableToXConverter(
                 targetType!!.isAssignableFrom(targetNotNullable) && targetNotNullable.isExactlyTarget()
         } && TypeConverterRegistry.any {
             it.matches(
-                source = source.arguments[0].type!!.resolve(),
-                target = target.arguments[0].type!!.resolve(),
+                source = source.arguments[0].type?.resolve() ?: resolver.builtIns.anyType,
+                target = target.arguments[0].type?.resolve() ?: resolver.builtIns.anyType,
             )
         }
     }
@@ -87,8 +91,8 @@ abstract class IterableToXConverter(
                 it
             }
         }
-        val genericSourceType = source.arguments[0].type!!.resolve()
-        val genericTargetType = target.arguments[0].type!!.resolve()
+        val genericSourceType = source.arguments[0].type?.resolve() ?: resolver.builtIns.anyType
+        val genericTargetType = target.arguments[0].type?.resolve() ?: resolver.builtIns.anyType
         val typeConverter = TypeConverterRegistry.first {
             it.matches(
                 source = genericSourceType,

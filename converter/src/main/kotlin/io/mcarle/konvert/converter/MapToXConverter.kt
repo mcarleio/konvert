@@ -65,13 +65,13 @@ abstract class MapToXConverter(
                 && targetType!!.isAssignableFrom(targetNotNullable) && targetNotNullable.isExactlyTarget()
         } && TypeConverterRegistry.any {
             it.matches(
-                source = source.arguments[0].type!!.resolve(),
-                target = target.arguments[0].type!!.resolve(),
+                source = source.arguments[0].type?.resolve() ?: resolver.builtIns.anyType,
+                target = target.arguments[0].type?.resolve() ?: resolver.builtIns.anyType,
             )
         } && TypeConverterRegistry.any {
             it.matches(
-                source = source.arguments[1].type!!.resolve(),
-                target = target.arguments[1].type!!.resolve(),
+                source = source.arguments[1].type?.resolve() ?: resolver.builtIns.anyType,
+                target = target.arguments[1].type?.resolve() ?: resolver.builtIns.anyType,
             )
         }
     }
@@ -92,10 +92,10 @@ abstract class MapToXConverter(
             }
         }
 
-        val genericSourceKeyType = source.arguments[0].type!!.resolve()
-        val genericSourceValueType = source.arguments[1].type!!.resolve()
-        val genericTargetKeyType = target.arguments[0].type!!.resolve()
-        val genericTargetValueType = target.arguments[1].type!!.resolve()
+        val genericSourceKeyType = source.arguments[0].type?.resolve() ?: resolver.builtIns.anyType
+        val genericSourceValueType = source.arguments[1].type?.resolve() ?: resolver.builtIns.anyType
+        val genericTargetKeyType = target.arguments[0].type?.resolve() ?: resolver.builtIns.anyType
+        val genericTargetValueType = target.arguments[1].type?.resolve() ?: resolver.builtIns.anyType
         val keyTypeConverter = TypeConverterRegistry.firstOrNull {
             it.matches(
                 source = genericSourceKeyType,
