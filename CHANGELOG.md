@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+
+### New features
+
+* New option `konvert.enforce-not-null-strategy` to define how Konvert handles mapping from nullable to non-nullable field [#199](https://github.com/mcarleio/konvert/pull/199) (thanks to [@Shanzeee](https://github.com/Shanzeee))
+   * `ASSERTION_OPERATOR` (default, deprecated) - uses the `!!` operator to assert that the source value is not null. Will result in a simple `NullPointerException` if the source value is null.
+   * `REQUIRE_NOT_NULL` - uses the `requireNotNull` function to check that the source value is not null. Will throw an `IllegalArgumentException` with a speaking message if the source value is null.
+
+* Three new type converters, which handle `Array<*>` (including primitive arrays like e.g. `IntArray`) mappings:
+   * `ArrayToArrayConverter` - maps between arrays, e.g. `Array<Int>` to `Array<String>`
+   * `ArrayToIterablesXConverter` - maps from an array to an iterable, e.g. `Array<Int>` to `List<String>`
+   * `IterableToArrayConverter` - maps from an iterable to an array, e.g. `List<Int>` to `Array<String>`
+
+  The following example now works out-of-the-box and generates the appropriate mappings:
+  ```kotlin
+  @KonvertTo(UserIdsDto::class)
+  class UserIds(val ids: Array<Int>)
+
+  @KonvertTo(UserIds::class)
+  class UserIdsDto(val ids: List<Int>)
+  ```
+
+
+### Improvements
+
+* Updates:
+  * Kotlin → 2.3.10
+  * KSP → 2.3.5
+  * Injectors (Anvil, Dagger, Koin, Spring)
+
+* Build updates:
+  * Gradle → 9.4.1
+  * Kotlin Compile Testing → 0.12.1
+  * jUnit → 6.0.2
+
+## [4.4.0]
+
 ### Improvements
 * Update to Kotlin 2.2.0 and KSP 2.0.2
 * Switch how `konvert` is being used in a maven project with KSP2 by using the new [ksp-maven-plugin](https://github.com/mcarleio/ksp-maven-plugin).
@@ -364,7 +400,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v4.3.2...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v4.4.0...HEAD
+
+[4.4.0]: https://github.com/mcarleio/konvert/compare/v4.3.2...v4.4.0
 
 [4.3.2]: https://github.com/mcarleio/konvert/compare/v4.3.1...v4.3.2
 
