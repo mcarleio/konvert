@@ -2,10 +2,12 @@
 
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.kotlin.dsl.kotlin
+import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
 
 val DependencyHandler.kotlinTest get() = kotlin("test")
 val DependencyHandler.kotlinReflect get() = kotlin("reflect")
 val DependencyHandler.kotlinStdlib get() = kotlin("stdlib-jdk8")
+val KotlinDependencyHandler.kotlinStdlib get() = kotlin("stdlib-jdk8")
 val DependencyHandler.kotlinCompilerEmbeddable get() = kotlin("compiler-embeddable")
 
 val DependencyHandler.kotlinCompileTesting get() = "dev.zacsweers.kctfork:core:${Versions.kotlinCompileTesting}"

@@ -1,29 +1,22 @@
 plugins {
-    id("konvert.kotlin")
-    id("konvert.mvn-publish")
+    id("konvert.kotlin.kmp")
+    id("konvert.mvn-publish.kmp")
 }
 
-dependencies {
-    api(project(":annotations"))
-}
-
-sourceSets {
-    main {
-        kotlin {
-            setSrcDirs(listOf("${layout.buildDirectory.get().asFile}/generated/generator/kotlin"))
-        }
-    }
-}
+val generatedDir = layout.buildDirectory.dir("generated/generator/kotlin")
 
 kotlin {
-    target {
+    jvm {
         compilations {
             @Suppress("UNUSED_VARIABLE")
             val generator by compilations.creating {
                 defaultSourceSet {
+                    // Map to the existing source directory layout
+                    kotlin.srcDir("src/generator/kotlin")
+
                     dependencies {
-                        parent?.subprojects?.forEach {
-                            if (it.path !in arrayOf(":injectors", ":docs", ":annotations", path)) {
+                        rootProject.subprojects.forEach {
+                            if (it.path !in arrayOf(":injectors", ":docs", ":annotations", project.path)) {
                                 implementation(project(it.path))
                             }
                         }
@@ -37,18 +30,25 @@ kotlin {
                     group = LifecycleBasePlugin.BUILD_GROUP
                     classpath = runtimeDependencyFiles + output.allOutputs
                     mainClass.set("GenerateKt")
-                    args = listOf("${layout.buildDirectory.get().asFile}/generated/generator/kotlin")
+                    args = listOf(generatedDir.get().asFile.absolutePath)
+                    outputs.dir(generatedDir)
                 }
 
-                tasks.processResources {
-                    dependsOn += generateTask
+                tasks.named("jvmProcessResources") {
+                    dependsOn(generateTask)
                 }
-                tasks.compileKotlin {
-                    dependsOn += generateTask
-                }
-                tasks.sourcesJar {
-                    dependsOn += generateTask
-                }
+            }
+        }
+    }
+
+    sourceSets {
+        commonMain {
+            // Use srcDir with the task provider so that KGP automatically
+            // adds a task dependency from all compile tasks to generateApiConstants
+            kotlin.setSrcDirs(emptyList<String>())
+            kotlin.srcDir(tasks.named("generateApiConstants"))
+            dependencies {
+                api(project(":annotations"))
             }
         }
     }
