@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.5.0]
+
 
 ### New features
 
@@ -400,7 +402,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v4.4.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v4.5.0...HEAD
+
+[4.5.0]: https://github.com/mcarleio/konvert/compare/v4.4.0...v4.5.0
 
 [4.4.0]: https://github.com/mcarleio/konvert/compare/v4.3.2...v4.4.0
 
