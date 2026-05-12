@@ -16,6 +16,8 @@ kotlin {
 
                     dependencies {
                         rootProject.subprojects.forEach {
+                            // do not include dependency on empty injectors module, docs, annotations and api itself
+                            // as they do not contain any configurations and converters
                             if (it.path !in arrayOf(":injectors", ":docs", ":annotations", project.path)) {
                                 implementation(project(it.path))
                             }

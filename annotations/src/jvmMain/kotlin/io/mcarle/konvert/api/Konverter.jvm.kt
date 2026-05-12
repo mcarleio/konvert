@@ -5,15 +5,28 @@ import kotlin.reflect.KClass
 private val mappers: MutableMap<KClass<*>, Any> = mutableMapOf()
 private val CLASS_LOADER_LIST = mutableListOf(ClassLoader.getSystemClassLoader())
 
-fun addClassLoader(classLoader: ClassLoader) {
+
+actual fun deprecated_addClassLoader(classLoader: Any) {
+    if (classLoader is ClassLoader) {
+        addJvmClassLoader(classLoader)
+    }
+}
+
+actual fun deprecated_removeClassLoader(classLoader: Any) {
+    if (classLoader is ClassLoader) {
+        removeJvmClassLoader(classLoader)
+    }
+}
+
+fun addJvmClassLoader(classLoader: ClassLoader) {
     CLASS_LOADER_LIST += classLoader
 }
 
-fun removeClassLoader(classLoader: ClassLoader) {
+fun removeJvmClassLoader(classLoader: ClassLoader) {
     CLASS_LOADER_LIST -= classLoader
 }
 
-private inline fun <T: Any> withCurrentClassLoaders(clazz: KClass<T>, block: (List<ClassLoader>) -> T): T {
+private inline fun <T : Any> withCurrentClassLoaders(clazz: KClass<T>, block: (List<ClassLoader>) -> T): T {
     return block(
         listOfNotNull(clazz.java.classLoader, Thread.currentThread().contextClassLoader, *CLASS_LOADER_LIST.toTypedArray())
     )
