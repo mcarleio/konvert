@@ -14,7 +14,7 @@ Due to that, if you use Konvert from e.g. a maven project, you need to change to
 ### New features
 
 * add support for Kotlin Multiplatform (KMP) for the modules `api` and `annotations`
-   * you can now use the `konvert-api` and `konvert-annotations` modules in KMP projects :party:
+   * you can now use the `konvert-api` and `konvert-annotations` modules in KMP projects 🥳
 
 ## [4.5.0]
 
