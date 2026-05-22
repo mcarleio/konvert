@@ -5,6 +5,8 @@ import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
 import io.mcarle.konvert.api.DEFAULT_KONVERT_PRIORITY
 import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.addJvmClassLoader
+import io.mcarle.konvert.api.removeJvmClassLoader
 import io.mcarle.konvert.converter.IntToStringConverter
 import io.mcarle.konvert.converter.IterableToArrayListConverter
 import io.mcarle.konvert.converter.IterableToListConverter
@@ -1775,9 +1777,9 @@ interface Mapper {
 
 private fun Konverter.Companion.getWithClassLoader(classFQN: String, classLoader: ClassLoader): Any {
     try {
-        addClassLoader(classLoader)
+        addJvmClassLoader(classLoader)
         return get(classLoader.loadClass(classFQN).kotlin)
     } finally {
-        removeClassLoader(classLoader)
+        removeJvmClassLoader(classLoader)
     }
 }
