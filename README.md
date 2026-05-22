@@ -20,6 +20,7 @@ Major features:
    * ⏱️ Generated at **compile time**
    * 🚫 **Zero reflection**, **zero runtime overhead**
 * 📦 Works seamlessly with **Gradle** and **Maven**
+* 🌍 **Kotlin Multiplatform**
 
 > ℹ️ This README provides a basic overview, for more details have a look at the [documentation](https://mcarleio.github.io/konvert).
 
@@ -159,11 +160,14 @@ To use Konvert with Gradle, you have to do the following steps:
 
 To use Konvert with Maven, you have to do the following steps:
 
-1. Add `konvert-api` as a dependency to use the annotations:
+> ℹ️ Maven does not support Gradle Module Metadata, so you need to use the `-jvm` suffixed artifact names.
+> See the [Multiplatform documentation](https://mcarleio.github.io/konvert/multiplatform) for details.
+
+1. Add `konvert-api-jvm` as a dependency to use the annotations:
    ```xml
    <dependency>
        <groupId>io.mcarle</groupId>
-       <artifactId>konvert-api</artifactId>
+       <artifactId>konvert-api-jvm</artifactId>
        <version>${konvert.version}</version>
    </dependency>
    ```
@@ -190,6 +194,15 @@ To use Konvert with Maven, you have to do the following steps:
        </dependencies>
    </plugin>
    ```
+
+## Kotlin Multiplatform Setup
+
+The `konvert-api` and `konvert-annotations` modules are published as Kotlin Multiplatform artifacts,
+supporting JVM, JS, WasmJs, and Native targets.
+
+Add the `konvert-api` dependency to your `commonMain` source set and configure KSP with `konvert`.
+See the [Multiplatform documentation](https://mcarleio.github.io/konvert/multiplatform) for details.
+
 
 ## Further information
 

@@ -11,10 +11,12 @@ Konvert is split into multiple modules.
 * `konvert-api`
 +
 This module brings the module `konvert-annotations` with it and adds constants for available converter names and option keys.
+Published as a link:multiplatform[Kotlin Multiplatform] artifact.
 
 **  `konvert-annotations`
 +
 This module contains mainly annotations which you can use to annotate your classes or mapper interfaces to generate mapping code by `Konvert`.
+Published as a link:multiplatform[Kotlin Multiplatform] artifact.
 
 * `konvert`
 +
