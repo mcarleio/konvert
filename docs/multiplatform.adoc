@@ -1,0 +1,114 @@
+:page-title: Kotlin Multiplatform
+:page-nav_order: 7
+
+= Kotlin Multiplatform (KMP)
+
+[.fs-6.fw-300]
+Starting with version 5.0.0, Konvert supports Kotlin Multiplatform projects.
+
+== Overview
+
+The `konvert-annotations` and `konvert-api` modules are published as Kotlin Multiplatform artifacts.
+This means you can use Konvert's annotations in shared KMP code and have the generated mapping code available for all supported targets.
+
+== Supported Targets
+
+[cols="1,2",options="header"]
+|===
+| Tier | Targets
+
+| JVM
+| JVM 17+
+
+| JavaScript
+| Browser, Node.js
+
+| WasmJs
+| Browser, Node.js
+
+| Native – Tier 1
+| linuxX64, macosX64, macosArm64
+
+| Native – Tier 2
+| iosArm64, iosX64, iosSimulatorArm64, watchosArm64, watchosSimulatorArm64, tvosArm64, tvosSimulatorArm64
+
+| Native – Tier 3
+| mingwX64, linuxArm64
+|===
+
+== Setup for KMP projects
+
+Add the `konvert-api` dependency to your `commonMain` source set:
+
+[source,kotlin]
+----
+kotlin {
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation("io.mcarle:konvert-api:$konvertVersion")
+            }
+        }
+    }
+}
+----
+
+Then configure KSP e.g. for your common target to process the annotations:
+
+[source,kotlin]
+----
+dependencies {
+    add("kspCommonMainMetadata", "io.mcarle:konvert:$konvertVersion")
+}
+----
+
+[.info]
+> For trying out, you may also use `ksp("io.mcarle:konvert:$konvertVersion")`, but it is https://kotlinlang.org/docs/ksp-multiplatform.html#avoid-the-ksp-configuration-on-ksp-1-0-1[deprecated due added overheads to build time].
+
+=== Example
+
+[source,kotlin]
+----
+// in commonMain
+@KonvertTo(PersonDto::class)
+data class Person(val firstName: String, val lastName: String, val age: Int)
+data class PersonDto(val firstName: String, val lastName: String, val age: Int)
+----
+
+The generated extension function `Person.toPersonDto()` will be available in the common source set.
+
+== ClassLoader management (JVM only)
+
+On JVM, if you still use `Konverter.get()` with `konvert.konverter.use-reflection` enabled and need to manage class loaders manually, switch to the platform-specific functions:
+
+[source,kotlin]
+----
+import io.mcarle.konvert.api.addJvmClassLoader
+import io.mcarle.konvert.api.removeJvmClassLoader
+
+addJvmClassLoader(myClassLoader)
+// ... use Konverter.get() ...
+removeJvmClassLoader(myClassLoader)
+----
+
+NOTE: The old `Konverter.addClassLoader()` / `Konverter.removeClassLoader()` methods are deprecated and will be removed in a future release.
+
+== Usage in Maven / Gradle
+
+=== Maven
+For **Maven** users, the old artifacts `konvert-api` and `konvert-annotations` will not be usable anymore,
+as they are now published as Kotlin Multiplatform artifacts and the JVM variant needs to be explicitly selected by using the `-jvm` suffix.
+
+[cols="1,1",options="header"]
+|===
+| Old artifact | New artifact
+
+| `io.mcarle:konvert-api`
+| `io.mcarle:konvert-api-jvm`
+
+| `io.mcarle:konvert-annotations`
+| `io.mcarle:konvert-annotations-jvm`
+|===
+
+=== Gradle
+For **Gradle** users with Kotlin Multiplatform or JVM plugin, Gradle metadata resolution will automatically select the correct `-jvm` variant — no change needed if you use the base coordinates (`io.mcarle:konvert-api`).

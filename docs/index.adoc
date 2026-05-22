@@ -16,3 +16,6 @@ image:{codecov-image}[link={codecov-url},alt=Code Coverage]
 [.fs-6.fw-300]
 Konvert is a lightweight Kotlin compiler plugin which is using https://github.com/google/ksp[KSP (Kotlin Symbol Processing) API].
 The purpose of Konvert is to generate conversion/mapping code for annotated types.
+
+With link:multiplatform[Kotlin Multiplatform support], you can use Konvert's annotations and api in shared code across JVM, JS, WasmJs, and Native targets.
+
