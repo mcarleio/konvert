@@ -6,10 +6,6 @@ plugins {
     id("org.jetbrains.kotlinx.kover")
 }
 
-dependencies {
-    implementation(kotlinStdlib)
-}
-
 repositories {
     mavenCentral()
 }
