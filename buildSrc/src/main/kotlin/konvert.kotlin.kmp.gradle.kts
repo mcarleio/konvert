@@ -1,13 +1,10 @@
+import gradle.kotlin.dsl.accessors._4a7cc57273eb0b8555a879331af7a94d.implementation
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     kotlin("multiplatform") // version defined in buildSrc/build.gradle.kts -> dependencies
     id("org.jetbrains.kotlinx.kover")
-}
-
-dependencies {
-
 }
 
 repositories {
@@ -62,11 +59,4 @@ kotlin {
 
     applyDefaultHierarchyTemplate()
 
-    sourceSets {
-        val jvmMain by getting {
-            dependencies {
-                implementation(kotlinStdlib)
-            }
-        }
-    }
 }
