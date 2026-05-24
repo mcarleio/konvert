@@ -312,7 +312,7 @@ $className(${"⇥\n%L"}
         source: PropertyMappingInfo,
         targetType: KSType
     ): CodeBlock {
-        val sourceType = source.sourceData!!.typeRef.resolve()
+        val sourceType = source.sourceData!!.type
         val paramName = source.mappingParamName?.let { "$it." } ?: ""
 
         return TypeConverterRegistry.withAdditionallyEnabledConverters(source.enableConverters + Configuration.enableConverters) {

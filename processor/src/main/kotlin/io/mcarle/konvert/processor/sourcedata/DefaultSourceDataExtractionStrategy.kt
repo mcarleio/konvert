@@ -21,7 +21,7 @@ class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
 
         val properties = classDeclaration.getAllProperties()
             .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }
-            .map { SourceDataExtractionStrategy.SourceProperty(it) }
+            .map { SourceDataExtractionStrategy.SourceProperty(it, resolver) }
 
         val potentialFunctions = classDeclaration.getAllFunctions()
             .filter { it.parameters.isEmpty() }
@@ -30,17 +30,20 @@ class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
             .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }
 
         val functionsAndGetters = when {
-            classDeclaration.isRecord() -> handleRecords(potentialFunctions)
+            classDeclaration.isRecord() -> handleRecords(potentialFunctions, resolver)
             else -> handleClasses(potentialFunctions, resolver)
         }
 
         return (properties + functionsAndGetters).toList()
     }
 
-    private fun handleRecords(potentialFunctions: Sequence<KSFunctionDeclaration>): Sequence<SourceDataExtractionStrategy.SourceData> {
+    private fun handleRecords(
+        potentialFunctions: Sequence<KSFunctionDeclaration>,
+        resolver: Resolver
+    ): Sequence<SourceDataExtractionStrategy.SourceData> {
         return potentialFunctions
             .filter { !it.isConstructor() && !it.modifiers.contains(Modifier.ABSTRACT) }
-            .map { SourceDataExtractionStrategy.SourceFunction(it) }
+            .map { SourceDataExtractionStrategy.SourceFunction(it, resolver) }
     }
 
     private fun handleClasses(

@@ -481,6 +481,38 @@ interface OtherMapper {
     }
 
     @Test
+    fun resolveRecursiveGenericTypealiasOnSourceData() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IterableToListConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceTag(val id: Int)
+typealias SourceTags<T> = List<T>
+typealias SourceTagsView = SourceTags<SourceTag>
+data class SourceView(val tags: SourceTagsView)
+
+data class TargetTag(val id: Int)
+data class TargetView(val tags: List<TargetTag>)
+
+@Konverter
+interface Mapper {
+    fun toTag(source: SourceTag): TargetTag
+    fun toView(source: SourceView): TargetView
+}
+                    """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "source.tags.map { this.toTag(source = it) }")
+    }
+
+    @Test
     fun configGenerateClassInsteadOfObject() {
         val (compilation, result) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
