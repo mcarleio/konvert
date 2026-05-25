@@ -15,25 +15,25 @@ This means you can use Konvert's annotations in shared KMP code and have the gen
 
 [cols="1,2",options="header"]
 |===
-| Tier | Targets
+| Target family | Targets
 
 | JVM
 | JVM 17+
 
 | JavaScript
-| Browser, Node.js
+| js (Browser, Node.js)
 
-| WasmJs
-| Browser, Node.js
+| Wasm
+| wasmJs (Browser, Node.js), wasmWasi (Node.js)
 
-| Native – Tier 1
-| linuxX64, macosX64, macosArm64
+| Native – https://kotlinlang.org/docs/native-target-support.html#tier-1[Tier 1]
+| macosArm64, iosSimulatorArm64, iosArm64
 
-| Native – Tier 2
-| iosArm64, iosX64, iosSimulatorArm64, watchosArm64, watchosSimulatorArm64, tvosArm64, tvosSimulatorArm64
+| Native – https://kotlinlang.org/docs/native-target-support.html#tier-2[Tier 2]
+| linuxX64, linuxArm64, watchosSimulatorArm64, watchosArm32, watchosArm64, tvosSimulatorArm64, tvosArm64
 
-| Native – Tier 3
-| mingwX64, linuxArm64
+| Native – https://kotlinlang.org/docs/native-target-support.html#tier-3[Tier 3]
+| androidNativeArm32, androidNativeArm64, androidNativeX86, androidNativeX64, mingwX64, watchosDeviceArm64
 |===
 
 == Setup for KMP projects
@@ -63,7 +63,7 @@ dependencies {
 ----
 
 [.info]
-> For trying out, you may also use `ksp("io.mcarle:konvert:$konvertVersion")`, but it is https://kotlinlang.org/docs/ksp-multiplatform.html#avoid-the-ksp-configuration-on-ksp-1-0-1[deprecated due added overheads to build time].
+> For trying out, you may also use `ksp("io.mcarle:konvert:$konvertVersion")`, but it is https://kotlinlang.org/docs/ksp-multiplatform.html#avoid-the-ksp-configuration-on-ksp-1-0-1[deprecated due to added build-time overhead].
 
 === Example
 
@@ -79,7 +79,7 @@ The generated extension function `Person.toPersonDto()` will be available in the
 
 == ClassLoader management (JVM only)
 
-On JVM, if you still use `Konverter.get()` with `konvert.konverter.use-reflection` enabled and need to manage class loaders manually, switch to the platform-specific functions:
+On JVM, if you still use `Konverter.get()` with `konvert.konverter.use-reflection` enabled and you need to manage class loaders manually, switch to the platform-specific functions:
 
 [source,kotlin]
 ----
@@ -96,7 +96,7 @@ NOTE: The old `Konverter.addClassLoader()` / `Konverter.removeClassLoader()` met
 == Usage in Maven / Gradle
 
 === Maven
-For **Maven** users, the old artifacts `konvert-api` and `konvert-annotations` will not be usable anymore,
+For **Maven** users, the old artifacts `konvert-api` and `konvert-annotations` will *not* be usable anymore,
 as they are now published as Kotlin Multiplatform artifacts and the JVM variant needs to be explicitly selected by using the `-jvm` suffix.
 
 [cols="1,1",options="header"]
@@ -111,4 +111,4 @@ as they are now published as Kotlin Multiplatform artifacts and the JVM variant 
 |===
 
 === Gradle
-For **Gradle** users with Kotlin Multiplatform or JVM plugin, Gradle metadata resolution will automatically select the correct `-jvm` variant — no change needed if you use the base coordinates (`io.mcarle:konvert-api`).
+For **Gradle** users with Kotlin Multiplatform or JVM plugin, Gradle metadata resolution will automatically select the correct variant — no change needed if you use the base coordinates (`io.mcarle:konvert-api`).
