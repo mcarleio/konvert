@@ -17,14 +17,21 @@ abstract class BaseTypeConverter(
     override val enabledByDefault: Boolean = false
 ) : AbstractTypeConverter() {
 
-    private val sourceType: KSType by lazy {
-        resolver.getClassDeclarationByName(sourceClass.qualifiedName!!)!!.asStarProjectedType()
+    // Nullable: in non-JVM KSP compilations (e.g. kspCommonMainKotlinMetadata or native targets)
+    // a converter may reference a type that is not on the current classpath — most notably the
+    // java.* types used by the BigInteger/BigDecimal/Date converters. In that case the class
+    // declaration cannot be resolved; such a converter simply can never match in this compilation,
+    // so we treat an unresolvable type as "no match" instead of throwing an NPE.
+    private val sourceType: KSType? by lazy {
+        resolver.getClassDeclarationByName(sourceClass.qualifiedName!!)?.asStarProjectedType()
     }
-    private val targetType: KSType by lazy {
-        resolver.getClassDeclarationByName(targetClass.qualifiedName!!)!!.asStarProjectedType()
+    private val targetType: KSType? by lazy {
+        resolver.getClassDeclarationByName(targetClass.qualifiedName!!)?.asStarProjectedType()
     }
 
     override fun matches(source: KSType, target: KSType): Boolean {
+        val sourceType = sourceType ?: return false
+        val targetType = targetType ?: return false
         return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
             sourceNotNullable == sourceType && targetNotNullable == targetType
         }
