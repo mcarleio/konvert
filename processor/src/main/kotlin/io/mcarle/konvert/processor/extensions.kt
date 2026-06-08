@@ -62,6 +62,12 @@ fun Iterable<Mapping>.validated(reference: KSNode, logger: KSPLogger) = filter {
  * even after guarding the lookup the value may be `null`.
  *
  * We resolve in priority order: explicit argument → KSP default argument → [fallback].
+ *
+ * Note on testing: the metadata-phase behavior this guards against cannot be reproduced in
+ * the `*ITest` harness, which runs a JVM platform compilation via kotlin-compile-testing
+ * (no commonMain-metadata KSP mode exists there). This function is therefore unit-tested
+ * directly against a fake [KSAnnotation] simulating the metadata phase — see
+ * `AnnotationArgumentExtensionsTest`.
  */
 fun KSAnnotation.argumentValue(name: String, fallback: Any? = null): Any? {
     arguments.firstOrNull { it.name?.asString() == name }?.let { if (it.value != null) return it.value }
@@ -82,6 +88,13 @@ fun KSAnnotation.argumentValue(name: String, fallback: Any? = null): Any? {
  *
  * We treat the argument as explicitly set only when it appears in [KSAnnotation.arguments]
  * with a non-null value; otherwise we fall back to the [Unit] sentinel.
+ *
+ * Note on testing: the absent-vs-explicit-empty distinction only diverges in the
+ * common-metadata compilation. In the JVM `*ITest` harness a defaulted `constructorArgs`
+ * always arrives as `[Unit::class]`, so those integration tests exercise the unchanged
+ * platform path and cannot prove this fix. Faithful coverage would require running
+ * `kspCommonMainKotlinMetadata` (and, for native consumers, macOS runners with the
+ * Kotlin/Native toolchain), neither of which is available to the integration harness.
  */
 fun KSAnnotation.constructorArgClassDeclarations(name: String, resolver: Resolver): List<KSClassDeclaration> {
     val explicit = arguments.firstOrNull { it.name?.asString() == name }?.value
