@@ -22,15 +22,17 @@ abstract class TemporalToTemporalConverter(
     val targetClass: KClass<out Temporal>,
 ) : AbstractTypeConverter() {
 
-    private val sourceType: KSType by lazy {
-        resolver.getClassDeclarationByName(sourceClass.qualifiedName!!)!!.asStarProjectedType()
+    private val sourceType: KSType? by lazy {
+        resolver.getClassDeclarationByName(sourceClass.qualifiedName!!)?.asStarProjectedType()
     }
 
-    private val targetType: KSType by lazy {
-        resolver.getClassDeclarationByName(targetClass.qualifiedName!!)!!.asStarProjectedType()
+    private val targetType: KSType? by lazy {
+        resolver.getClassDeclarationByName(targetClass.qualifiedName!!)?.asStarProjectedType()
     }
 
     override fun matches(source: KSType, target: KSType): Boolean {
+        val sourceType = sourceType ?: return false
+        val targetType = targetType ?: return false
         return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
             sourceType.isAssignableFrom(sourceNotNullable) && targetType == targetNotNullable
         }

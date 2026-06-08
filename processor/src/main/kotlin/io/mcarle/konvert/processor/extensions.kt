@@ -1,9 +1,12 @@
 package io.mcarle.konvert.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Visibility
 import io.mcarle.konvert.api.Konfig
@@ -47,20 +50,62 @@ fun Iterable<Mapping>.validated(reference: KSNode, logger: KSPLogger) = filter {
     }
 }
 
+/**
+ * Resolves the value of an annotation argument by [name].
+ *
+ * On platform KSP compilations every argument (including ones left at their default) is
+ * materialized in [KSAnnotation.arguments]. In the common-metadata compilation
+ * (`kspCommonMainKotlinMetadata`) KSP may omit arguments that were not explicitly set —
+ * and [KSAnnotation.defaultArguments] is likewise unreliable there (array-valued defaults
+ * such as `mappings = []` come back as `null`). A naive
+ * `arguments.first { it.name == name }.value` therefore throws [NoSuchElementException], and
+ * even after guarding the lookup the value may be `null`.
+ *
+ * We resolve in priority order: explicit argument → KSP default argument → [fallback].
+ */
+fun KSAnnotation.argumentValue(name: String, fallback: Any? = null): Any? {
+    arguments.firstOrNull { it.name?.asString() == name }?.let { if (it.value != null) return it.value }
+    defaultArguments.firstOrNull { it.name?.asString() == name }?.let { if (it.value != null) return it.value }
+    return fallback
+}
+
+/**
+ * Resolves the `constructorArgs` annotation value into [KSClassDeclaration]s.
+ *
+ * Two states must be distinguished, which is impossible from the value alone in the
+ * common-metadata compilation (where a defaulted argument is dropped from
+ * [KSAnnotation.arguments]):
+ *  - **absent** (left at its `[Unit::class]` default) → the "auto-detect constructor" sentinel.
+ *    We synthesize `[Unit]` so downstream behaves exactly as in a platform compilation.
+ *  - **explicitly empty** (`constructorArgs = []`) → "use the empty/no-arg constructor".
+ *    We must preserve the empty list.
+ *
+ * We treat the argument as explicitly set only when it appears in [KSAnnotation.arguments]
+ * with a non-null value; otherwise we fall back to the [Unit] sentinel.
+ */
+fun KSAnnotation.constructorArgClassDeclarations(name: String, resolver: Resolver): List<KSClassDeclaration> {
+    val explicit = arguments.firstOrNull { it.name?.asString() == name }?.value
+    if (explicit != null) {
+        return (explicit as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() }
+    }
+    val unit = resolver.getClassDeclarationByName(Unit::class.qualifiedName!!)
+    return listOfNotNull(unit)
+}
+
 fun Mapping.Companion.from(annotation: KSAnnotation) = Mapping(
-    target = annotation.arguments.first { it.name?.asString() == Mapping::target.name }.value as String,
-    source = annotation.arguments.first { it.name?.asString() == Mapping::source.name }.value as String,
-    constant = annotation.arguments.first { it.name?.asString() == Mapping::constant.name }.value as String,
-    expression = annotation.arguments.first { it.name?.asString() == Mapping::expression.name }.value as String,
-    ignore = annotation.arguments.first { it.name?.asString() == Mapping::ignore.name }.value as Boolean,
-    enable = (annotation.arguments.first { it.name?.asString() == Mapping::enable.name }.value as List<*>)
+    target = annotation.argumentValue(Mapping::target.name) as String,
+    source = annotation.argumentValue(Mapping::source.name, "") as String,
+    constant = annotation.argumentValue(Mapping::constant.name, "") as String,
+    expression = annotation.argumentValue(Mapping::expression.name, "") as String,
+    ignore = annotation.argumentValue(Mapping::ignore.name, false) as Boolean,
+    enable = (annotation.argumentValue(Mapping::enable.name, emptyList<Any?>()) as List<*>)
         .filterIsInstance<TypeConverterName>()
         .toTypedArray(),
 )
 
 fun Konfig.Companion.from(annotation: KSAnnotation) = Konfig(
-    key = annotation.arguments.first { it.name?.asString() == Konfig::key.name }.value as String,
-    value = annotation.arguments.first { it.name?.asString() == Konfig::value.name }.value as String
+    key = annotation.argumentValue(Konfig::key.name) as String,
+    value = annotation.argumentValue(Konfig::value.name) as String
 )
 
 fun KSValueParameter.typeClassDeclaration(): KSClassDeclaration? = this.type.resolve().classDeclaration()

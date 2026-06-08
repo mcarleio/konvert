@@ -8,6 +8,7 @@ import io.mcarle.konvert.converter.api.config.konverterGenerateClass
 import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.AnnotatedConverterData
+import io.mcarle.konvert.processor.argumentValue
 import io.mcarle.konvert.processor.from
 
 class KonverterData constructor(
@@ -42,7 +43,7 @@ class KonverterData constructor(
 
         companion object {
             fun from(annotation: KSAnnotation) = AnnotationData(
-                options = (annotation.arguments.first { it.name?.asString() == Konverter::options.name }.value as List<*>)
+                options = (annotation.argumentValue(Konverter::options.name, emptyList<Any?>()) as List<*>)
                     .filterIsInstance<KSAnnotation>()
                     .map { Konfig.from(it) },
             )

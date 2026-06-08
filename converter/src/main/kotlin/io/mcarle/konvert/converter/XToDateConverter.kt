@@ -15,15 +15,17 @@ abstract class XToDateConverter(
     val sourceClass: KClass<*>
 ) : AbstractTypeConverter() {
 
-    private val dateType: KSType by lazy {
-        resolver.getClassDeclarationByName("java.util.Date")!!.asStarProjectedType()
+    private val dateType: KSType? by lazy {
+        resolver.getClassDeclarationByName("java.util.Date")?.asStarProjectedType()
     }
 
-    private val sourceType: KSType by lazy {
-        resolver.getClassDeclarationByName(sourceClass.qualifiedName!!)!!.asStarProjectedType()
+    private val sourceType: KSType? by lazy {
+        resolver.getClassDeclarationByName(sourceClass.qualifiedName!!)?.asStarProjectedType()
     }
 
     override fun matches(source: KSType, target: KSType): Boolean {
+        val dateType = dateType ?: return false
+        val sourceType = sourceType ?: return false
         return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
             sourceType == sourceNotNullable && dateType == targetNotNullable
         }
