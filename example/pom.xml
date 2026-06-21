@@ -110,7 +110,7 @@
                 <version>3.6.1</version>
                 <executions>
                     <execution>
-                        <phase>generate-sources</phase>
+                        <phase>initialize</phase>
                         <goals>
                             <goal>add-source</goal>
                         </goals>
