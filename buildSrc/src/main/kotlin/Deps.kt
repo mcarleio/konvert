@@ -21,8 +21,8 @@ val DependencyHandler.kotlinPoet get() = "com.squareup:kotlinpoet:${Versions.kot
 val DependencyHandler.kotlinPoetKsp get() = "com.squareup:kotlinpoet-ksp:${Versions.kotlinPoet}"
 
 object Versions {
-    const val kotlin = "2.3.21" // has to match buildSrc/gradle.properties
-    const val ksp = "2.3.8"
+    const val kotlin = "2.4.0" // has to match buildSrc/gradle.properties
+    const val ksp = "2.3.9"
 
     /**
      * com.google.auto.service:auto-service-annotations
@@ -49,9 +49,9 @@ object Versions {
      */
     const val markdownGenerator = "1.3.1.1"
 
-    const val kotlinCompileTesting = "0.12.1"
+    const val kotlinCompileTesting = "0.13.0"
 
-    const val kotlinxCollectionsImmutable = "0.4.0"
+    const val kotlinxCollectionsImmutable = "0.5.0"
 
     const val kotlinPoet = "2.3.0"
     const val jUnit = "6.1.0"
