@@ -9,9 +9,11 @@ import io.mcarle.konvert.api.converter.LONG_TO_UINT_CONVERTER
 import io.mcarle.konvert.api.converter.STRING_TO_INT_CONVERTER
 import io.mcarle.konvert.injector.spring.KComponent
 
+
 @Konverter(options = [
     /**
-     * This is already set in the pom.xml, but you can also define it here (and override default and global values with that).
+     * This is already set in the pom.xml/build.gradle.kts,
+     * but you can also define it here (and override default and global values with that).
      */
     Konfig(key = KONVERTER_GENERATE_CLASS, value = "true")
 ])
@@ -43,13 +45,3 @@ interface Mapper {
     @Konvert(mappings = [Mapping(source = "age", target = "numberOfYearsSinceBirth", enable = [LONG_TO_UINT_CONVERTER])])
     fun toDto(person: Person): PersonDto
 }
-
-
-@Konverter
-interface AMapper {
-    fun map(domain: Domain): DTO
-    fun map(domains: Collection<Domain>): List<DTO>
-}
-
-data class Domain(val prop: String)
-data class DTO(val prop: String)

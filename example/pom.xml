@@ -41,8 +41,8 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>src/main/kotlin</sourceDirectory>
-        <testSourceDirectory>src/test/kotlin</testSourceDirectory>
+        <sourceDirectory>src/commonMain/kotlin</sourceDirectory>
+        <testSourceDirectory>src/jvmTest/kotlin</testSourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -116,7 +116,8 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>${project.build.directory}/generated-sources/ksp</source>
+                                <source>src/jvmMain/kotlin</source>
+                                <source>${project.build.directory}/generated-sources/ksp-kotlin</source>
                             </sources>
                         </configuration>
                     </execution>
