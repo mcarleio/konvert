@@ -7,8 +7,7 @@ val generatedDir = layout.buildDirectory.dir("generated/generator/kotlin")
 
 kotlin {
     jvm {
-        @Suppress("UNUSED_VARIABLE")
-        val generator by compilations.creating {
+        compilations.create("generator") {
             defaultSourceSet {
                 // Map to the existing source directory layout
                 kotlin.srcDir("src/generator/kotlin")
