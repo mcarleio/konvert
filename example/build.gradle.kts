@@ -12,7 +12,12 @@ val jUnitVersion = "6.1.0"
 
 
 repositories {
-    mavenLocal()
+    mavenLocal {
+        // only use io.mcarle packages from mavenLocal
+        content {
+            includeGroup("io.mcarle")
+        }
+    }
     mavenCentral()
 }
 
