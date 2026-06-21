@@ -18,7 +18,7 @@ abstract class BaseTypeConverter(
 ) : AbstractTypeConverter() {
 
     // Nullable: in non-JVM KSP compilations (e.g. kspCommonMainKotlinMetadata or native targets)
-    // a converter may reference a type that is not on the current classpath — most notably the
+    // a converter may reference a type that is not on the current classpath - most notably the
     // java.* types used by the BigInteger/BigDecimal/Date converters. In that case the class
     // declaration cannot be resolved; such a converter simply can never match in this compilation,
     // so we treat an unresolvable type as "no match" instead of throwing an NPE.

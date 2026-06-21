@@ -44,8 +44,8 @@ abstract class MapToXConverter(
         )
     }
 
-    private val mapType: KSType by lazy {
-        resolver.getClassDeclarationByName<Map<*, *>>()!!.asStarProjectedType()
+    private val mapType: KSType? by lazy {
+        resolver.getClassDeclarationByName<Map<*, *>>()?.asStarProjectedType()
     }
 
     private val targetClassDeclaration: KSClassDeclaration? by lazy {
@@ -58,11 +58,12 @@ abstract class MapToXConverter(
     override val enabledByDefault: Boolean = true
 
     override fun matches(source: KSType, target: KSType): Boolean {
-        if (targetType == null) return false
+        val targetType = targetType ?: return false
+        val mapType = mapType ?: return false
 
         return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
             mapType.isAssignableFrom(sourceNotNullable)
-                && targetType!!.isAssignableFrom(targetNotNullable) && targetNotNullable.isExactlyTarget()
+                && targetType.isAssignableFrom(targetNotNullable) && targetNotNullable.isExactlyTarget()
         } && TypeConverterRegistry.any {
             it.matches(
                 source = source.arguments[0].type?.resolve() ?: resolver.builtIns.anyType,

@@ -46,13 +46,13 @@ class KonvertData constructor(
     ) {
 
         companion object {
-            fun from(annotation: KSAnnotation, resolver: Resolver) = AnnotationData(
-                mappings = (annotation.argumentValue(Konvert::mappings.name, emptyList<Any?>()) as List<*>)
+            fun from(annotation: KSAnnotation, unitType: KSType) = AnnotationData(
+                mappings = (annotation.argumentValue(Konvert::mappings.name, emptyList<Any?>()))
                     .filterIsInstance<KSAnnotation>()
                     .map { Mapping.from(it) },
-                constructor = annotation.constructorArgClassDeclarations(Konvert::constructorArgs.name, resolver),
-                priority = annotation.argumentValue(Konvert::priority.name, DEFAULT_KONVERT_PRIORITY) as Priority,
-                options = (annotation.argumentValue(Konvert::options.name, emptyList<Any?>()) as List<*>)
+                constructor = annotation.constructorArgClassDeclarations(Konvert::constructorArgs.name, unitType),
+                priority = annotation.argumentValue(Konvert::priority.name, DEFAULT_KONVERT_PRIORITY),
+                options = (annotation.argumentValue(Konvert::options.name, emptyList<Any?>()))
                     .filterIsInstance<KSAnnotation>()
                     .map { Konfig.from(it) },
             )

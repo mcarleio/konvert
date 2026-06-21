@@ -14,13 +14,14 @@ import io.mcarle.konvert.converter.api.isNullable
 @AutoService(TypeConverter::class)
 class EnumToEnumConverter : AbstractTypeConverter() {
 
-    private val enumType: KSType by lazy {
-        resolver.getClassDeclarationByName<Enum<*>>()!!.asStarProjectedType()
+    private val enumType: KSType? by lazy {
+        resolver.getClassDeclarationByName<Enum<*>>()?.asStarProjectedType()
     }
 
     override val enabledByDefault: Boolean = true
 
     override fun matches(source: KSType, target: KSType): Boolean {
+        val enumType = enumType ?: return false
         return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
             enumType.isAssignableFrom(sourceNotNullable) && enumType.isAssignableFrom(targetNotNullable)
         }

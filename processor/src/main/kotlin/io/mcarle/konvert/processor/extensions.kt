@@ -1,8 +1,6 @@
 package io.mcarle.konvert.processor
 
-import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSNode
@@ -55,70 +53,38 @@ fun Iterable<Mapping>.validated(reference: KSNode, logger: KSPLogger) = filter {
  *
  * On platform KSP compilations every argument (including ones left at their default) is
  * materialized in [KSAnnotation.arguments]. In the common-metadata compilation
- * (`kspCommonMainKotlinMetadata`) KSP may omit arguments that were not explicitly set —
- * and [KSAnnotation.defaultArguments] is likewise unreliable there (array-valued defaults
- * such as `mappings = []` come back as `null`). A naive
- * `arguments.first { it.name == name }.value` therefore throws [NoSuchElementException], and
- * even after guarding the lookup the value may be `null`.
+ * (`kspCommonMainKotlinMetadata`) KSP may omit arguments that were not explicitly set.
+ * And [KSAnnotation.defaultArguments] is likewise unreliable there (array-valued defaults
+ * such as `mappings = []` come back as `null`).
  *
- * We resolve in priority order: explicit argument → KSP default argument → [fallback].
- *
- * Note on testing: the metadata-phase behavior this guards against cannot be reproduced in
- * the `*ITest` harness, which runs a JVM platform compilation via kotlin-compile-testing
- * (no commonMain-metadata KSP mode exists there). This function is therefore unit-tested
- * directly against a fake [KSAnnotation] simulating the metadata phase — see
- * `AnnotationArgumentExtensionsTest`.
+ * We resolve in priority order: explicit argument -> KSP default argument -> [fallback].
  */
-fun KSAnnotation.argumentValue(name: String, fallback: Any? = null): Any? {
-    arguments.firstOrNull { it.name?.asString() == name }?.let { if (it.value != null) return it.value }
-    defaultArguments.firstOrNull { it.name?.asString() == name }?.let { if (it.value != null) return it.value }
-    return fallback
+inline fun <reified T> KSAnnotation.argumentValue(name: String, fallback: T? = null): T {
+    return arguments.firstOrNull { it.name?.asString() == name }?.value as? T
+        ?: defaultArguments.firstOrNull { it.name?.asString() == name }?.value as? T
+        ?: fallback
+        ?: throw IllegalArgumentException("Could not resolve the default value for argument '$name' in annotation ${annotationType.resolve().declaration.simpleName.asString()}")
 }
 
-/**
- * Resolves the `constructorArgs` annotation value into [KSClassDeclaration]s.
- *
- * Two states must be distinguished, which is impossible from the value alone in the
- * common-metadata compilation (where a defaulted argument is dropped from
- * [KSAnnotation.arguments]):
- *  - **absent** (left at its `[Unit::class]` default) → the "auto-detect constructor" sentinel.
- *    We synthesize `[Unit]` so downstream behaves exactly as in a platform compilation.
- *  - **explicitly empty** (`constructorArgs = []`) → "use the empty/no-arg constructor".
- *    We must preserve the empty list.
- *
- * We treat the argument as explicitly set only when it appears in [KSAnnotation.arguments]
- * with a non-null value; otherwise we fall back to the [Unit] sentinel.
- *
- * Note on testing: the absent-vs-explicit-empty distinction only diverges in the
- * common-metadata compilation. In the JVM `*ITest` harness a defaulted `constructorArgs`
- * always arrives as `[Unit::class]`, so those integration tests exercise the unchanged
- * platform path and cannot prove this fix. Faithful coverage would require running
- * `kspCommonMainKotlinMetadata` (and, for native consumers, macOS runners with the
- * Kotlin/Native toolchain), neither of which is available to the integration harness.
- */
-fun KSAnnotation.constructorArgClassDeclarations(name: String, resolver: Resolver): List<KSClassDeclaration> {
-    val explicit = arguments.firstOrNull { it.name?.asString() == name }?.value
-    if (explicit != null) {
-        return (explicit as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() }
-    }
-    val unit = resolver.getClassDeclarationByName(Unit::class.qualifiedName!!)
-    return listOfNotNull(unit)
+fun KSAnnotation.constructorArgClassDeclarations(name: String, unitType: KSType): List<KSClassDeclaration> {
+    return argumentValue(name, listOf(unitType))
+        .mapNotNull { it.classDeclaration() }
 }
 
 fun Mapping.Companion.from(annotation: KSAnnotation) = Mapping(
-    target = annotation.argumentValue(Mapping::target.name) as String,
-    source = annotation.argumentValue(Mapping::source.name, "") as String,
-    constant = annotation.argumentValue(Mapping::constant.name, "") as String,
-    expression = annotation.argumentValue(Mapping::expression.name, "") as String,
-    ignore = annotation.argumentValue(Mapping::ignore.name, false) as Boolean,
-    enable = (annotation.argumentValue(Mapping::enable.name, emptyList<Any?>()) as List<*>)
+    target = annotation.argumentValue<String>(Mapping::target.name),
+    source = annotation.argumentValue(Mapping::source.name, ""),
+    constant = annotation.argumentValue(Mapping::constant.name, ""),
+    expression = annotation.argumentValue(Mapping::expression.name, ""),
+    ignore = annotation.argumentValue(Mapping::ignore.name, false),
+    enable = (annotation.argumentValue(Mapping::enable.name, emptyList<Any?>()))
         .filterIsInstance<TypeConverterName>()
         .toTypedArray(),
 )
 
 fun Konfig.Companion.from(annotation: KSAnnotation) = Konfig(
-    key = annotation.argumentValue(Konfig::key.name) as String,
-    value = annotation.argumentValue(Konfig::value.name) as String
+    key = annotation.argumentValue<String>(Konfig::key.name),
+    value = annotation.argumentValue<String>(Konfig::value.name)
 )
 
 fun KSValueParameter.typeClassDeclaration(): KSClassDeclaration? = this.type.resolve().classDeclaration()

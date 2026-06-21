@@ -9,7 +9,6 @@ import io.mcarle.konvert.api.KonvertFrom
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.classDeclaration
-import com.google.devtools.ksp.processing.Resolver
 import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.AnnotatedConverterData
 import io.mcarle.konvert.processor.argumentValue
@@ -52,15 +51,15 @@ class KonvertFromData(
     ) {
 
         companion object {
-            fun from(annotation: KSAnnotation, resolver: Resolver) = AnnotationData(
-                value = (annotation.argumentValue(KonvertFrom::value.name) as KSType).classDeclaration()!!,
-                mappings = (annotation.argumentValue(KonvertFrom::mappings.name, emptyList<Any?>()) as List<*>)
+            fun from(annotation: KSAnnotation, unitType: KSType) = AnnotationData(
+                value = (annotation.argumentValue<KSType>(KonvertFrom::value.name)).classDeclaration()!!,
+                mappings = (annotation.argumentValue(KonvertFrom::mappings.name, emptyList<Any?>()))
                     .filterIsInstance<KSAnnotation>()
                     .map { Mapping.from(it) },
-                constructor = annotation.constructorArgClassDeclarations(KonvertFrom::constructorArgs.name, resolver),
-                mapFunctionName = annotation.argumentValue(KonvertFrom::mapFunctionName.name, "") as String,
-                priority = annotation.argumentValue(KonvertFrom::priority.name, DEFAULT_KONVERT_FROM_PRIORITY) as Priority,
-                options = (annotation.argumentValue(KonvertFrom::options.name, emptyList<Any?>()) as List<*>)
+                constructor = annotation.constructorArgClassDeclarations(KonvertFrom::constructorArgs.name, unitType),
+                mapFunctionName = annotation.argumentValue(KonvertFrom::mapFunctionName.name, ""),
+                priority = annotation.argumentValue(KonvertFrom::priority.name, DEFAULT_KONVERT_FROM_PRIORITY),
+                options = (annotation.argumentValue(KonvertFrom::options.name, emptyList<Any?>()))
                     .filterIsInstance<KSAnnotation>()
                     .map { Konfig.from(it) },
             )
