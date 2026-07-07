@@ -1,7 +1,9 @@
 @file:Suppress("UnusedReceiverParameter")
 
+import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.kotlin.dsl.kotlin
+import org.gradle.kotlin.dsl.support.uppercaseFirstChar
 
 val DependencyHandler.kotlinTest get() = kotlin("test")
 val DependencyHandler.kotlinReflect get() = kotlin("reflect")
@@ -55,4 +57,14 @@ object Versions {
 
     const val kotlinPoet = "2.3.0"
     const val jUnit = "6.1.0"
+}
+
+object TestkitRepo {
+    const val NAME = "testkit"
+    fun dir(rootProject: Project) = rootProject.layout.buildDirectory.dir("$NAME-repo")
+    val PUBLISH_TASK = "publishAllPublicationsTo${TestkitRepo.NAME.uppercaseFirstChar()}Repository"
+}
+
+fun isCI(): Boolean {
+    return System.getenv("CI") != null
 }

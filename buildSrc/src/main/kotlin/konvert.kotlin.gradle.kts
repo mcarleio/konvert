@@ -16,7 +16,7 @@ java {
 }
 
 kover {
-    if (System.getenv("CI") == null) {
+    if (!isCI()) {
         disable()
     }
 }

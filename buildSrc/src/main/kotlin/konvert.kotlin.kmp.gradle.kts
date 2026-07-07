@@ -11,7 +11,7 @@ repositories {
 }
 
 kover {
-    if (System.getenv("CI") == null) {
+    if (!isCI()) {
         disable()
     }
 }
@@ -22,6 +22,7 @@ kotlin {
             compileTaskProvider.configure {
                 compilerOptions {
                     jvmTarget = JvmTarget.JVM_17
+                    javaParameters = true
                 }
             }
         }

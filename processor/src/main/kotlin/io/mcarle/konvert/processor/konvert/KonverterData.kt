@@ -43,7 +43,7 @@ class KonverterData constructor(
 
         companion object {
             fun from(annotation: KSAnnotation) = AnnotationData(
-                options = (annotation.argumentValue(Konverter::options.name, emptyList<Any?>()) as List<*>)
+                options = (annotation.argumentValue(Konverter::options.name, emptyList<Any?>()))
                     .filterIsInstance<KSAnnotation>()
                     .map { Konfig.from(it) },
             )
