@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.gradle.KspAATask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 
@@ -71,4 +72,15 @@ dependencies {
 
 ksp {
     arg("konvert.konverter.generate-class", "true")
+    arg("konvert.generated-filename-suffix", "CommonK")
+}
+
+
+tasks.withType<KspAATask>().configureEach {
+    if (name == "kspKotlinJvm") {
+        // Apply following KSP options to JVM only – NOT applied in common or JS. Overrides globally defined ksp args.
+        commandLineArgumentProviders.add(
+            CommandLineArgumentProvider { listOf("konvert.generated-filename-suffix=JvmK") }
+        )
+    }
 }
