@@ -496,12 +496,24 @@ class KotlinMultiplatformGradleTestkitITest {
                     "test/Models.kt" to """
                         package test
 
+                        import io.mcarle.konvert.api.Konverter
                         import io.mcarle.konvert.api.KonvertTo
+
+                        data class TagDto(val name: String)
+                        data class MetadataKeyDto(val key: String)
+                        data class MetadataValueDto(val value: String)
+
+                        @Konverter
+                        interface Mapper {
+                            fun stringToTagDto(str: String): TagDto = TagDto(str)
+                            fun stringToMetadataKeyDto(str: String): MetadataKeyDto = MetadataKeyDto(str)
+                            fun stringToMetadataValueDto(str: String): MetadataValueDto = MetadataValueDto(str)
+                        }
 
                         @KonvertTo(TagContainerDto::class)
                         data class TagContainer(val tags: List<String>, val metadata: Map<String, String>)
 
-                        data class TagContainerDto(val tags: List<String>, val metadata: Map<String, String>)
+                        data class TagContainerDto(val tags: Set<TagDto>, val metadata: Map<MetadataKeyDto, MetadataValueDto>)
                     """.trimIndent()
                 )
             )
@@ -583,15 +595,17 @@ class KotlinMultiplatformGradleTestkitITest {
                     """.trimIndent()
                 ),
                 jvmMainFiles = mapOf(
-                    "test/JvmModels.kt" to """
-                        package test
+                    "test/sub/JvmModels.kt" to """
+                        package test.sub
 
+                        import test.SharedEntity
+                        import test.SharedDto
                         import io.mcarle.konvert.api.KonvertTo
 
                         @KonvertTo(JvmDto::class)
-                        data class JvmEntity(val uuid: String, val payload: String)
+                        data class JvmEntity(val uuid: String, val payload: SharedEntity)
 
-                        data class JvmDto(val uuid: String, val payload: String)
+                        data class JvmDto(val uuid: String, val payload: SharedDto)
                     """.trimIndent()
                 )
             )
@@ -606,6 +620,56 @@ class KotlinMultiplatformGradleTestkitITest {
 
             assertNotNull(commonGenerated, "Common generated file should exist. All: ${findAllGeneratedFiles()}")
             assertNotNull(jvmGenerated, "JVM generated file should exist. All: ${findAllGeneratedFiles()}")
+
+            val jvmGeneratedCode = jvmGenerated.readText()
+            assertContains(jvmGeneratedCode, "fun JvmEntity.toJvmDto()")
+        }
+
+        @Test
+        fun `class from commonMain used by mapping in jvmMain`() {
+            writeProjectFiles(
+                commonMainFiles = mapOf(
+                    "test/CommonModels.kt" to """
+                        package test
+
+                        data class Common(val id: Int, val name: String)
+                    """.trimIndent()
+                ),
+                jvmMainFiles = mapOf(
+                    "test/JvmModels.kt" to """
+                        package test.sub
+
+                        import test.Common
+                        import io.mcarle.konvert.api.KonvertTo
+                        import io.mcarle.konvert.api.KonvertFrom
+                        import io.mcarle.konvert.api.Konfig
+                        import io.mcarle.konvert.api.config.ENABLE_CONVERTERS
+                        import io.mcarle.konvert.api.converter.STRING_TO_INT_CONVERTER
+
+                        @KonvertFrom(Common::class)
+                        @KonvertTo(Common::class, options = [
+                            Konfig(key = ENABLE_CONVERTERS, value = STRING_TO_INT_CONVERTER)
+                        ])
+                        data class Jvm(val id: String, val name: String){
+                            companion object {}
+                        }
+
+                    """.trimIndent()
+                )
+            )
+
+            val result = runGradle("compileKotlinJvm")
+
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+
+            // Verify both common and JVM-specific files are generated
+            val jvmGenerated = findGeneratedFile("JvmKonverter.kt")
+
+            assertNotNull(jvmGenerated, "JVM generated file should exist. All: ${findAllGeneratedFiles()}")
+
+            val jvmGeneratedCode = jvmGenerated.readText()
+            assertContains(jvmGeneratedCode, "fun Jvm.toCommon()")
+            assertContains(jvmGeneratedCode, "fun Jvm.Companion.fromCommon(common: Common)")
         }
     }
 
@@ -637,7 +701,7 @@ class KotlinMultiplatformGradleTestkitITest {
 
                         data class OrderDto(
                             val id: String,
-                            val amount: Int,
+                            val amount: Long,
                             val active: Boolean
                         )
                     """.trimIndent()
@@ -653,7 +717,7 @@ class KotlinMultiplatformGradleTestkitITest {
 
             val generatedCode = generatedFile.readText()
             assertContains(generatedCode, "fun Order.toOrderDto()")
-            assertContains(generatedCode, "amount = quantity")
+            assertContains(generatedCode, "amount = quantity.toLong()")
             assertContains(generatedCode, "active = active")
         }
 
