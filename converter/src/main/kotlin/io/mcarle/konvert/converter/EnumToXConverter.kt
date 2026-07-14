@@ -15,8 +15,8 @@ abstract class EnumToXConverter(
     val targetClass: KClass<*>
 ) : AbstractTypeConverter() {
 
-    private val enumType: KSType? by lazy {
-        resolver.getClassDeclarationByName<Enum<*>>()?.asStarProjectedType()
+    private val enumType: KSType by lazy {
+        resolver.getClassDeclarationByName<Enum<*>>()!!.asStarProjectedType()
     }
 
     private val targetType: KSType? by lazy {
@@ -24,7 +24,6 @@ abstract class EnumToXConverter(
     }
 
     override fun matches(source: KSType, target: KSType): Boolean {
-        val enumType = enumType ?: return false
         val targetType = targetType ?: return false
         return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
             enumType.isAssignableFrom(sourceNotNullable) && targetType == targetNotNullable

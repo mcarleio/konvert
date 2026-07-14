@@ -19,17 +19,16 @@ abstract class BaseArrayConverter : AbstractTypeConverter() {
 
     protected val arrayType: KSType by lazy { resolver.builtIns.arrayType }
     protected val primitiveArrayTypes by lazy {
-        @Suppress("UNCHECKED_CAST")
         mapOf(
-            resolver.getClassDeclarationByName(BOOLEAN_ARRAY)?.asStarProjectedType() to resolver.builtIns.booleanType,
-            resolver.getClassDeclarationByName(DOUBLE_ARRAY)?.asStarProjectedType() to resolver.builtIns.doubleType,
-            resolver.getClassDeclarationByName(FLOAT_ARRAY)?.asStarProjectedType() to resolver.builtIns.floatType,
-            resolver.getClassDeclarationByName(LONG_ARRAY)?.asStarProjectedType() to resolver.builtIns.longType,
-            resolver.getClassDeclarationByName(INT_ARRAY)?.asStarProjectedType() to resolver.builtIns.intType,
-            resolver.getClassDeclarationByName(SHORT_ARRAY)?.asStarProjectedType() to resolver.builtIns.shortType,
-            resolver.getClassDeclarationByName(BYTE_ARRAY)?.asStarProjectedType() to resolver.builtIns.byteType,
-            resolver.getClassDeclarationByName(CHAR_ARRAY)?.asStarProjectedType() to resolver.builtIns.charType,
-        ).filterKeys { it != null } as Map<KSType, KSType>
+            resolver.getClassDeclarationByName(BOOLEAN_ARRAY)!!.asStarProjectedType() to resolver.builtIns.booleanType,
+            resolver.getClassDeclarationByName(DOUBLE_ARRAY)!!.asStarProjectedType() to resolver.builtIns.doubleType,
+            resolver.getClassDeclarationByName(FLOAT_ARRAY)!!.asStarProjectedType() to resolver.builtIns.floatType,
+            resolver.getClassDeclarationByName(LONG_ARRAY)!!.asStarProjectedType() to resolver.builtIns.longType,
+            resolver.getClassDeclarationByName(INT_ARRAY)!!.asStarProjectedType() to resolver.builtIns.intType,
+            resolver.getClassDeclarationByName(SHORT_ARRAY)!!.asStarProjectedType() to resolver.builtIns.shortType,
+            resolver.getClassDeclarationByName(BYTE_ARRAY)!!.asStarProjectedType() to resolver.builtIns.byteType,
+            resolver.getClassDeclarationByName(CHAR_ARRAY)!!.asStarProjectedType() to resolver.builtIns.charType,
+        )
     }
 
     protected fun extractGenericSource(
