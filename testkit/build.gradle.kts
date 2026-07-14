@@ -7,6 +7,7 @@ dependencies {
     testImplementation(gradleTestKit())
     testImplementation("org.junit.jupiter:junit-jupiter-api:${Versions.jUnit}")
     testImplementation("org.junit.jupiter:junit-jupiter-params:${Versions.jUnit}")
+    testImplementation(project(":api"))
 }
 
 val testkitCoverageDir = layout.buildDirectory.dir("kover/testkit-bin-reports")

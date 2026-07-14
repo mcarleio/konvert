@@ -1,11 +1,19 @@
 package io.mcarle.konvert.testkit
 
+import io.mcarle.konvert.api.config.ENABLE_CONVERTERS
+import io.mcarle.konvert.api.config.KONVERTER_GENERATE_CLASS
+import io.mcarle.konvert.api.converter.INT_TO_ENUM_CONVERTER
+import io.mcarle.konvert.api.converter.LONG_EPOCH_MILLIS_TO_INSTANT_CONVERTER
+import io.mcarle.konvert.api.converter.STRING_TO_DATE_CONVERTER
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -57,6 +65,27 @@ class KotlinMultiplatformGradleTestkitITest {
                 }
             }
         }
+
+        @JvmStatic
+        fun commonTypeCombinations(): List<Arguments> = listOf(
+            Arguments.of("Int", "Double", null),
+            Arguments.of("List<Int>", "Set<String>", null),
+            Arguments.of("Map<Int, Int>", "MutableMap<String, Long>", null),
+            Arguments.of("DeprecationLevel", "String", null),
+            Arguments.of("Int", "DeprecationLevel", INT_TO_ENUM_CONVERTER),
+        )
+
+        @JvmStatic
+        fun jvmTypeCombinations(): List<Arguments> = commonTypeCombinations() + listOf(
+            Arguments.of("java.util.Date", "java.time.Instant", null),
+            Arguments.of("java.util.Date", "String", null),
+            Arguments.of("java.time.Instant", "java.util.Date", null),
+            Arguments.of("java.time.OffsetDateTime", "java.time.Instant", null),
+            Arguments.of("java.time.Instant", "Long", null),
+            Arguments.of("String", "java.util.Date", STRING_TO_DATE_CONVERTER),
+            Arguments.of("Long", "java.time.Instant", LONG_EPOCH_MILLIS_TO_INSTANT_CONVERTER),
+            Arguments.of("java.util.concurrent.TimeUnit", "kotlin.time.DurationUnit", null),
+        )
     }
 
     // region: Helper methods
@@ -68,12 +97,19 @@ class KotlinMultiplatformGradleTestkitITest {
     private fun buildGradleKts(
         targets: String = """
                 jvm()
+                js {
+                    browser()
+                    nodejs()
+                }
             """.trimIndent(),
         kspDependencies: String = """
                 add("kspCommonMainMetadata", "io.mcarle:konvert:$konvertVersion")
                 add("kspJvm", "io.mcarle:konvert:$konvertVersion")
+                add("kspJs", "io.mcarle:konvert:$konvertVersion")
             """.trimIndent(),
-        additionalDependencies: String = "",
+        additionalDependencies: String = """
+                implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+            """.trimIndent(),
         kspOptions: String = ""
     ) = """
             import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -107,26 +143,6 @@ class KotlinMultiplatformGradleTestkitITest {
 
             $kspOptions
         """.trimIndent()
-
-    private fun buildGradleKtsWithJvmAndJs(
-        kspDependencies: String = """
-                add("kspCommonMainMetadata", "io.mcarle:konvert:$konvertVersion")
-                add("kspJvm", "io.mcarle:konvert:$konvertVersion")
-                add("kspJs", "io.mcarle:konvert:$konvertVersion")
-            """.trimIndent()
-    ) = buildGradleKts(
-        targets = """
-                jvm()
-                js {
-                    browser()
-                    nodejs()
-                }
-            """.trimIndent(),
-        kspDependencies = kspDependencies,
-        additionalDependencies = """
-                implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-            """.trimIndent()
-    )
 
     private fun writeProjectFiles(
         buildScript: String = buildGradleKts(),
@@ -169,8 +185,10 @@ class KotlinMultiplatformGradleTestkitITest {
             .build()
     }
 
-    private fun findGeneratedFile(vararg pathSegments: String): File? {
-        return projectDir.resolve("build").walkTopDown()
+    private fun findGeneratedFile(platform: String, vararg pathSegments: String): File? {
+        return projectDir.resolve("build/generated/ksp")
+            .resolve(platform)
+            .walkTopDown()
             .filter { it.isFile && it.extension == "kt" }
             .firstOrNull { file ->
                 pathSegments.all { segment -> file.path.contains(segment) }
@@ -208,11 +226,11 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("compileCommonMainKotlinMetadata")
 
-            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
 
-            val generatedFile = findGeneratedFile("SourceKonverter.kt")
+            val generatedFile = findGeneratedFile("metadata", "SourceKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
 
             val generatedCode = generatedFile.readText()
@@ -245,11 +263,11 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("compileCommonMainKotlinMetadata")
 
-            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
 
-            val generatedFile = findGeneratedFile("PersonKonverter.kt")
+            val generatedFile = findGeneratedFile("metadata", "PersonKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
 
             val generatedCode = generatedFile.readText()
@@ -285,11 +303,11 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("compileCommonMainKotlinMetadata")
 
-            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
 
-            val generatedFile = findGeneratedFile("TargetEventKonverter.kt")
+            val generatedFile = findGeneratedFile("metadata", "TargetEventKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
 
             val generatedCode = generatedFile.readText()
@@ -327,11 +345,11 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("compileCommonMainKotlinMetadata")
 
-            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
 
-            val generatedFile = findGeneratedFile("UserMapperKonverter.kt")
+            val generatedFile = findGeneratedFile("metadata", "UserMapperKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
 
             val generatedCode = generatedFile.readText()
@@ -375,11 +393,11 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("compileCommonMainKotlinMetadata")
 
-            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
 
-            val generatedFile = findGeneratedFile("AddressMapperKonverter.kt")
+            val generatedFile = findGeneratedFile("metadata", "AddressMapperKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
 
             val generatedCode = generatedFile.readText()
@@ -401,7 +419,6 @@ class KotlinMultiplatformGradleTestkitITest {
         @Test
         fun `KMP project with JVM and JS targets compiles successfully`() {
             writeProjectFiles(
-                buildScript = buildGradleKtsWithJvmAndJs(),
                 commonMainFiles = mapOf(
                     "test/Models.kt" to """
                         package test
@@ -418,6 +435,7 @@ class KotlinMultiplatformGradleTestkitITest {
 
             val result = runGradle("assemble")
 
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
             assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
             assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJs")?.outcome)
         }
@@ -442,11 +460,11 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("compileCommonMainKotlinMetadata")
 
-            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
 
-            val generatedFile = findGeneratedFile("ColoredItemKonverter.kt")
+            val generatedFile = findGeneratedFile("metadata", "ColoredItemKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
 
             val generatedCode = generatedFile.readText()
@@ -476,11 +494,11 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("compileCommonMainKotlinMetadata")
 
-            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
 
-            val generatedFile = findGeneratedFile("NullableSourceKonverter.kt")
+            val generatedFile = findGeneratedFile("metadata", "NullableSourceKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
 
             val generatedCode = generatedFile.readText()
@@ -518,11 +536,11 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("compileCommonMainKotlinMetadata")
 
-            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
 
-            val generatedFile = findGeneratedFile("TagContainerKonverter.kt")
+            val generatedFile = findGeneratedFile("metadata", "TagContainerKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
 
             val generatedCode = generatedFile.readText()
@@ -567,13 +585,14 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("assemble")
 
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
             assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
 
             // Verify both common and JVM-specific files are generated
-            val commonGenerated = findGeneratedFile("CommonSourceKonverter.kt")
-            val jvmGenerated = findGeneratedFile("JvmSourceKonverter.kt")
+            val commonGenerated = findGeneratedFile("metadata", "CommonSourceKonverter.kt")
+            val jvmGenerated = findGeneratedFile("jvm", "JvmSourceKonverter.kt")
 
             assertNotNull(commonGenerated, "Common generated file should exist. All: ${findAllGeneratedFiles()}")
             assertNotNull(jvmGenerated, "JVM generated file should exist. All: ${findAllGeneratedFiles()}")
@@ -610,13 +629,14 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("assemble")
 
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
             assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
 
             // Verify both common and JVM-specific files are generated
-            val commonGenerated = findGeneratedFile("SharedEntityKonverter.kt")
-            val jvmGenerated = findGeneratedFile("JvmEntityKonverter.kt")
+            val commonGenerated = findGeneratedFile("metadata", "SharedEntityKonverter.kt")
+            val jvmGenerated = findGeneratedFile("jvm", "JvmEntityKonverter.kt")
 
             assertNotNull(commonGenerated, "Common generated file should exist. All: ${findAllGeneratedFiles()}")
             assertNotNull(jvmGenerated, "JVM generated file should exist. All: ${findAllGeneratedFiles()}")
@@ -662,8 +682,7 @@ class KotlinMultiplatformGradleTestkitITest {
 
             assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
 
-            // Verify both common and JVM-specific files are generated
-            val jvmGenerated = findGeneratedFile("JvmKonverter.kt")
+            val jvmGenerated = findGeneratedFile("jvm", "JvmKonverter.kt")
 
             assertNotNull(jvmGenerated, "JVM generated file should exist. All: ${findAllGeneratedFiles()}")
 
@@ -675,10 +694,163 @@ class KotlinMultiplatformGradleTestkitITest {
 
     // endregion
 
-    // region: Tests for type converters in KMP context
+    // region: Tests for JS target compilation
 
     @Nested
-    inner class KotlinMultiplatformTypeConverterTest {
+    inner class KotlinMultiplatformJSTest {
+        @Test
+        fun `KSP generates code for JS target compilation`() {
+            writeProjectFiles(
+                jsMainFiles = mapOf(
+                    "test/Models.kt" to """
+                        package test
+
+                        import io.mcarle.konvert.api.KonvertTo
+
+                        @KonvertTo(MessageDto::class)
+                        data class Message(val id: String, val text: String, val timestamp: Long)
+
+                        data class MessageDto(val id: String, val text: String, val timestamp: Long)
+                    """.trimIndent()
+                )
+            )
+
+            val result = runGradle("compileKotlinJs")
+
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJs")?.outcome)
+
+            val generatedFile = findGeneratedFile("js", "MessageKonverter.kt")
+            assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
+        }
+    }
+
+    // endregion
+
+    // region: KSP options in KMP context
+
+    @Nested
+    inner class KotlinMultiplatformKspOptionTest {
+
+        @Test
+        fun `KSP options are passed correctly in KMP build`() {
+            writeProjectFiles(
+                buildScript = buildGradleKts(
+                    kspOptions = """
+                        ksp {
+                            arg("$KONVERTER_GENERATE_CLASS", "true")
+                        }
+                    """.trimIndent()
+                ),
+                commonMainFiles = mapOf(
+                    "test/Models.kt" to """
+                        package test
+
+                        import io.mcarle.konvert.api.Konverter
+
+                        data class Input(val value: String)
+                        data class Output(val value: String)
+
+                        @Konverter
+                        interface SimpleMapper {
+                            fun map(input: Input): Output
+                        }
+                    """.trimIndent()
+                )
+            )
+
+            val result = runGradle("compileCommonMainKotlinMetadata")
+
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
+
+            val generatedFile = findGeneratedFile("metadata", "SimpleMapperKonverter.kt")
+            assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
+
+            val generatedCode = generatedFile.readText()
+            // With generate-class=true, it should generate a class instead of object
+            assertContains(generatedCode, "class SimpleMapperImpl")
+        }
+
+        @Test
+        fun `platform specific KSP options take priority over global KMP options`() {
+            writeProjectFiles(
+                buildScript = buildGradleKts(
+                    kspOptions = """
+                        ksp {
+                            arg("$KONVERTER_GENERATE_CLASS", "true")
+                        }
+
+                        tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+                            if (name == "kspKotlinJvm") {
+                                commandLineArgumentProviders.add(
+                                    CommandLineArgumentProvider { listOf("$KONVERTER_GENERATE_CLASS=false") }
+                                )
+                            }
+                        }
+
+                    """.trimIndent()
+                ),
+                jvmMainFiles = mapOf(
+                    "test/Models.kt" to """
+                        package test
+
+                        import io.mcarle.konvert.api.Konverter
+
+                        data class Input(val value: String)
+                        data class Output(val value: String)
+
+                        @Konverter
+                        interface SimpleMapper {
+                            fun map(input: Input): Output
+                        }
+                    """.trimIndent()
+                ),
+                jsMainFiles = mapOf(
+                    "test/Models.kt" to """
+                        package test
+
+                        import io.mcarle.konvert.api.Konverter
+
+                        data class Input(val value: String)
+                        data class Output(val value: String)
+
+                        @Konverter
+                        interface SimpleMapper {
+                            fun map(input: Input): Output
+                        }
+                    """.trimIndent()
+                )
+            )
+
+            val result = runGradle("assemble")
+
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJs")?.outcome)
+
+            val generatedJvmFile = findGeneratedFile("jvm", "SimpleMapperKonverter.kt")
+            val generatedJsFile = findGeneratedFile("js", "SimpleMapperKonverter.kt")
+            assertNotNull(
+                generatedJvmFile,
+                "Generated konverter file should exist for JVM. All generated files: ${findAllGeneratedFiles()}"
+            )
+            assertNotNull(generatedJsFile, "Generated konverter file should exist for JS. All generated files: ${findAllGeneratedFiles()}")
+
+            val generatedJvmCode = generatedJvmFile.readText()
+            // With generate-class=false, it should generate an object instead of class
+            assertContains(generatedJvmCode, "object SimpleMapperImpl")
+
+            val generatedJsCode = generatedJsFile.readText()
+            // With generate-class=true, it should generate a class instead of object
+            assertContains(generatedJsCode, "class SimpleMapperImpl")
+        }
+    }
+
+    // endregion
+
+
+    // region: Tests for @Mapping args in KMP context
+
+    @Nested
+    inner class KotlinMultiplatformMappingArgsTest {
 
         @Test
         fun `KSP handles type conversion with mapping in commonMain`() {
@@ -708,11 +880,11 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("compileCommonMainKotlinMetadata")
 
-            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
 
-            val generatedFile = findGeneratedFile("OrderKonverter.kt")
+            val generatedFile = findGeneratedFile("metadata", "OrderKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
 
             val generatedCode = generatedFile.readText()
@@ -745,11 +917,11 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("compileCommonMainKotlinMetadata")
 
-            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
 
-            val generatedFile = findGeneratedFile("ConfigKonverter.kt")
+            val generatedFile = findGeneratedFile("metadata", "ConfigKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
 
             val generatedCode = generatedFile.readText()
@@ -777,11 +949,11 @@ class KotlinMultiplatformGradleTestkitITest {
                 )
             )
 
-            val result = runGradle("compileKotlinJvm")
+            val result = runGradle("compileCommonMainKotlinMetadata")
 
-            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
 
-            val generatedFile = findGeneratedFile("NamePartsKonverter.kt")
+            val generatedFile = findGeneratedFile("metadata", "NamePartsKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
 
             val generatedCode = generatedFile.readText()
@@ -792,64 +964,77 @@ class KotlinMultiplatformGradleTestkitITest {
 
     // endregion
 
-    // region: Tests for JS target compilation
+    // region: Tests for type converters in KMP context
 
     @Nested
-    inner class KotlinMultiplatformJSTest {
-        @Test
-        fun `KSP generates code for JS target compilation`() {
+    inner class KotlinMultiplatformTypeConverterTest {
+
+        @ParameterizedTest
+        @MethodSource("io.mcarle.konvert.testkit.KotlinMultiplatformGradleTestkitITest#commonTypeCombinations")
+        fun `KSP handles type converters in commonMain`(sourceType: String, targetType: String, enabledConverter: String? = null) {
             writeProjectFiles(
-                buildScript = buildGradleKtsWithJvmAndJs(),
+                buildGradleKts(
+                    kspOptions = """
+                    ksp {
+                        arg("$ENABLE_CONVERTERS", "$enabledConverter")
+                    }
+                """.trimIndent()
+                ),
                 commonMainFiles = mapOf(
                     "test/Models.kt" to """
                         package test
 
                         import io.mcarle.konvert.api.KonvertTo
 
-                        @KonvertTo(MessageDto::class)
-                        data class Message(val id: String, val text: String, val timestamp: Long)
+                        @KonvertTo(Target::class)
+                        data class Source(
+                            val value: $sourceType,
+                            val valueOpt: $sourceType?,
+                        )
 
-                        data class MessageDto(val id: String, val text: String, val timestamp: Long)
+                        data class Target(
+                            val value: $targetType,
+                            val valueOpt: $targetType?,
+                        )
                     """.trimIndent()
                 )
             )
 
-            val result = runGradle("compileKotlinJs")
+            val result = runGradle("compileCommonMainKotlinMetadata")
 
-            assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJs")?.outcome)
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
+
+            val generatedFile = findGeneratedFile("metadata", "SourceKonverter.kt")
+            assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
         }
-    }
 
-    // endregion
-
-    // region: KSP options in KMP context
-
-    @Nested
-    inner class KotlinMultiplatformKspOptionTest {
-
-        @Test
-        fun `KSP options are passed correctly in KMP build`() {
+        @ParameterizedTest
+        @MethodSource("io.mcarle.konvert.testkit.KotlinMultiplatformGradleTestkitITest#jvmTypeCombinations")
+        fun `KSP handles type converters in jvmMain`(sourceType: String, targetType: String, enabledConverter: String? = null) {
             writeProjectFiles(
-                buildScript = buildGradleKts(
+                buildGradleKts(
                     kspOptions = """
-                        ksp {
-                            arg("konvert.konverter.generate-class", "true")
-                        }
-                    """.trimIndent()
+                    ksp {
+                        arg("$ENABLE_CONVERTERS", "$enabledConverter")
+                    }
+                """.trimIndent()
                 ),
-                commonMainFiles = mapOf(
+                jvmMainFiles = mapOf(
                     "test/Models.kt" to """
                         package test
 
-                        import io.mcarle.konvert.api.Konverter
+                        import io.mcarle.konvert.api.KonvertTo
 
-                        data class Input(val value: String)
-                        data class Output(val value: String)
+                        @KonvertTo(Target::class)
+                        data class Source(
+                            val value: $sourceType,
+                            val valueOpt: $sourceType?,
+                        )
 
-                        @Konverter
-                        interface SimpleMapper {
-                            fun map(input: Input): Output
-                        }
+                        data class Target(
+                            val value: $targetType,
+                            val valueOpt: $targetType?,
+                        )
                     """.trimIndent()
                 )
             )
@@ -858,13 +1043,10 @@ class KotlinMultiplatformGradleTestkitITest {
 
             assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
 
-            val generatedFile = findGeneratedFile("SimpleMapperKonverter.kt")
+            val generatedFile = findGeneratedFile("jvm", "SourceKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
-
-            val generatedCode = generatedFile.readText()
-            // With generate-class=true, it should generate a class instead of object
-            assertContains(generatedCode, "class SimpleMapperImpl")
         }
+
     }
 
     // endregion
