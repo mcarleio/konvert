@@ -107,9 +107,6 @@ class KotlinMultiplatformGradleTestkitITest {
                 add("kspJvm", "io.mcarle:konvert:$konvertVersion")
                 add("kspJs", "io.mcarle:konvert:$konvertVersion")
             """.trimIndent(),
-        additionalDependencies: String = """
-                implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-            """.trimIndent(),
         kspOptions: String = ""
     ) = """
             import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -131,7 +128,6 @@ class KotlinMultiplatformGradleTestkitITest {
                     commonMain {
                         dependencies {
                             implementation("io.mcarle:konvert-api:$konvertVersion")
-                            $additionalDependencies
                         }
                     }
                 }
@@ -1044,6 +1040,64 @@ class KotlinMultiplatformGradleTestkitITest {
             assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
 
             val generatedFile = findGeneratedFile("jvm", "SourceKonverter.kt")
+            assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
+        }
+
+    }
+
+    // endregion
+
+    // region: Tests for special stuff in KMP context
+
+    @Nested
+    inner class KotlinMultiplatformSpecialTest {
+
+        @Test
+        fun `enum and primitive arrays and enforce checking all type converters in commonMain`() {
+            writeProjectFiles(
+                commonMainFiles = mapOf(
+                    "test/Models.kt" to """
+                        package test
+
+                        import io.mcarle.konvert.api.KonvertTo
+                        import io.mcarle.konvert.api.DEFAULT_PRIORITY
+
+                        @KonvertTo(Target::class)
+                        data class Source(
+                            val value: SourceValue
+                        )
+
+                        data class Target(
+                            val value: TargetValue
+                        )
+
+                        @KonvertTo(TargetValue::class, priority = DEFAULT_PRIORITY + 5) // should enforce to check all type converters
+                        data class SourceValue(
+                            val value: SourceEnum,
+                            val arr: IntArray
+                        )
+
+                        data class TargetValue(
+                            val value: TargetEnum,
+                            val arr: LongArray
+                        )
+
+                        enum class SourceEnum {
+                            A, B, C
+                        }
+
+                        enum class TargetEnum {
+                            A, B, C
+                        }
+                    """.trimIndent()
+                )
+            )
+
+            val result = runGradle("compileCommonMainKotlinMetadata")
+
+            assertEquals(TaskOutcome.SUCCESS, result.task(":compileCommonMainKotlinMetadata")?.outcome)
+
+            val generatedFile = findGeneratedFile("metadata", "SourceKonverter.kt")
             assertNotNull(generatedFile, "Generated konverter file should exist. All generated files: ${findAllGeneratedFiles()}")
         }
 
