@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug fixes
+* fix the visibility checks for what the generated extension functions can access on source and target [#288](https://github.com/mcarleio/konvert/issues/288)
+
 ## [4.5.0]
 
 
