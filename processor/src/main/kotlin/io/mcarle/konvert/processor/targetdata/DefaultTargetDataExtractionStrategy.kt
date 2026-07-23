@@ -1,30 +1,26 @@
 package io.mcarle.konvert.processor.targetdata
 
 import com.google.devtools.ksp.getConstructors
-import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Origin
+import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
+import io.mcarle.konvert.processor.codegen.isVisibleFrom
 
 class DefaultTargetDataExtractionStrategy : TargetDataExtractionStrategy {
 
     override fun extract(
         resolver: Resolver,
         classDeclaration: KSClassDeclaration,
-        mappingCodeParentDeclaration: KSDeclaration
+        visibilityContext: MappingVisibilityContext
     ): TargetDataExtractionStrategy.TargetData {
-        val primaryConstructor = if (classDeclaration.primaryConstructor?.isVisibleFrom(mappingCodeParentDeclaration) == true) {
-            classDeclaration.primaryConstructor
-        } else {
-            null
-        }
+        val primaryConstructor = classDeclaration.primaryConstructor.takeIf { it?.isVisibleFrom(visibilityContext) == true }
 
         val properties = classDeclaration.getAllProperties()
             .filter { it.extensionReceiver == null }
-            .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }
+            .filter { it.isVisibleFrom(visibilityContext) }
             .filter { it.isMutable }
             .map { TargetDataExtractionStrategy.TargetVarProperty(it) }
 
@@ -33,7 +29,7 @@ class DefaultTargetDataExtractionStrategy : TargetDataExtractionStrategy {
             .filter { it.origin in listOf(Origin.JAVA, Origin.JAVA_LIB) }
             .filter { it.parameters.size == 1 }
             .filter { isSetter(it.simpleName.asString()) }
-            .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }
+            .filter { it.isVisibleFrom(visibilityContext) }
             .map {
                 TargetDataExtractionStrategy.TargetSetter(
                     it,
@@ -47,7 +43,7 @@ class DefaultTargetDataExtractionStrategy : TargetDataExtractionStrategy {
             setter = setters.toList(),
             primaryConstructor = primaryConstructor,
             constructors = classDeclaration.getConstructors()
-                .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }
+                .filter { it.isVisibleFrom(visibilityContext) }
                 .toList()
         )
     }

@@ -12,6 +12,7 @@ import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.codegen.MappingContext
+import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
 import io.mcarle.konvert.processor.exceptions.InaccessibleDueToVisibilityClassException
 import io.mcarle.konvert.processor.exceptions.KonvertException
 import io.mcarle.konvert.processor.isEqualOrMoreRestrictedThan
@@ -52,7 +53,9 @@ object KonvertToCodeGenerator {
                                 paramName = null,
                                 targetClassImportName = null
                             ),
-                            mappingCodeParentDeclaration = data.sourceClassDeclaration,
+                            visibilityContext = MappingVisibilityContext.TopLevelInPackage(
+                                data.sourceClassDeclaration.packageName.asString()
+                            ),
                             additionalSourceParameters = emptyList()
                         )
                     ),

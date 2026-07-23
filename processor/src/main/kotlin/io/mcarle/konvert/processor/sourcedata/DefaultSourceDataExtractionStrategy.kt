@@ -1,13 +1,13 @@
 package io.mcarle.konvert.processor.sourcedata
 
 import com.google.devtools.ksp.isConstructor
-import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
+import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
+import io.mcarle.konvert.processor.codegen.isVisibleFrom
 
 
 class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
@@ -15,19 +15,19 @@ class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
     override fun extract(
         resolver: Resolver,
         classDeclaration: KSClassDeclaration,
-        mappingCodeParentDeclaration: KSDeclaration,
+        visibilityContext: MappingVisibilityContext,
     ): List<SourceDataExtractionStrategy.SourceData> {
         val unitType = resolver.builtIns.unitType
 
         val properties = classDeclaration.getAllProperties()
-            .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }
+            .filter { it.isVisibleFrom(visibilityContext) }
             .map { SourceDataExtractionStrategy.SourceProperty(it) }
 
         val potentialFunctions = classDeclaration.getAllFunctions()
             .filter { it.parameters.isEmpty() }
             .filter { it.returnType != null }
             .filter { it.returnType?.resolve() != unitType }
-            .filter { it.isVisibleFrom(mappingCodeParentDeclaration) }
+            .filter { it.isVisibleFrom(visibilityContext) }
 
         val functionsAndGetters = when {
             classDeclaration.isRecord() -> handleRecords(potentialFunctions)

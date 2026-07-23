@@ -2,17 +2,17 @@ package io.mcarle.konvert.processor.targetdata
 
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.squareup.kotlinpoet.CodeBlock
+import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
 
 fun interface TargetDataExtractionStrategy {
 
     fun extract(
         resolver: Resolver,
         classDeclaration: KSClassDeclaration,
-        mappingCodeParentDeclaration: KSDeclaration
+        visibilityContext: MappingVisibilityContext
     ): TargetData
 
     data class TargetData(
