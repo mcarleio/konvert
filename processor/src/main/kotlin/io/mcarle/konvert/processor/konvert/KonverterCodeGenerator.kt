@@ -18,6 +18,7 @@ import io.mcarle.konvert.plugin.api.KonverterInjector
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.codegen.MappingContext
+import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
 import io.mcarle.konvert.processor.exceptions.KonvertException
 import io.mcarle.konvert.processor.validated
 import java.util.ServiceLoader
@@ -133,7 +134,7 @@ object KonverterCodeGenerator {
                     paramName = konvertData.paramName,
                     targetClassImportName = targetClassImportName,
                 ),
-                mappingCodeParentDeclaration = konvertData.mapKSFunctionDeclaration,
+                visibilityContext = MappingVisibilityContext.Declaration(konvertData.mapKSFunctionDeclaration),
                 additionalSourceParameters = konvertData.additionalParameters
             )
         )

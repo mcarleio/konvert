@@ -669,4 +669,45 @@ public fun TargetClass.Companion.fromSourceClass(sourceClass: SourceClass): Targ
         )
     }
 
+    @Test
+    fun ignoreProtectedEmptyConstructorVisibleFromSourceSubclassButNotFromGeneratedTopLevelFunction() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.KonvertTo
+import io.mcarle.konvert.api.Mapping
+
+@KonvertTo(TargetClass::class, mappings = [
+    Mapping(source = "sourceProperty", target = "property")
+])
+class SourceClass(val sourceProperty: String): TargetClass()
+
+open class TargetClass {
+    protected constructor()
+
+    constructor(property: String) {
+        this.property = property
+    }
+
+    var property: String = ""
+}
+                """.trimIndent()
+            )
+        )
+        val extensionFunctionCode = compilation.generatedSourceFor("SourceClassKonverter.kt")
+
+        assertSourceEquals(
+            """
+            public fun SourceClass.toTargetClass(): TargetClass = TargetClass(
+              property = sourceProperty
+            )
+            """.trimIndent(),
+            extensionFunctionCode
+        )
+    }
+
+
 }

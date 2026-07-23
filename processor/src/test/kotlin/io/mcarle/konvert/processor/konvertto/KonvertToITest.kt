@@ -27,7 +27,7 @@ class KonvertToITest : KonverterITest() {
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -63,7 +63,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -89,7 +89,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -114,7 +114,7 @@ class TargetClass(
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -145,7 +145,7 @@ data class TargetProperty(val value: String)
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
 
@@ -176,7 +176,7 @@ data class TargetProperty(val value: String)
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.api.Mapping
@@ -219,7 +219,7 @@ class TargetProperty<E>(val value: E)
                 SourceFile.kotlin(
                     name = "a/SourceClass.kt",
                     contents =
-                    """
+                        """
 package a
 
 import io.mcarle.konvert.api.KonvertTo
@@ -232,7 +232,7 @@ class SourceClass(val property: String)
                 SourceFile.kotlin(
                     name = "b/TargetClass.kt",
                     contents =
-                    """
+                        """
 package b
 
 class TargetClass {
@@ -267,7 +267,7 @@ class TargetClass {
                 SourceFile.kotlin(
                     name = "a/SomeClass.kt",
                     contents =
-                    """
+                        """
 package a
 
 import io.mcarle.konvert.api.KonvertTo
@@ -279,7 +279,7 @@ class SomeClass(val property: String)
                 SourceFile.kotlin(
                     name = "b/SomeClass.kt",
                     contents =
-                    """
+                        """
 package b
 
 class SomeClass {
@@ -312,7 +312,7 @@ class SomeClass {
                 SourceFile.kotlin(
                     name = "a/SomeClass.kt",
                     contents =
-                    """
+                        """
 package a
 
 import io.mcarle.konvert.api.KonvertTo
@@ -325,7 +325,7 @@ class SomeClass(val property: String)
                 SourceFile.kotlin(
                     name = "b/SomeClass.kt",
                     contents =
-                    """
+                        """
 package b
 
 class SomeClass {
@@ -404,7 +404,7 @@ data class TargetClass(val property: String)
             code = SourceFile.kotlin(
                 name = "TestCode.kt",
                 contents =
-                """
+                    """
 import io.mcarle.konvert.api.KonvertTo
 
 @KonvertTo(TargetClass::class)
@@ -435,7 +435,7 @@ class TargetClass(val children: List<TargetClass>)
                 SourceFile.kotlin(
                     name = "a/Person.kt",
                     contents =
-                    """
+                        """
 package a
 
 import io.mcarle.konvert.api.KonvertTo
@@ -450,7 +450,7 @@ data class Person(val firstName: String, val lastName: String, val age: Int, val
                 SourceFile.kotlin(
                     name = "b/PersonDto.kt",
                     contents =
-                    """
+                        """
 package b
 
 import io.mcarle.konvert.api.KonvertTo
@@ -530,6 +530,94 @@ class TargetClass(
             )
             """.trimIndent(),
             extensionFunctionCode
+        )
+    }
+
+    @Test
+    fun useCustomGetter() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                        """
+package org.example
+
+import io.mcarle.konvert.api.KonvertTo
+
+@KonvertTo(UserDto::class)
+class User {
+    fun getEmail(): String {
+        return "a@b.cd"
+    }
+}
+
+data class UserDto(
+    val email: String
+)
+                    """.trimIndent(),
+                    name = "org/example/TestCode.kt"
+                )
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("UserKonverter.kt")
+
+        assertSourceEquals(
+            """
+            package org.example
+
+            public fun User.toUserDto(): UserDto = UserDto(
+              email = getEmail()
+            )
+        """.trimIndent(), mapperCode
+        )
+    }
+
+    @Test
+    fun useVisibleGetter() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin(
+                    contents =
+                        """
+package org.example
+
+import io.mcarle.konvert.api.KonvertTo
+
+@KonvertTo(UserDto::class)
+class User private constructor(
+    private var email: String
+) {
+    fun getEmail(): String {
+        return email
+    }
+
+    companion object {
+        fun of(email: String): User {
+            return User(email)
+        }
+    }
+}
+
+data class UserDto(
+    val email: String
+)
+                    """.trimIndent(),
+                    name = "org/example/TestCode.kt"
+                )
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("UserKonverter.kt")
+
+        assertSourceEquals(
+            """
+            package org.example
+
+            public fun User.toUserDto(): UserDto = UserDto(
+              email = getEmail()
+            )
+        """.trimIndent(), mapperCode
         )
     }
 

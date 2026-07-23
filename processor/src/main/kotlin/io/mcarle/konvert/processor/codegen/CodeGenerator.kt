@@ -3,7 +3,6 @@ package io.mcarle.konvert.processor.codegen
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.Mapping
@@ -34,7 +33,7 @@ class CodeGenerator constructor(
         mappings: List<Mapping>,
         enforcedConstructorTypes: List<KSClassDeclaration>,
         context: MappingContext,
-        mappingCodeParentDeclaration: KSDeclaration,
+        visibilityContext: MappingVisibilityContext,
         additionalSourceParameters: List<KSValueParameter>
     ): CodeBlock {
         if (context.paramName != null && mappings.isEmpty()) {
@@ -51,8 +50,8 @@ class CodeGenerator constructor(
             }
         }
 
-        val sourceDataList = sourceDataExtractionStrategy.extract(resolver, context.sourceClassDeclaration, mappingCodeParentDeclaration)
-        val targetData = targetDataExtractionStrategy.extract(resolver, context.targetClassDeclaration, mappingCodeParentDeclaration)
+        val sourceDataList = sourceDataExtractionStrategy.extract(resolver, context.sourceClassDeclaration, visibilityContext)
+        val targetData = targetDataExtractionStrategy.extract(resolver, context.targetClassDeclaration, visibilityContext)
 
         val sourceProperties = PropertyMappingResolver(logger).determinePropertyMappings(
             mappingParamName = context.paramName,
