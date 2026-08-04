@@ -10,4 +10,12 @@ data class MappingContext constructor(
     val target: KSType,
     val paramName: String?,
     val targetClassImportName: String?,
+    /**
+     * When set, the mapping writes into that already existing target instance instead of creating a new one.
+     */
+    val targetParamName: String? = null,
+    /**
+     * When true, the generated code returns the updated target instance.
+     */
+    val returnsTargetParam: Boolean = false,
 )

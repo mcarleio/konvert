@@ -1357,7 +1357,7 @@ interface Mapper {
 
         assertContains(
             compilationResult.messages,
-            "Konvert annotated function must have exactly one source parameter (either single parameter or annotated with @Konverter.Source) and must have a return type: Mapper.toTarget"
+            "Konvert annotated function must have exactly one source parameter (either single parameter or annotated with @Konverter.Source) and must either have a return type or a parameter annotated with @Konverter.Target: Mapper.toTarget"
         )
     }
 

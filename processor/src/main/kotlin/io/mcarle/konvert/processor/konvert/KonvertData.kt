@@ -23,7 +23,12 @@ class KonvertData constructor(
     val sourceTypeReference: KSTypeReference,
     val targetTypeReference: KSTypeReference,
     val mapKSFunctionDeclaration: KSFunctionDeclaration,
-    val additionalParameters: List<KSValueParameter>
+    val additionalParameters: List<KSValueParameter>,
+    val targetParameter: KSValueParameter? = null,
+    /**
+     * True, if the function both takes a @[io.mcarle.konvert.api.Konverter.Target] annotated parameter and returns it.
+     */
+    val returnsTargetParameter: Boolean = false
 ) {
 
     val sourceType: KSType = sourceTypeReference.resolve()
@@ -31,7 +36,15 @@ class KonvertData constructor(
     val targetType: KSType = targetTypeReference.resolve()
     val targetClassDeclaration: KSClassDeclaration = targetType.classDeclaration()!!
     val mapFunctionName: String = mapKSFunctionDeclaration.simpleName.asString()
-    val paramName: String = (mapKSFunctionDeclaration.parameters - additionalParameters).first().name!!.asString()
+
+    /**
+     * The name of the @[io.mcarle.konvert.api.Konverter.Target] annotated parameter, if the mapping writes into an
+     * already existing target instance instead of creating a new one.
+     */
+    val targetParamName: String? = targetParameter?.name?.asString()
+    val mapsIntoExistingTarget: Boolean = targetParameter != null
+    val paramName: String =
+        (mapKSFunctionDeclaration.parameters - additionalParameters - listOfNotNull(targetParameter)).first().name!!.asString()
 
     val priority = annotationData.priority
 

@@ -31,8 +31,37 @@ annotation class Konverter(
 ) {
 
     @Retention(AnnotationRetention.RUNTIME)
-    @Target(AnnotationTarget.VALUE_PARAMETER)
+    @kotlin.annotation.Target(AnnotationTarget.VALUE_PARAMETER)
     annotation class Source
+
+    /**
+     * Annotate a parameter of a function inside a `@Konverter` annotated interface to map into that already existing
+     * instance instead of creating a new instance of the target type.
+     *
+     * Example:
+     * ```kotlin
+     * class Source(val source: Int)
+     * class Target { var target: String = "" }
+     *
+     * @Konverter
+     * interface Mapper {
+     *   @Konvert(mappings = [Mapping(source="source", target="target")])
+     *   fun update(source: Source, @Konverter.Target target: Target)
+     * }
+     * ```
+     *
+     * This will generate an implementation, which sets the properties on the passed instance:
+     * ```kotlin
+     * object MapperImpl : Mapper {
+     *      override fun update(source: Source, target: Target) {
+     *          target.target = source.source.toString()
+     *      }
+     * }
+     * ```
+     */
+    @Retention(AnnotationRetention.RUNTIME)
+    @kotlin.annotation.Target(AnnotationTarget.VALUE_PARAMETER)
+    annotation class Target
 
     /**
      * This object can be used to load the generated class of an interface, which is annotated with `@Konverter`.

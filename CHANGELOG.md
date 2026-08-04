@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New features
+
+* New annotation `@Konverter.Target` to map into an already existing target instance instead of creating a new one [#119](https://github.com/mcarleio/konvert/issues/119)
+  ```kotlin
+  @Konverter
+  interface PersonMapper {
+      fun update(person: Person, @Konverter.Target personEntity: PersonEntity)
+  }
+
+  class Person(val name: String)
+  class PersonEntity {
+      var id: Long = 0
+      var name: String = ""
+  }
+  ```
+  generates
+  ```kotlin
+  object PersonMapperImpl : PersonMapper {
+    override fun update(person: Person, personEntity: PersonEntity) {
+      personEntity.name = person.name
+    }
+  }
+  ```
+  * as no constructor is called, only mutable properties and setters of the target are written; properties without a matching source field (like `id` above) keep their value
+  * the function may also return the type of the annotated parameter, in which case the updated instance is returned
+  * such a function is not registered as a type converter, as the target instance has to be provided by the caller
+  * `konvert.non-constructor-properties-mapping` defaults to `implicit` for these functions, so a single `@Mapping` does not disable the implicit mappings of all other matching properties
+
 ### Bug fixes
 * fix the visibility checks for what the generated extension functions can access on source and target [#288](https://github.com/mcarleio/konvert/issues/288)
 
