@@ -76,6 +76,37 @@ class MappingCodeGenerator constructor(
         }
     }
 
+    /**
+     * Generates the code to map into an already existing target instance, which is passed as the
+     * @[io.mcarle.konvert.api.Konverter.Target] annotated parameter.
+     */
+    fun generateUpdateCode(
+        context: MappingContext,
+        sourceProperties: List<PropertyMappingInfo>,
+        targetProperties: List<KSPropertyDeclaration>,
+        targetSetters: List<TargetSetter>
+    ): CodeBlock {
+        val targetParamName = context.targetParamName!!
+        val assignmentCode = if (noTargetOrAllIgnored(sourceProperties, targetProperties, targetSetters)) {
+            CodeBlock.of("")
+        } else {
+            propertySettingCode(targetProperties, targetSetters, sourceProperties, targetParamName)
+        }
+
+        // a null source has nothing to map, so the existing target instance is left untouched
+        val guardedAssignmentCode = if (context.source.isNullable() && !assignmentCode.isEmpty()) {
+            CodeBlock.of("${context.paramName!!}?.let·{\n⇥%L⇤\n}", assignmentCode)
+        } else {
+            assignmentCode
+        }
+
+        if (!context.returnsTargetParam) return guardedAssignmentCode
+
+        return listOf(guardedAssignmentCode, CodeBlock.of("return·$targetParamName"))
+            .filterNot { it.isEmpty() }
+            .joinToCode("\n")
+    }
+
     private fun constructorCode(
         className: String?,
         classDeclaration: KSClassDeclaration,

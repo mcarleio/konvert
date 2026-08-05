@@ -9,6 +9,7 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.converter.api.config.Configuration
@@ -65,7 +66,14 @@ object KonverterCodeGenerator {
                         codeBuilder.addFunction(
                             funBuilder = FunSpec.builder(konvertData.mapFunctionName)
                                 .addModifiers(KModifier.OVERRIDE)
-                                .returns(konvertData.targetTypeReference.toTypeName())
+                                // when mapping into an existing target instance, the function may return Unit
+                                .returns(
+                                    if (konvertData.mapsIntoExistingTarget && !konvertData.returnsTargetParameter) {
+                                        UNIT
+                                    } else {
+                                        konvertData.targetTypeReference.toTypeName()
+                                    }
+                                )
                                 .addParameters(konvertData.mapKSFunctionDeclaration.parameters.map {
                                     val builder = ParameterSpec.builder(
                                         name = it.name!!.asString(),
@@ -133,6 +141,8 @@ object KonverterCodeGenerator {
                     target = konvertData.targetType,
                     paramName = konvertData.paramName,
                     targetClassImportName = targetClassImportName,
+                    targetParamName = konvertData.targetParamName,
+                    returnsTargetParam = konvertData.returnsTargetParameter,
                 ),
                 visibilityContext = MappingVisibilityContext.Declaration(konvertData.mapKSFunctionDeclaration),
                 additionalSourceParameters = konvertData.additionalParameters
