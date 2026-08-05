@@ -41,7 +41,7 @@ class KonvertData constructor(
      * The name of the @[io.mcarle.konvert.api.Konverter.Target] annotated parameter, if the mapping writes into an
      * already existing target instance instead of creating a new one.
      */
-    val targetParamName: String? = targetParameter?.name?.asString()
+    val targetParamName: String? = targetParameter?.let { it.name!!.asString() }
     val mapsIntoExistingTarget: Boolean = targetParameter != null
     val paramName: String =
         (mapKSFunctionDeclaration.parameters - additionalParameters - listOfNotNull(targetParameter)).first().name!!.asString()

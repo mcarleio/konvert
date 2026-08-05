@@ -9,6 +9,7 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.api.Konverter
 import io.mcarle.konvert.converter.api.config.Configuration
@@ -67,8 +68,11 @@ object KonverterCodeGenerator {
                                 .addModifiers(KModifier.OVERRIDE)
                                 // when mapping into an existing target instance, the function may return Unit
                                 .returns(
-                                    konvertData.mapKSFunctionDeclaration.returnType?.toTypeName()
-                                        ?: konvertData.targetTypeReference.toTypeName()
+                                    if (konvertData.mapsIntoExistingTarget && !konvertData.returnsTargetParameter) {
+                                        UNIT
+                                    } else {
+                                        konvertData.targetTypeReference.toTypeName()
+                                    }
                                 )
                                 .addParameters(konvertData.mapKSFunctionDeclaration.parameters.map {
                                     val builder = ParameterSpec.builder(

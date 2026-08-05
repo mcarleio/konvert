@@ -119,7 +119,7 @@ object KonverterDataCollector {
                         sourceTypeReference = source,
                         targetTypeReference = target,
                         mapKSFunctionDeclaration = it,
-                        additionalParameters = determineAdditionalParams(it, sourceValueParameter, targetValueParameter),
+                        additionalParameters = determineAdditionalParams(it, sourceValueParameter),
                         targetParameter = targetValueParameter,
                         returnsTargetParameter = targetValueParameter != null && returnedTarget != null
                     )
@@ -168,14 +168,12 @@ object KonverterDataCollector {
     @OptIn(KspExperimental::class)
     private fun determineAdditionalParams(
         function: KSFunctionDeclaration,
-        sourceParam: KSValueParameter?,
-        targetParam: KSValueParameter?
+        sourceParam: KSValueParameter?
     ): List<KSValueParameter> {
         return function.parameters
             .filterNot { it.isAnnotationPresent(Konverter.Source::class) }
             .filterNot { it.isAnnotationPresent(Konverter.Target::class) }
             .filterNot { it == sourceParam }
-            .filterNot { it == targetParam }
     }
 
 }

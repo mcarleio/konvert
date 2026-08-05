@@ -280,6 +280,89 @@ interface Mapper {
     }
 
     @Test
+    fun generateNoAssignmentsWhenAllTargetPropertiesAreIgnored() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(
+    val property: String
+)
+class TargetClass {
+    var property: String = ""
+}
+
+@Konverter
+interface Mapper {
+    @Konvert(mappings = [Mapping(target = "property", ignore = true)])
+    fun update(source: SourceClass?, @Konverter.Target target: TargetClass)
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertSourceEquals(
+            """
+            public object MapperImpl : Mapper {
+              override fun update(source: SourceClass?, target: TargetClass) {
+              }
+            }
+            """.trimIndent(),
+            mapperCode
+        )
+    }
+
+    @Test
+    fun returnTheTargetInstanceWhenAllTargetPropertiesAreIgnored() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Mapping
+
+class SourceClass(
+    val property: String
+)
+class TargetClass {
+    var property: String = ""
+}
+
+@Konverter
+interface Mapper {
+    @Konvert(mappings = [Mapping(target = "property", ignore = true)])
+    fun update(source: SourceClass, @Konverter.Target target: TargetClass): TargetClass
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertSourceEquals(
+            """
+            public object MapperImpl : Mapper {
+              override fun update(source: SourceClass, target: TargetClass): TargetClass {
+                return target
+              }
+            }
+            """.trimIndent(),
+            mapperCode
+        )
+    }
+
+    @Test
     fun failOnMultipleTargetAnnotatedParameters() {
         val (_, compilationResult) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
