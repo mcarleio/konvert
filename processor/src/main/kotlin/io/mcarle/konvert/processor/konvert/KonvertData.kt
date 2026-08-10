@@ -9,11 +9,14 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.konvert.api.DEFAULT_KONVERTER_PRIORITY
+import io.mcarle.konvert.api.DEFAULT_KONVERT_PRIORITY
 import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.classDeclaration
+import io.mcarle.konvert.processor.argumentValue
+import io.mcarle.konvert.processor.constructorArgClassDeclarations
 import io.mcarle.konvert.processor.from
 
 class KonvertData constructor(
@@ -43,13 +46,13 @@ class KonvertData constructor(
     ) {
 
         companion object {
-            fun from(annotation: KSAnnotation) = AnnotationData(
-                mappings = (annotation.arguments.first { it.name?.asString() == Konvert::mappings.name }.value as List<*>)
+            fun from(annotation: KSAnnotation, unitType: KSType) = AnnotationData(
+                mappings = (annotation.argumentValue(Konvert::mappings.name, emptyList<Any?>()))
                     .filterIsInstance<KSAnnotation>()
                     .map { Mapping.from(it) },
-                constructor = (annotation.arguments.first { it.name?.asString() == Konvert::constructorArgs.name }.value as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() },
-                priority = annotation.arguments.first { it.name?.asString() == Konvert::priority.name }.value as Priority,
-                options = (annotation.arguments.first { it.name?.asString() == Konvert::options.name }.value as List<*>)
+                constructor = annotation.constructorArgClassDeclarations(Konvert::constructorArgs.name, unitType),
+                priority = annotation.argumentValue(Konvert::priority.name, DEFAULT_KONVERT_PRIORITY),
+                options = (annotation.argumentValue(Konvert::options.name, emptyList<Any?>()))
                     .filterIsInstance<KSAnnotation>()
                     .map { Konfig.from(it) },
             )

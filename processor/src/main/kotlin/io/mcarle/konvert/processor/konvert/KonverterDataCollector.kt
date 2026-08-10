@@ -75,7 +75,7 @@ object KonverterDataCollector {
                 }?.let { annotation ->
                     // cannot use getAnnotationsByType, as the Konvert.constructor classes may be part of this compilation and
                     // therefore results in ClassNotFoundExceptions when accessing it
-                    KonvertData.AnnotationData.from(annotation)
+                    KonvertData.AnnotationData.from(annotation, resolver.builtIns.unitType)
                 }
 
                 if (it.isAbstract) {

@@ -26,7 +26,7 @@ object KonvertToDataCollector {
                     .map {
                         // cannot use getAnnotationsByType, as the KonvertTo.value class may be part of this compilation and
                         // therefore results in ClassNotFoundExceptions when accessing it
-                        KonvertToData.AnnotationData.from(it)
+                        KonvertToData.AnnotationData.from(it, resolver.builtIns.unitType)
                     }
                     .map {
                         KonvertToData(

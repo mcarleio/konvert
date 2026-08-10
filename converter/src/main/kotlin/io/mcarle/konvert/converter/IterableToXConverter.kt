@@ -70,11 +70,11 @@ abstract class IterableToXConverter(
     override val enabledByDefault: Boolean = true
 
     override fun matches(source: KSType, target: KSType): Boolean {
-        if (targetType == null) return false
+        val targetType = targetType ?: return false
 
         return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
             iterableType.isAssignableFrom(sourceNotNullable) &&
-                targetType!!.isAssignableFrom(targetNotNullable) && targetNotNullable.isExactlyTarget()
+                targetType.isAssignableFrom(targetNotNullable) && targetNotNullable.isExactlyTarget()
         } && TypeConverterRegistry.any {
             it.matches(
                 source = source.arguments[0].type?.resolve() ?: resolver.builtIns.anyType,

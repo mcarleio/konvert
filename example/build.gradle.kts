@@ -1,58 +1,86 @@
+import com.google.devtools.ksp.gradle.KspAATask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 
 plugins {
-    kotlin("jvm") version "2.3.10"
-    id("com.google.devtools.ksp").version("2.3.5")
+    kotlin("multiplatform") version "2.3.21"
+    id("com.google.devtools.ksp").version("2.3.9")
 }
 
 val konvertVersion = "0.1.0-SNAPSHOT"
 
-val jUnitVersion = "6.0.2"
+val jUnitVersion = "6.1.0"
 
-dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-    implementation("io.mcarle:konvert-api:$konvertVersion")
-    implementation("io.mcarle:konvert-spring-annotations:$konvertVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$jUnitVersion")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jUnitVersion")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:$jUnitVersion")
-
-    // KSP to generate mapping code
-    ksp("io.mcarle:konvert:$konvertVersion")
-    ksp("io.mcarle:konvert-spring-injector:$konvertVersion")
-}
 
 repositories {
-    mavenLocal()
+    mavenLocal {
+        // only use io.mcarle packages from mavenLocal
+        content {
+            includeGroup("io.mcarle")
+        }
+    }
     mavenCentral()
 }
 
-tasks.test {
+kotlin {
+    jvm {
+        compilations.all {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    jvmTarget = JvmTarget.JVM_17
+                    javaParameters = true
+                }
+            }
+        }
+    }
+    js {
+        browser()
+        nodejs()
+    }
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation("io.mcarle:konvert-api:$konvertVersion")
+            }
+        }
+        jvmMain {
+            dependencies {
+                implementation("io.mcarle:konvert-spring-annotations:$konvertVersion")
+            }
+        }
+        jvmTest {
+            dependencies {
+                implementation("org.junit.jupiter:junit-jupiter-api:$jUnitVersion")
+                runtimeOnly("org.junit.jupiter:junit-jupiter-engine:$jUnitVersion")
+                runtimeOnly("org.junit.platform:junit-platform-launcher:$jUnitVersion")
+            }
+        }
+    }
+}
+
+tasks.withType<KotlinJvmTest>().configureEach {
     useJUnitPlatform()
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
 
-kotlin {
-    sourceSets.main {
-        kotlin.srcDir("build/generated/ksp/main/kotlin")
-    }
-    sourceSets.test {
-        kotlin.srcDir("build/generated/ksp/test/kotlin")
-    }
-}
-
-tasks.withType<KotlinCompile>().configureEach {
-    compilerOptions {
-        jvmTarget = JvmTarget.JVM_17
-        javaParameters = true
-    }
+dependencies {
+    add("kspCommonMainMetadata", "io.mcarle:konvert:$konvertVersion")
+    add("kspJvm", "io.mcarle:konvert:$konvertVersion")
+    add("kspJvm", "io.mcarle:konvert-spring-annotations:$konvertVersion")
 }
 
 ksp {
     arg("konvert.konverter.generate-class", "true")
+    arg("konvert.generated-filename-suffix", "CommonK")
+}
+
+
+tasks.withType<KspAATask>().configureEach {
+    if (name == "kspKotlinJvm") {
+        // Apply following KSP options to JVM only – NOT applied in common or JS. Overrides globally defined ksp args.
+        commandLineArgumentProviders.add(
+            CommandLineArgumentProvider { listOf("konvert.generated-filename-suffix=JvmK") }
+        )
+    }
 }

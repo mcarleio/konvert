@@ -4,6 +4,7 @@ import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.ksp.toClassName
+import io.mcarle.konvert.api.DEFAULT_KONVERT_TO_PRIORITY
 import io.mcarle.konvert.api.Konfig
 import io.mcarle.konvert.api.KonvertTo
 import io.mcarle.konvert.api.Mapping
@@ -11,6 +12,8 @@ import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.AnnotatedConverterData
+import io.mcarle.konvert.processor.argumentValue
+import io.mcarle.konvert.processor.constructorArgClassDeclarations
 import io.mcarle.konvert.processor.from
 
 class KonvertToData(
@@ -45,15 +48,15 @@ class KonvertToData(
     ) {
 
         companion object {
-            fun from(annotation: KSAnnotation) = AnnotationData(
-                value = (annotation.arguments.first { it.name?.asString() == KonvertTo::value.name }.value as KSType).classDeclaration()!!,
-                mappings = (annotation.arguments.first { it.name?.asString() == KonvertTo::mappings.name }.value as List<*>)
+            fun from(annotation: KSAnnotation, unitType: KSType) = AnnotationData(
+                value = (annotation.argumentValue<KSType>(KonvertTo::value.name)).classDeclaration()!!,
+                mappings = (annotation.argumentValue(KonvertTo::mappings.name, emptyList<Any?>()))
                     .filterIsInstance<KSAnnotation>()
                     .map { Mapping.from(it) },
-                constructor = (annotation.arguments.first { it.name?.asString() == KonvertTo::constructorArgs.name }.value as List<*>).mapNotNull { (it as? KSType)?.classDeclaration() },
-                mapFunctionName = annotation.arguments.first { it.name?.asString() == KonvertTo::mapFunctionName.name }.value as String,
-                priority = annotation.arguments.first { it.name?.asString() == KonvertTo::priority.name }.value as Priority,
-                options = (annotation.arguments.first { it.name?.asString() == KonvertTo::options.name }.value as List<*>)
+                constructor = annotation.constructorArgClassDeclarations(KonvertTo::constructorArgs.name, unitType),
+                mapFunctionName = annotation.argumentValue(KonvertTo::mapFunctionName.name, ""),
+                priority = annotation.argumentValue(KonvertTo::priority.name, DEFAULT_KONVERT_TO_PRIORITY),
+                options = (annotation.argumentValue(KonvertTo::options.name, emptyList<Any?>()))
                     .filterIsInstance<KSAnnotation>()
                     .map { Konfig.from(it) },
             )

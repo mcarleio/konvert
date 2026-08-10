@@ -1,5 +1,8 @@
 package io.mcarle.konvert.converter
 
+import io.mcarle.konvert.converter.api.config.ENFORCE_NOT_NULL_OPTION
+import io.mcarle.konvert.converter.api.config.ENFORCE_NOT_NULL_STRATEGY_OPTION
+import io.mcarle.konvert.converter.api.config.EnforceNotNullStrategy
 import io.mcarle.konvert.converter.utils.ConverterITest
 import io.mcarle.konvert.converter.utils.VerificationData
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
@@ -7,6 +10,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.reflections.Reflections
 import java.math.BigDecimal
@@ -259,8 +263,16 @@ class BaseTypeConverterITest : ConverterITest() {
             BigDecimalToFloatConverter(),
             BigDecimalToDoubleConverter(),
             BigDecimalToNumberConverter(),
-        ).toConverterTestArgumentsWithType {
+        )
+
+        @JvmStatic
+        fun allBaseTypeConverterTypes() = converterList().toConverterTestArgumentsWithType {
             it.sourceClass.qualifiedName to it.targetClass.qualifiedName
+        }
+
+        @JvmStatic
+        fun allBaseTypeCombinationsWithNotNullEnforcementRequired() = converterList().map {
+            Arguments.arguments(it::class.simpleName, "${it.sourceClass.qualifiedName}?", it.targetClass.qualifiedName)
         }
 
         private val baseTypeConverterClasses: Set<Class<out BaseTypeConverter>> =
@@ -271,12 +283,27 @@ class BaseTypeConverterITest : ConverterITest() {
 
     @Tag("detailed")
     @ParameterizedTest
-    @MethodSource("converterList")
+    @MethodSource("allBaseTypeConverterTypes")
     fun converterTest(simpleConverterName: String, sourceTypeName: String, targetTypeName: String) {
         executeTest(
             sourceTypeName,
             targetTypeName,
             baseTypeConverterClasses.newConverterInstance(simpleConverterName)
+        )
+    }
+
+    @Tag("detailed")
+    @ParameterizedTest
+    @MethodSource("allBaseTypeCombinationsWithNotNullEnforcementRequired")
+    fun converterTestEnforceNotNull(simpleConverterName: String, sourceTypeName: String, targetTypeName: String) {
+        executeTest(
+            sourceTypeName,
+            targetTypeName,
+            baseTypeConverterClasses.newConverterInstance(simpleConverterName),
+            options = mapOf(
+                ENFORCE_NOT_NULL_OPTION.key to "true",
+                ENFORCE_NOT_NULL_STRATEGY_OPTION.key to EnforceNotNullStrategy.REQUIRE_NOT_NULL.name
+            )
         )
     }
 

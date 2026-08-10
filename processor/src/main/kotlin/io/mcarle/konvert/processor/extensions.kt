@@ -4,6 +4,7 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Visibility
 import io.mcarle.konvert.api.Konfig
@@ -47,20 +48,43 @@ fun Iterable<Mapping>.validated(reference: KSNode, logger: KSPLogger) = filter {
     }
 }
 
+/**
+ * Resolves the value of an annotation argument by [name].
+ *
+ * On platform KSP compilations every argument (including ones left at their default) is
+ * materialized in [KSAnnotation.arguments]. In the common-metadata compilation
+ * (`kspCommonMainKotlinMetadata`) KSP may omit arguments that were not explicitly set.
+ * And [KSAnnotation.defaultArguments] is likewise unreliable there (array-valued defaults
+ * such as `mappings = []` come back as `null`).
+ *
+ * We resolve in priority order: explicit argument -> KSP default argument -> [fallback].
+ */
+inline fun <reified T> KSAnnotation.argumentValue(name: String, fallback: T? = null): T {
+    return arguments.firstOrNull { it.name?.asString() == name }?.value as? T
+        ?: defaultArguments.firstOrNull { it.name?.asString() == name }?.value as? T
+        ?: fallback
+        ?: throw IllegalArgumentException("Could not resolve the default value for argument '$name' in annotation ${annotationType.resolve().declaration.simpleName.asString()}")
+}
+
+fun KSAnnotation.constructorArgClassDeclarations(name: String, unitType: KSType): List<KSClassDeclaration> {
+    return argumentValue(name, listOf(unitType))
+        .mapNotNull { it.classDeclaration() }
+}
+
 fun Mapping.Companion.from(annotation: KSAnnotation) = Mapping(
-    target = annotation.arguments.first { it.name?.asString() == Mapping::target.name }.value as String,
-    source = annotation.arguments.first { it.name?.asString() == Mapping::source.name }.value as String,
-    constant = annotation.arguments.first { it.name?.asString() == Mapping::constant.name }.value as String,
-    expression = annotation.arguments.first { it.name?.asString() == Mapping::expression.name }.value as String,
-    ignore = annotation.arguments.first { it.name?.asString() == Mapping::ignore.name }.value as Boolean,
-    enable = (annotation.arguments.first { it.name?.asString() == Mapping::enable.name }.value as List<*>)
+    target = annotation.argumentValue<String>(Mapping::target.name),
+    source = annotation.argumentValue(Mapping::source.name, ""),
+    constant = annotation.argumentValue(Mapping::constant.name, ""),
+    expression = annotation.argumentValue(Mapping::expression.name, ""),
+    ignore = annotation.argumentValue(Mapping::ignore.name, false),
+    enable = (annotation.argumentValue(Mapping::enable.name, emptyList<Any?>()))
         .filterIsInstance<TypeConverterName>()
         .toTypedArray(),
 )
 
 fun Konfig.Companion.from(annotation: KSAnnotation) = Konfig(
-    key = annotation.arguments.first { it.name?.asString() == Konfig::key.name }.value as String,
-    value = annotation.arguments.first { it.name?.asString() == Konfig::value.name }.value as String
+    key = annotation.argumentValue<String>(Konfig::key.name),
+    value = annotation.argumentValue<String>(Konfig::value.name)
 )
 
 fun KSValueParameter.typeClassDeclaration(): KSClassDeclaration? = this.type.resolve().classDeclaration()

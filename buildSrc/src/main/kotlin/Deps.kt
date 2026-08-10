@@ -1,11 +1,12 @@
 @file:Suppress("UnusedReceiverParameter")
 
+import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.kotlin.dsl.kotlin
+import org.gradle.kotlin.dsl.support.uppercaseFirstChar
 
 val DependencyHandler.kotlinTest get() = kotlin("test")
 val DependencyHandler.kotlinReflect get() = kotlin("reflect")
-val DependencyHandler.kotlinStdlib get() = kotlin("stdlib-jdk8")
 val DependencyHandler.kotlinCompilerEmbeddable get() = kotlin("compiler-embeddable")
 
 val DependencyHandler.kotlinCompileTesting get() = "dev.zacsweers.kctfork:core:${Versions.kotlinCompileTesting}"
@@ -22,8 +23,8 @@ val DependencyHandler.kotlinPoet get() = "com.squareup:kotlinpoet:${Versions.kot
 val DependencyHandler.kotlinPoetKsp get() = "com.squareup:kotlinpoet-ksp:${Versions.kotlinPoet}"
 
 object Versions {
-    const val kotlin = "2.3.10" // has to match buildSrc/gradle.properties
-    const val ksp = "2.3.5"
+    const val kotlin = "2.3.21" // has to match buildSrc/gradle.properties
+    const val ksp = "2.3.9"
 
     /**
      * com.google.auto.service:auto-service-annotations
@@ -50,10 +51,20 @@ object Versions {
      */
     const val markdownGenerator = "1.3.1.1"
 
-    const val kotlinCompileTesting = "0.12.1"
+    const val kotlinCompileTesting = "0.13.0"
 
-    const val kotlinxCollectionsImmutable = "0.4.0"
+    const val kotlinxCollectionsImmutable = "0.5.0"
 
-    const val kotlinPoet = "2.2.0"
-    const val jUnit = "6.0.2"
+    const val kotlinPoet = "2.3.0"
+    const val jUnit = "6.1.0"
+}
+
+object TestkitRepo {
+    const val NAME = "testkit"
+    fun dir(rootProject: Project) = rootProject.layout.buildDirectory.dir("$NAME-repo")
+    val PUBLISH_TASK = "publishAllPublicationsTo${TestkitRepo.NAME.uppercaseFirstChar()}Repository"
+}
+
+fun isCI(): Boolean {
+    return System.getenv("CI") != null
 }

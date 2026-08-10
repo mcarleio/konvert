@@ -33,8 +33,25 @@ jobs:
         run: cd example && mvn --batch-mode --update-snapshots package
       - name: Test
         run: ./gradlew test check -PrunAllTests --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g"
+      - name: Upload test reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/tests/
+            **/build/test-results/
+          retention-days: 7
+      - name: Upload coverage html report as artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: kover-html-report
+          path: build/reports/kover/html
+          retention-days: 7
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/reports/kover/report.xml
+          disable_search: true
 

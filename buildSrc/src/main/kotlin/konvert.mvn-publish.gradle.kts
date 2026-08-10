@@ -12,7 +12,7 @@ version = System.getenv("RELEASE_VERSION") ?: "0.1.0-SNAPSHOT"
 mavenPublishing {
     configure(KotlinJvm())
 
-    if (System.getenv("CI") != null) {
+    if (isCI()) {
         publishToMavenCentral()
         signAllPublications()
     }
@@ -52,8 +52,8 @@ mavenPublishing {
 }
 
 publishing {
-    if (System.getenv("CI") != null && System.getenv("GITHUB_TOKEN") != null) {
-        repositories {
+    repositories {
+        if (isCI() && System.getenv("GITHUB_TOKEN") != null) {
             maven {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/mcarleio/konvert")
@@ -62,6 +62,10 @@ publishing {
                     password = System.getenv("GITHUB_TOKEN")
                 }
             }
+        }
+        maven {
+            name = TestkitRepo.NAME
+            url = uri(TestkitRepo.dir(rootProject))
         }
     }
 }

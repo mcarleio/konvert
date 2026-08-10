@@ -41,13 +41,13 @@ abstract class ArrayToIterableXConverter(val targetIterableFQN: String) : BaseAr
     override val enabledByDefault: Boolean = true
 
     override fun matches(source: KSType, target: KSType): Boolean {
-        if (targetType == null) return false
+        val targetType = targetType ?: return false
 
         return handleNullable(source, target) { sourceNotNullable, targetNotNullable ->
             val sourceArrayElementType = sourceArrayElementType(sourceNotNullable)?.first
 
             sourceArrayElementType != null
-                && targetType!!.isAssignableFrom(targetNotNullable)
+                && targetType.isAssignableFrom(targetNotNullable)
                 && targetNotNullable.isExactlyTarget()
                 && TypeConverterRegistry.any {
                 it.matches(

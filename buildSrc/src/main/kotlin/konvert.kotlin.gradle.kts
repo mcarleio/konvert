@@ -6,10 +6,6 @@ plugins {
     id("org.jetbrains.kotlinx.kover")
 }
 
-dependencies {
-    implementation(kotlinStdlib)
-}
-
 repositories {
     mavenCentral()
 }
@@ -20,7 +16,7 @@ java {
 }
 
 kover {
-    if (System.getenv("CI") == null) {
+    if (!isCI()) {
         disable()
     }
 }

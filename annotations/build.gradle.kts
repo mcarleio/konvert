@@ -1,8 +1,4 @@
 plugins {
-    id("konvert.kotlin")
-    id("konvert.mvn-publish")
-}
-
-dependencies {
-
+    id("konvert.kotlin.kmp")
+    id("konvert.mvn-publish.kmp")
 }

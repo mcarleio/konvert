@@ -4,11 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Breaking Changes
+
+This release publishes the modules `api` and `annotations` as Kotlin Multiplatform artifacts.
+Due to that, if you use Konvert from e.g. a maven project, you need to change to the new artifact names with the `-jvm` suffix:
+- <code>io.mcarle:konvert-api<b>-jvm</b></code> instead of `io.mcarle:konvert-api`
+- <code>io.mcarle:konvert-annotations<b>-jvm</b></code> instead of `io.mcarle:konvert-annotations`
+
+### New features
+
+* add support for Kotlin Multiplatform (KMP) for the modules `api` and `annotations`
+   * you can now use the `konvert-api` and `konvert-annotations` modules in KMP projects 🥳
+
+## [4.5.1]
+
 ### Bug fixes
 * fix the visibility checks for what the generated extension functions can access on source and target [#288](https://github.com/mcarleio/konvert/issues/288)
 
 ## [4.5.0]
-
 
 ### New features
 
@@ -30,18 +43,17 @@ All notable changes to this project will be documented in this file.
   class UserIdsDto(val ids: List<Int>)
   ```
 
-
 ### Improvements
 
 * Updates:
-  * Kotlin → 2.3.10
-  * KSP → 2.3.5
-  * Injectors (Anvil, Dagger, Koin, Spring)
+   * Kotlin → 2.3.10
+   * KSP → 2.3.5
+   * Injectors (Anvil, Dagger, Koin, Spring)
 
 * Build updates:
-  * Gradle → 9.4.1
-  * Kotlin Compile Testing → 0.12.1
-  * jUnit → 6.0.2
+   * Gradle → 9.4.1
+   * Kotlin Compile Testing → 0.12.1
+   * jUnit → 6.0.2
 
 ## [4.4.0]
 
@@ -405,7 +417,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v4.5.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v4.5.1...HEAD
+
+[4.5.1]: https://github.com/mcarleio/konvert/compare/v4.5.0...v4.5.1
 
 [4.5.0]: https://github.com/mcarleio/konvert/compare/v4.4.0...v4.5.0
 
