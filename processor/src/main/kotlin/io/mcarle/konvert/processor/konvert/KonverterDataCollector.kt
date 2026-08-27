@@ -15,6 +15,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.api.Konvert
 import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.processor.resolveFully
 
 object KonverterDataCollector {
 
@@ -92,8 +93,8 @@ object KonverterDataCollector {
                         annotationData = annotation ?: KonvertData.AnnotationData.default(resolver, it.isAbstract),
                         isAbstract = it.isAbstract,
                         isSuspend = Modifier.SUSPEND in it.modifiers,
-                        sourceTypeReference = source,
-                        targetTypeReference = target,
+                        sourceType = source.resolveFully(resolver),
+                        targetType = target.resolveFully(resolver),
                         mapKSFunctionDeclaration = it,
                         additionalParameters = determineAdditionalParams(it, sourceValueParameter)
                     )

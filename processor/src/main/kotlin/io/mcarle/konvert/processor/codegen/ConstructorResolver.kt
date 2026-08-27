@@ -1,19 +1,16 @@
 package io.mcarle.konvert.processor.codegen
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSValueParameter
 import io.mcarle.konvert.processor.exceptions.AmbiguousConstructorException
 import io.mcarle.konvert.processor.exceptions.NoMatchingConstructorException
 import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy
-import io.mcarle.konvert.processor.typeClassDeclaration
 
 object ConstructorResolver {
     fun determineConstructor(
         targetData: TargetDataExtractionStrategy.TargetData,
         sourceProperties: List<PropertyMappingInfo>,
         constructorTypes: List<KSClassDeclaration>
-    ): KSFunctionDeclaration {
+    ): TargetDataExtractionStrategy.TargetConstructor {
         return if (constructorTypes.firstOrNull()?.qualifiedName?.asString() == Unit::class.qualifiedName) {
             if (targetData.primaryConstructor != null
                 && propertiesMatching(
@@ -42,15 +39,15 @@ object ConstructorResolver {
     }
 
     private fun findConstructorByParameterTypes(
-        constructors: List<KSFunctionDeclaration>,
+        constructors: List<TargetDataExtractionStrategy.TargetConstructor>,
         constructorTypes: List<KSClassDeclaration>
-    ): KSFunctionDeclaration? {
+    ): TargetDataExtractionStrategy.TargetConstructor? {
         return constructors.firstOrNull { constructor ->
-            constructor.parameters.mapNotNull { it.typeClassDeclaration() } == constructorTypes
+            constructor.parameters.mapNotNull { it.type.classDeclaration() } == constructorTypes
         }
     }
 
-    private fun determineSingleOrEmptyConstructor(constructors: List<KSFunctionDeclaration>): KSFunctionDeclaration? {
+    private fun determineSingleOrEmptyConstructor(constructors: List<TargetDataExtractionStrategy.TargetConstructor>): TargetDataExtractionStrategy.TargetConstructor? {
         return if (constructors.size <= 1) {
             constructors.firstOrNull()
         } else {
@@ -61,9 +58,9 @@ object ConstructorResolver {
     }
 
     private fun findMatchingConstructors(
-        constructors: List<KSFunctionDeclaration>,
+        constructors: List<TargetDataExtractionStrategy.TargetConstructor>,
         props: List<PropertyMappingInfo>
-    ): List<KSFunctionDeclaration> {
+    ): List<TargetDataExtractionStrategy.TargetConstructor> {
         return constructors
             .filter {
                 propertiesMatching(
@@ -73,11 +70,14 @@ object ConstructorResolver {
             }
     }
 
-    private fun propertiesMatching(props: List<PropertyMappingInfo>, parameters: List<KSValueParameter>): Boolean {
+    private fun propertiesMatching(
+        props: List<PropertyMappingInfo>,
+        parameters: List<TargetDataExtractionStrategy.TargetConstructorParameter>
+    ): Boolean {
         if (props.size >= parameters.filter { !it.hasDefault }.size) {
             return parameters.all { parameter ->
                 props.any { property ->
-                    property.targetName == parameter.name?.asString() && (!property.ignore || parameter.hasDefault)
+                    property.targetName == parameter.name && (!property.ignore || parameter.hasDefault)
                 }
             }
         }
