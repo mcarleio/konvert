@@ -556,6 +556,162 @@ interface Mapper {
     }
 
     @Test
+    fun resolveTypeParametersOfInheritedSourceProperties() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IntToStringConverter(), IterableToListConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+typealias Tags<T> = List<T>
+
+abstract class Base<T>(val value: T, val values: Tags<T>)
+class Derived(value: Int, values: List<Int>) : Base<Int>(value, values)
+
+data class TargetView(val value: String, val values: List<String>)
+
+@Konverter
+interface Mapper {
+    fun toView(source: Derived): TargetView
+}
+                    """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "value = source.value.toString()")
+        assertContains(mapperCode, "values = source.values.map { it.toString() }")
+    }
+
+    @Test
+    fun resolveTypeParametersOfInheritedTargetProperties() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IntToStringConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceView(val value: Int)
+
+abstract class BaseTarget<T> {
+    var value: T? = null
+}
+class DerivedTarget : BaseTarget<String>()
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceView): DerivedTarget
+}
+                    """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "value = source.value.toString()")
+    }
+
+    @Test
+    fun resolveTypeParametersOfDeeplyInheritedSourceAndTargetMembers() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IntToStringConverter(), IterableToListConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+typealias Tags<T> = List<T>
+
+interface SourceRoot<R> {
+    val rootValue: R
+}
+abstract class SourceMiddle<M>(override val rootValue: M, val middleValues: Tags<M>) : SourceRoot<M>
+class SourceLeaf<L>(rootValue: L, middleValues: List<L>) : SourceMiddle<L>(rootValue, middleValues)
+
+abstract class TargetBase<T> {
+    var rootValue: T? = null
+    var middleValues: List<T>? = null
+}
+class TargetLeaf : TargetBase<String>()
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: SourceLeaf<Int>): TargetLeaf
+}
+                    """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "rootValue = source.rootValue.toString()")
+        assertContains(mapperCode, "middleValues = source.middleValues.map { it.toString() }")
+    }
+
+    @Test
+    fun resolveTypeParametersOfInheritedJavaGetterAndSetter() {
+        enforceNotNull = true
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IntToStringConverter()),
+            code = arrayOf(
+                SourceFile.java(
+                    name = "JavaBase.java",
+                    contents =
+                        """
+public class JavaBase<T> {
+    private T value;
+
+    public T getValue() {
+        return value;
+    }
+
+    public void setValue(T value) {
+        this.value = value;
+    }
+}
+                    """.trimIndent()
+                ),
+                SourceFile.java(
+                    name = "JavaDerived.java",
+                    contents =
+                        """
+public class JavaDerived extends JavaBase<Integer> {
+}
+                    """.trimIndent()
+                ),
+                SourceFile.kotlin(
+                    name = "TestCode.kt",
+                    contents =
+                        """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceView(val value: Int)
+data class TargetView(val value: String)
+
+@Konverter
+interface Mapper {
+    fun fromJava(source: JavaDerived): TargetView
+    fun toJava(source: SourceView): JavaDerived
+}
+                    """.trimIndent()
+                )
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        // the inherited getter/setter are declared as `T` on JavaBase<T> and must be resolved to Integer
+        assertContains(mapperCode, "value = source.value?.toString()!!")
+        assertContains(mapperCode, "javaDerived.value = source.value")
+    }
+
+    @Test
     fun resolveTypeParametersOfGenericSourceClass() {
         val (compilation) = compileWith(
             enabledConverters = listOf(SameTypeConverter(), IterableToListConverter()),
