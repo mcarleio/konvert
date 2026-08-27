@@ -11,6 +11,7 @@ import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.konverterUseReflection
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
+import io.mcarle.konvert.processor.ResolvedType
 
 class KonvertTypeConverter constructor(
     override val priority: Priority,
@@ -19,8 +20,8 @@ class KonvertTypeConverter constructor(
      * indicates if the converter was (alreadyGenerated = true) or will be generated as a class or object
      */
     internal val classKind: ClassOrObject,
-    internal val sourceType: KSType,
-    internal val targetType: KSType,
+    internal val sourceType: ResolvedType,
+    internal val targetType: ResolvedType,
     internal val mapFunctionName: String,
     internal val paramName: String,
     internal val konverterInterface: KonverterInterface
@@ -31,17 +32,17 @@ class KonvertTypeConverter constructor(
         OBJECT;
     }
 
-    internal val sourceTypeName = sourceType.toClassNameOrNull()?.simpleName ?: sourceType.toString()
-    internal val targetTypeName = targetType.toClassNameOrNull()?.simpleName ?: targetType.toString()
+    internal val sourceTypeName = sourceType.ksType.toClassNameOrNull()?.simpleName ?: sourceType.toString()
+    internal val targetTypeName = targetType.ksType.toClassNameOrNull()?.simpleName ?: targetType.toString()
 
     override val enabledByDefault: Boolean = true
 
-    private val targetTypeNotNullable: KSType = targetType.makeNotNullable()
+    private val targetTypeNotNullable: KSType = targetType.ksType.makeNotNullable()
 
     // different and more complex handling than others, as the converter's types here can be nullable themselves
     override fun matches(source: KSType, target: KSType): Boolean {
         return handleNullable(source, target) { sourceNotNullable, _ ->
-            if (!sourceType.isAssignableFrom(sourceNotNullable)) {
+            if (!sourceType.ksType.isAssignableFrom(sourceNotNullable)) {
                 // cannot pass the current source (ignoring its nullability) to the converter
                 return@handleNullable false
             }

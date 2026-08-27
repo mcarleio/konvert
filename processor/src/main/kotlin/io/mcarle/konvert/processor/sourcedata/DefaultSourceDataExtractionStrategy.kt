@@ -6,6 +6,8 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
+import io.mcarle.konvert.processor.ResolvedType
+import io.mcarle.konvert.processor.TypeSubstitution
 import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
 import io.mcarle.konvert.processor.codegen.isVisibleFrom
 
@@ -14,14 +16,17 @@ class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
 
     override fun extract(
         resolver: Resolver,
+        sourceType: ResolvedType,
         classDeclaration: KSClassDeclaration,
         visibilityContext: MappingVisibilityContext,
     ): List<SourceDataExtractionStrategy.SourceData> {
         val unitType = resolver.builtIns.unitType
 
+        val substitution by lazy { TypeSubstitution.of(sourceType, resolver) }
+
         val properties = classDeclaration.getAllProperties()
             .filter { it.isVisibleFrom(visibilityContext) }
-            .map { SourceDataExtractionStrategy.SourceProperty(it) }
+            .map { SourceDataExtractionStrategy.SourceProperty(it, substitution, resolver) }
 
         val potentialFunctions = classDeclaration.getAllFunctions()
             .filter { it.parameters.isEmpty() }
@@ -30,25 +35,30 @@ class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
             .filter { it.isVisibleFrom(visibilityContext) }
 
         val functionsAndGetters = when {
-            classDeclaration.isRecord() -> handleRecords(potentialFunctions)
-            else -> handleClasses(potentialFunctions, resolver)
+            classDeclaration.isRecord() -> handleRecords(potentialFunctions, substitution, resolver)
+            else -> handleClasses(potentialFunctions, substitution, resolver)
         }
 
         return (properties + functionsAndGetters).toList()
     }
 
-    private fun handleRecords(potentialFunctions: Sequence<KSFunctionDeclaration>): Sequence<SourceDataExtractionStrategy.SourceData> {
+    private fun handleRecords(
+        potentialFunctions: Sequence<KSFunctionDeclaration>,
+        substitution: TypeSubstitution,
+        resolver: Resolver
+    ): Sequence<SourceDataExtractionStrategy.SourceData> {
         return potentialFunctions
             .filter { !it.isConstructor() && !it.modifiers.contains(Modifier.ABSTRACT) }
-            .map { SourceDataExtractionStrategy.SourceFunction(it) }
+            .map { SourceDataExtractionStrategy.SourceFunction(it, substitution, resolver) }
     }
 
     private fun handleClasses(
         potentialFunctions: Sequence<KSFunctionDeclaration>,
+        substitution: TypeSubstitution,
         resolver: Resolver
     ): Sequence<SourceDataExtractionStrategy.SourceData> {
         return potentialFunctions.mapNotNull {
-            SourceDataExtractionStrategy.SourceData.from(it, resolver)
+            SourceDataExtractionStrategy.SourceData.from(it, substitution, resolver)
         }
     }
 

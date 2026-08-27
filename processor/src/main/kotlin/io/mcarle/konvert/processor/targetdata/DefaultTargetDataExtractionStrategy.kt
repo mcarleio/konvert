@@ -8,21 +8,26 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Origin
 import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
 import io.mcarle.konvert.processor.codegen.isVisibleFrom
+import io.mcarle.konvert.processor.ResolvedType
+import io.mcarle.konvert.processor.TypeSubstitution
 
 class DefaultTargetDataExtractionStrategy : TargetDataExtractionStrategy {
 
     override fun extract(
         resolver: Resolver,
+        targetType: ResolvedType,
         classDeclaration: KSClassDeclaration,
         visibilityContext: MappingVisibilityContext
     ): TargetDataExtractionStrategy.TargetData {
         val primaryConstructor = classDeclaration.primaryConstructor.takeIf { it?.isVisibleFrom(visibilityContext) == true }
 
+        val substitution by lazy { TypeSubstitution.of(targetType, resolver) }
+
         val properties = classDeclaration.getAllProperties()
             .filter { it.extensionReceiver == null }
             .filter { it.isVisibleFrom(visibilityContext) }
             .filter { it.isMutable }
-            .map { TargetDataExtractionStrategy.TargetVarProperty(it) }
+            .map { TargetDataExtractionStrategy.TargetVarProperty(it, substitution, resolver) }
 
         val setters = classDeclaration.getAllFunctions()
             .filter { it.extensionReceiver == null }
@@ -33,7 +38,9 @@ class DefaultTargetDataExtractionStrategy : TargetDataExtractionStrategy {
             .map {
                 TargetDataExtractionStrategy.TargetSetter(
                     it,
-                    determineCorrespondingGetter(it, classDeclaration, resolver)
+                    determineCorrespondingGetter(it, classDeclaration, resolver),
+                    substitution,
+                    resolver
                 )
             }
 
@@ -41,9 +48,12 @@ class DefaultTargetDataExtractionStrategy : TargetDataExtractionStrategy {
             classDeclaration = classDeclaration,
             varProperties = properties.toList(),
             setter = setters.toList(),
-            primaryConstructor = primaryConstructor,
+            primaryConstructor = primaryConstructor?.let {
+                TargetDataExtractionStrategy.TargetConstructor(it, substitution, resolver)
+            },
             constructors = classDeclaration.getConstructors()
                 .filter { it.isVisibleFrom(visibilityContext) }
+                .map { TargetDataExtractionStrategy.TargetConstructor(it, substitution, resolver) }
                 .toList()
         )
     }

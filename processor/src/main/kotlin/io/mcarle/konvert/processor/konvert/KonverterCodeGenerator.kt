@@ -15,6 +15,7 @@ import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.konverterGenerateClass
 import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.plugin.api.KonverterInjector
+import io.mcarle.konvert.processor.ResolvedType
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.codegen.MappingContext
@@ -47,25 +48,21 @@ object KonverterCodeGenerator {
             data.konvertData.forEach { konvertData ->
                 withIsolatedConfiguration(konvertData.annotationData.options) {
                     try {
-                        if (isAlias(konvertData.sourceTypeReference, konvertData.sourceType)) {
-                            // @Konverter annotated interface used alias for source, so the implementation should also use the same alias
-                            codeBuilder.addImport(konvertData.sourceType, konvertData.sourceTypeReference.toString())
+                        val returnTypeReference = checkNotNull(konvertData.mapKSFunctionDeclaration.returnType) {
+                            "Missing return type on ${konvertData.mapKSFunctionDeclaration.qualifiedName?.asString()}"
                         }
 
-                        val targetClassImportName =
-                            if (isAlias(konvertData.targetTypeReference, konvertData.targetType)) {
-                                // @Konverter annotated interface used alias for target, so the implementation should also use the same alias
-                                val alias = konvertData.targetTypeReference.toString()
-                                codeBuilder.addImport(konvertData.targetType, alias)
-                                alias
-                            } else {
-                                null
-                            }
+                        // @Konverter annotated interface used an import alias for source, so the implementation should also use the same alias
+                        codeBuilder.addAliasedImportIfNeeded(konvertData.sourceParameter.type, konvertData.sourceType)
+
+                        // @Konverter annotated interface used an import alias for target, so the implementation should also use the same
+                        // alias, additionally also to instantiate the target class
+                        val targetClassImportName = codeBuilder.addAliasedImportIfNeeded(returnTypeReference, konvertData.targetType)
 
                         codeBuilder.addFunction(
                             funBuilder = FunSpec.builder(konvertData.mapFunctionName)
                                 .addModifiers(KModifier.OVERRIDE)
-                                .returns(konvertData.targetTypeReference.toTypeName())
+                                .returns(returnTypeReference.toTypeName())
                                 .addParameters(konvertData.mapKSFunctionDeclaration.parameters.map {
                                     val builder = ParameterSpec.builder(
                                         name = it.name!!.asString(),
@@ -92,7 +89,7 @@ object KonverterCodeGenerator {
                             originating = data.konverterInterface.kSClassDeclaration.containingFile
                         )
                     } catch (e: Exception) {
-                        throw KonvertException(konvertData.sourceType, konvertData.targetType, e)
+                        throw KonvertException(konvertData.sourceType.ksType, konvertData.targetType.ksType, e)
                     }
                 }
             }
@@ -140,10 +137,29 @@ object KonverterCodeGenerator {
         )
     }
 
-    private fun isAlias(typeReference: KSTypeReference, type: KSType): Boolean {
+    private fun isImportAlias(typeReference: KSTypeReference, type: KSType): Boolean {
         // Waiting for solution of https://github.com/google/ksp/issues/2391
-        // to be able to identify import alias
+        // to be able to identify import alias. The following is a workaround only working on return types.
         return typeReference.toString().takeWhile { it != '<' }.removeSuffix("?") != type.makeNotNullable().toString().takeWhile { it != '<' }
+    }
+
+    /**
+     * In case the given [typeReference] is written using an import alias, the same alias is added as import to the
+     * generated file and returned. Otherwise, `null` is returned.
+     *
+     * Note: This currently only works for the return type, as KSP provides a PSI backed KSTypeReference for it.
+     *       The type of a KSValueParameter is always a resolved one (KSTypeReferenceResolvedImpl), which does not know
+     *       anything about the import alias used in the source code.
+     *
+     * @param typeReference the reference as it was written in the `@Konverter` annotated interface
+     * @param type the fully resolved type of the [typeReference], which is the one to be imported
+     */
+    private fun CodeBuilder.addAliasedImportIfNeeded(typeReference: KSTypeReference, type: ResolvedType): String? {
+        if (!isImportAlias(typeReference, typeReference.resolve())) return null
+
+        val alias = typeReference.toString()
+        addImport(type.ksType, alias)
+        return alias
     }
 
     private fun retrieveCodeBuilder(
