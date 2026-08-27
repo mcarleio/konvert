@@ -16,6 +16,7 @@ import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
 import io.mcarle.konvert.processor.exceptions.InaccessibleDueToVisibilityClassException
 import io.mcarle.konvert.processor.exceptions.KonvertException
 import io.mcarle.konvert.processor.isEqualOrMoreRestrictedThan
+import io.mcarle.konvert.processor.resolveFully
 import io.mcarle.konvert.processor.validated
 
 object KonvertToCodeGenerator {
@@ -48,8 +49,8 @@ object KonvertToCodeGenerator {
                             context = MappingContext(
                                 sourceClassDeclaration = data.sourceClassDeclaration,
                                 targetClassDeclaration = data.targetClassDeclaration,
-                                source = data.sourceClassDeclaration.asStarProjectedType(),
-                                target = data.targetClassDeclaration.asStarProjectedType(),
+                                source = data.sourceClassDeclaration.asStarProjectedType().resolveFully(resolver),
+                                target = data.targetClassDeclaration.asStarProjectedType().resolveFully(resolver),
                                 paramName = null,
                                 targetClassImportName = null
                             ),
