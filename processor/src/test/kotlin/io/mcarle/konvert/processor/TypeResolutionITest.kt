@@ -445,6 +445,117 @@ interface Mapper {
     }
 
     @Test
+    fun keepStarProjectionWhenItIsBoundToTypeParameterOfTypealias() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IterableToSetConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+typealias Tags<T> = List<T>
+typealias Boxes<T> = Tags<T>
+typealias StarTags = Tags<*>
+
+data class SourceView(
+    val aliasTags: Tags<*>,
+    val nestedAliasTags: Boxes<*>,
+    val chainedTags: StarTags,
+    val directTags: List<*>
+)
+
+data class TargetView(
+    val aliasTags: Set<Any?>,
+    val nestedAliasTags: Set<Any?>,
+    val chainedTags: Set<Any?>,
+    val directTags: Set<Any?>
+)
+
+@Konverter
+interface Mapper {
+    fun toView(source: SourceView): TargetView
+}
+                    """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        // all properties are the very same type (List<*>) and must therefore be converted identically
+        assertContains(mapperCode, "aliasTags = source.aliasTags.toSet()")
+        assertContains(mapperCode, "nestedAliasTags = source.nestedAliasTags.toSet()")
+        assertContains(mapperCode, "chainedTags = source.chainedTags.toSet()")
+        assertContains(mapperCode, "directTags = source.directTags.toSet()")
+    }
+
+    @Test
+    fun keepStarProjectionWhenItIsBoundToNestedTypeParameterOfTypealias() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IterableToListConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceTag<T>(val id: T)
+data class TargetTag(val id: String)
+
+typealias Tags<T> = List<SourceTag<T>>
+
+data class SourceView(val tags: Tags<*>)
+data class TargetView(val tags: List<TargetTag>)
+
+@Konverter
+interface Mapper {
+    fun toTag(source: SourceTag<*>): TargetTag = TargetTag(source.id.toString())
+    fun toView(source: SourceView): TargetView
+}
+                    """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        // Tags<*> resolves to List<SourceTag<*>>
+        assertContains(mapperCode, "tags = source.tags.map { this.toTag(source = it) }")
+    }
+
+    @Test
+    fun keepStarProjectionWhenItIsBoundToTypeParameterOfGenericSourceClass() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IterableToListConverter(), IterableToSetConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceTag<T>(val id: T)
+data class TargetTag(val id: String)
+
+typealias Tags<T> = List<T>
+
+data class SourceView<T>(val tags: Tags<SourceTag<T>>, val plainTags: Tags<T>)
+data class TargetView(val tags: List<TargetTag>, val plainTags: Set<Any?>)
+
+@Konverter
+interface Mapper {
+    fun toTag(source: SourceTag<*>): TargetTag = TargetTag(source.id.toString())
+    fun toView(source: SourceView<*>): TargetView
+}
+                    """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "tags = source.tags.map { this.toTag(source = it) }")
+        assertContains(mapperCode, "plainTags = source.plainTags.toSet()")
+    }
+
+    @Test
     fun resolveTypeParametersOfGenericSourceClass() {
         val (compilation) = compileWith(
             enabledConverters = listOf(SameTypeConverter(), IterableToListConverter()),
