@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug fixes
+* fix issue with missing type resolution for typealiases and generics
+
 
 ## [4.5.1]
 
