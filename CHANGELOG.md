@@ -4,11 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+
+## [4.5.1]
+
 ### Bug fixes
-* fix the visibility checks for what the generated extension functions can access on source and target [#288](https://github.com/mcarleio/konvert/issues/288)
+* fix the visibility checks for what the generated extension functions can access on source and target [#228](https://github.com/mcarleio/konvert/issues/228)
+
 
 ## [4.5.0]
-
 
 ### New features
 
@@ -405,7 +408,9 @@ Update to Kotlin 1.9.0 and KSP 1.0.12
 
 ## [1.0.0] - 2023-03-27
 
-[unreleased]: https://github.com/mcarleio/konvert/compare/v4.5.0...HEAD
+[unreleased]: https://github.com/mcarleio/konvert/compare/v4.5.1...HEAD
+
+[4.5.1]: https://github.com/mcarleio/konvert/compare/v4.5.0...v4.5.1
 
 [4.5.0]: https://github.com/mcarleio/konvert/compare/v4.4.0...v4.5.0
 
