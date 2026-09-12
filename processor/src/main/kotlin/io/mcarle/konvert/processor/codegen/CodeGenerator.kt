@@ -13,7 +13,6 @@ import io.mcarle.konvert.converter.api.config.NON_CONSTRUCTOR_PROPERTIES_MAPPING
 import io.mcarle.konvert.converter.api.config.NonConstructorPropertiesMapping
 import io.mcarle.konvert.converter.api.config.invalidMappingStrategy
 import io.mcarle.konvert.converter.api.config.nonConstructorPropertiesMapping
-import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.exceptions.InvalidMappingException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
@@ -39,19 +38,19 @@ class CodeGenerator constructor(
         if (context.paramName != null && mappings.isEmpty()) {
             val existingTypeConverter = TypeConverterRegistry
                 .firstOrNull {
-                    it.matches(context.source, context.target) && it !is AnnotatedConverter
+                    it.matches(context.source.ksType, context.target.ksType) && it !is AnnotatedConverter
                 }
 
             if (existingTypeConverter != null) {
                 return CodeBlock.of(
                     "return·%L",
-                    existingTypeConverter.convert(context.paramName, context.source, context.target)
+                    existingTypeConverter.convert(context.paramName, context.source.ksType, context.target.ksType)
                 )
             }
         }
 
-        val sourceDataList = sourceDataExtractionStrategy.extract(resolver, context.sourceClassDeclaration, visibilityContext)
-        val targetData = targetDataExtractionStrategy.extract(resolver, context.targetClassDeclaration, visibilityContext)
+        val sourceDataList = sourceDataExtractionStrategy.extract(resolver, context.source, context.sourceClassDeclaration, visibilityContext)
+        val targetData = targetDataExtractionStrategy.extract(resolver, context.target, context.targetClassDeclaration, visibilityContext)
 
         val sourceProperties = PropertyMappingResolver(logger).determinePropertyMappings(
             mappingParamName = context.paramName,
@@ -96,21 +95,21 @@ class CodeGenerator constructor(
             context,
             sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
             constructor,
-            variablesWithoutConstructorParameters.map { it.property },
+            variablesWithoutConstructorParameters.toList(),
             remainingSetters.toList()
         )
     }
 
     private fun verifyTargetExists(
         mappings: List<Mapping>,
-        constructorParameters: List<KSValueParameter>,
+        constructorParameters: List<TargetDataExtractionStrategy.TargetConstructorParameter>,
         varProperties: List<TargetDataExtractionStrategy.TargetVarProperty>,
         setter: List<TargetDataExtractionStrategy.TargetSetter>
     ) {
         val mappingsWithMissingTargets = mappings.filter {
             it.target !in varProperties.map { it.name }
                 && it.target !in setter.map { it.name }
-                && it.target !in constructorParameters.mapNotNull { it.name?.asString() }
+                && it.target !in constructorParameters.mapNotNull { it.name }
         }
         if (mappingsWithMissingTargets.isNotEmpty()) {
             when (Configuration.invalidMappingStrategy) {
@@ -155,14 +154,14 @@ class CodeGenerator constructor(
      */
     private fun obtainTargetNonConstructorProperties(
         sourceProperties: List<PropertyMappingInfo>,
-        constructorParameters: List<KSValueParameter>,
+        constructorParameters: List<TargetDataExtractionStrategy.TargetConstructorParameter>,
         targetData: TargetDataExtractionStrategy.TargetData,
         effectiveMappingMode: NonConstructorPropertiesMapping
     ): Set<TargetDataExtractionStrategy.TargetVarProperty> {
 
         val remainingProperties = targetData.varProperties
             .filter { variable ->
-                variable.name !in constructorParameters.mapNotNull { it.name?.asString() }
+                variable.name !in constructorParameters.mapNotNull { it.name }
             }
 
         val propertiesToSourceProperty = remainingProperties
@@ -193,14 +192,14 @@ class CodeGenerator constructor(
     private fun obtainTargetNonConstructorSetters(
         mappedNonConstructorProperties: Set<TargetDataExtractionStrategy.TargetVarProperty>,
         sourceProperties: List<PropertyMappingInfo>,
-        constructorParameters: List<KSValueParameter>,
+        constructorParameters: List<TargetDataExtractionStrategy.TargetConstructorParameter>,
         targetData: TargetDataExtractionStrategy.TargetData,
         effectiveMappingMode: NonConstructorPropertiesMapping
     ): Set<TargetDataExtractionStrategy.TargetSetter> {
 
         val remainingSetters = targetData.setter
             .filter { setter ->
-                setter.name !in constructorParameters.mapNotNull { it.name?.asString() }
+                setter.name !in constructorParameters.mapNotNull { it.name }
                     && setter.name !in mappedNonConstructorProperties.map { it.name }
             }
 
@@ -227,7 +226,7 @@ class CodeGenerator constructor(
 
     private fun verifyAvailableMappingsForConstructorParameters(
         sourceProperties: List<PropertyMappingInfo>,
-        constructorParameters: List<KSValueParameter>
+        constructorParameters: List<TargetDataExtractionStrategy.TargetConstructorParameter>
     ) {
         val availableNotIgnoredTargetNames = sourceProperties
             .filterNot { it.ignore }
@@ -236,14 +235,14 @@ class CodeGenerator constructor(
         val missingSourceForRequiredParameter = constructorParameters.firstOrNull {
             if (it.hasDefault) {
                 false
-            } else if (it.type.resolve().isNullable()) {
+            } else if (it.type.isNullable()) {
                 false
             } else {
-                it.name?.asString() !in availableNotIgnoredTargetNames
+                it.name !in availableNotIgnoredTargetNames
             }
         }
         if (missingSourceForRequiredParameter != null) {
-            throw PropertyMappingNotExistingException(missingSourceForRequiredParameter, sourceProperties)
+            throw PropertyMappingNotExistingException(missingSourceForRequiredParameter.valueParameterToString(), sourceProperties)
         }
     }
 

@@ -15,6 +15,7 @@ import io.mcarle.konvert.processor.konvert.KonvertTypeConverter
 import io.mcarle.konvert.processor.konvert.KonverterInterface
 import io.mcarle.konvert.processor.konvertfrom.KonvertFromTypeConverter
 import io.mcarle.konvert.processor.konvertto.KonvertToTypeConverter
+import io.mcarle.konvert.processor.resolveFully
 import io.mcarle.konvert.processor.typeClassDeclaration
 
 /**
@@ -79,8 +80,8 @@ class GeneratedKonverterLoaderFromMetaInf(
             KonvertTypeConverter(
                 priority = data.priority,
                 alreadyGenerated = true,
-                sourceType = data.function.parameters.first().type.resolve(),
-                targetType = data.function.returnType!!.resolve(),
+                sourceType = data.function.parameters.first().type.resolveFully(resolver),
+                targetType = data.function.returnType!!.resolveFully(resolver),
                 mapFunctionName = data.function.simpleName.asString(),
                 paramName = data.function.parameters.first().name!!.asString(),
                 konverterInterface = KonverterInterface(closestClassDeclaration.superTypes.first().resolve().classDeclaration()!!),

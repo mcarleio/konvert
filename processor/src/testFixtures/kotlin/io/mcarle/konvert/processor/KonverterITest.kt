@@ -72,7 +72,9 @@ abstract class KonverterITest {
 
         val result = compilation.compile()
         if (verbose) {
+            println("GENERATED")
             result.sourcesGeneratedBySymbolProcessor
+                .filter { it.isFile }
                 .filter { !it.name.contains("GeneratedModule") }
                 .forEach {
                     println("${it.name}:")

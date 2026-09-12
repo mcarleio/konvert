@@ -2,11 +2,6 @@ package io.mcarle.konvert.processor.codegen
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Origin
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.joinToCode
@@ -17,12 +12,15 @@ import io.mcarle.konvert.converter.api.config.EnforceNotNullStrategy
 import io.mcarle.konvert.converter.api.config.enableConverters
 import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.config.enforceNotNullStrategy
-import io.mcarle.konvert.converter.api.isNullable
+import io.mcarle.konvert.processor.ResolvedType
 import io.mcarle.konvert.processor.exceptions.IgnoredTargetNotIgnorableException
 import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
+import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy
+import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy.TargetConstructor
 import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy.TargetSetter
+import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy.TargetVarProperty
 import java.util.Locale
 
 class MappingCodeGenerator constructor(
@@ -32,11 +30,11 @@ class MappingCodeGenerator constructor(
     fun generateMappingCode(
         context: MappingContext,
         sourceProperties: List<PropertyMappingInfo>,
-        constructor: KSFunctionDeclaration,
-        targetProperties: List<KSPropertyDeclaration>,
+        constructor: TargetConstructor,
+        targetProperties: List<TargetVarProperty>,
         targetSetters: List<TargetSetter>
     ): CodeBlock {
-        val className = constructor.parentDeclaration!!.simpleName.asString()
+        val className = constructor.className
         val constructorCode = constructorCode(
             className = context.targetClassImportName,
             classDeclaration = context.targetClassDeclaration,
@@ -68,7 +66,7 @@ class MappingCodeGenerator constructor(
                         }
                     }
                 } else {
-                    throw NotNullOperatorNotEnabledException(context.paramName, context.source, context.target)
+                    throw NotNullOperatorNotEnabledException(context.paramName, context.source.ksType, context.target.ksType)
                 }
             }
         } else {
@@ -79,7 +77,7 @@ class MappingCodeGenerator constructor(
     private fun constructorCode(
         className: String?,
         classDeclaration: KSClassDeclaration,
-        constructor: KSFunctionDeclaration,
+        constructor: TargetConstructor,
         sourceProperties: List<PropertyMappingInfo>
     ): CodeBlock {
         if (className == null) {
@@ -110,28 +108,29 @@ $className(${"⇥\n%L"}
     }
 
     private fun constructorParamsCode(
-        constructor: KSFunctionDeclaration,
+        constructor: TargetConstructor,
         sourceProperties: List<PropertyMappingInfo>
     ): CodeBlock {
-        return constructor.parameters.mapNotNull { ksValueParameter ->
+        return constructor.parameters.mapNotNull { constructorParameter ->
             val constructorHasParamNames = constructor.origin !in listOf(
                 Origin.JAVA,
                 Origin.JAVA_LIB
             )
-            val valueParamHasDefault = ksValueParameter.hasDefault
-            val valueParamIsNullable = ksValueParameter.type.resolve().isNullable()
 
-            val propertyMappingInfo = determinePropertyMappingInfo(sourceProperties, ksValueParameter)
+            val valueParamHasDefault = constructorParameter.hasDefault
+            val valueParamIsNullable = constructorParameter.type.isNullable()
+
+            val propertyMappingInfo = determinePropertyMappingInfo(sourceProperties, constructorParameter)
             val convertedValue = convertValue(
                 source = propertyMappingInfo,
-                targetTypeRef = ksValueParameter.type,
+                targetType = constructorParameter.type,
                 valueParamHasDefault = valueParamHasDefault,
                 valueParamIsNullable = valueParamIsNullable
             )
 
             if (convertedValue != null) {
                 if (constructorHasParamNames) {
-                    CodeBlock.of("${propertyMappingInfo?.targetName ?: ksValueParameter.name?.asString()}·=·%L", convertedValue)
+                    CodeBlock.of("${propertyMappingInfo?.targetName ?: constructorParameter.name}·=·%L", convertedValue)
                 } else {
                     convertedValue
                 }
@@ -145,7 +144,7 @@ $className(${"⇥\n%L"}
         className: String,
         functionParamName: String?,
         sourceProperties: List<PropertyMappingInfo>,
-        targetProperties: List<KSPropertyDeclaration>,
+        targetProperties: List<TargetVarProperty>,
         targetSetters: List<TargetSetter>
     ): CodeBlock {
         if (noTargetOrAllIgnored(sourceProperties, targetProperties, targetSetters)) return CodeBlock.of("")
@@ -165,13 +164,13 @@ $className(${"⇥\n%L"}
 
     private fun noTargetOrAllIgnored(
         sourceProperties: List<PropertyMappingInfo>,
-        targetProperties: List<KSPropertyDeclaration>,
+        targetProperties: List<TargetVarProperty>,
         targetSetters: List<TargetSetter>
     ): Boolean {
         return targetProperties.all { targetProperty ->
             sourceProperties.any { sourceProperty ->
                 sourceProperty.ignore
-                    && sourceProperty.targetName == targetProperty.simpleName.asString()
+                    && sourceProperty.targetName == targetProperty.name
             }
         } && targetSetters.all { targetSetter ->
             sourceProperties.any { sourceProperty ->
@@ -182,7 +181,7 @@ $className(${"⇥\n%L"}
     }
 
     private fun propertySettingCode(
-        targetProperties: List<KSPropertyDeclaration>,
+        targetProperties: List<TargetVarProperty>,
         targetSetters: List<TargetSetter>,
         sourceProperties: List<PropertyMappingInfo>,
         targetVarName: String
@@ -191,7 +190,7 @@ $className(${"⇥\n%L"}
             val sourceProperty = determinePropertyMappingInfo(sourceProperties, targetProperty)
             val convertedValue = convertValue(
                 source = sourceProperty,
-                targetTypeRef = targetProperty.type,
+                targetType = targetProperty.type,
                 valueParamIsNullable = false,
                 valueParamHasDefault = true
             )
@@ -206,7 +205,7 @@ $className(${"⇥\n%L"}
             val sourceProperty = determinePropertyMappingInfo(sourceProperties, targetSetter)
             val convertedValue = convertValue(
                 source = sourceProperty,
-                targetTypeRef = targetSetter.typeRef,
+                targetType = targetSetter.type,
                 valueParamIsNullable = false,
                 valueParamHasDefault = true
             )
@@ -223,20 +222,20 @@ $className(${"⇥\n%L"}
 
     private fun determinePropertyMappingInfo(
         propertyMappings: List<PropertyMappingInfo>,
-        ksValueParameter: KSValueParameter
+        targetConstructorParameter: TargetDataExtractionStrategy.TargetConstructorParameter
     ): PropertyMappingInfo? {
         return propertyMappings.firstOrNull {
-            it.targetName == ksValueParameter.name?.asString()
+            it.targetName == targetConstructorParameter.name
         }
     }
 
     private fun determinePropertyMappingInfo(
         propertyMappings: List<PropertyMappingInfo>,
-        ksPropertyDeclaration: KSPropertyDeclaration
+        targetProperty: TargetVarProperty
     ): PropertyMappingInfo {
         return propertyMappings.firstOrNull {
-            it.targetName == ksPropertyDeclaration.simpleName.asString()
-        } ?: throw PropertyMappingNotExistingException(ksPropertyDeclaration, propertyMappings)
+            it.targetName == targetProperty.name
+        } ?: throw PropertyMappingNotExistingException(targetProperty.name, propertyMappings)
     }
 
     private fun determinePropertyMappingInfo(
@@ -250,15 +249,13 @@ $className(${"⇥\n%L"}
 
     private fun convertValue(
         source: PropertyMappingInfo?,
-        targetTypeRef: KSTypeReference,
+        targetType: ResolvedType,
         valueParamHasDefault: Boolean,
         valueParamIsNullable: Boolean
     ): CodeBlock? {
-        val targetType = targetTypeRef.resolve()
-
         return when {
-            source == null -> handleNullSource(valueParamHasDefault, valueParamIsNullable, targetTypeRef)
-            source.sourceData == null -> handleNullSourceData(source, valueParamHasDefault, valueParamIsNullable, targetTypeRef)
+            source == null -> handleNullSource(valueParamHasDefault, valueParamIsNullable, targetType)
+            source.sourceData == null -> handleNullSourceData(source, valueParamHasDefault, valueParamIsNullable, targetType)
             else -> handleNonNullSourceData(source, targetType)
         }
     }
@@ -266,12 +263,12 @@ $className(${"⇥\n%L"}
     private fun handleNullSource(
         valueParamHasDefault: Boolean,
         valueParamIsNullable: Boolean,
-        targetTypeRef: KSTypeReference
+        targetType: ResolvedType
     ): CodeBlock? {
         return when {
             valueParamHasDefault -> null
             valueParamIsNullable -> CodeBlock.of("null")
-            else -> throw PropertyMappingNotExistingException(targetTypeRef.toString(), emptyList())
+            else -> throw PropertyMappingNotExistingException(targetType.toString(), emptyList())
         }
     }
 
@@ -279,10 +276,10 @@ $className(${"⇥\n%L"}
         source: PropertyMappingInfo,
         valueParamHasDefault: Boolean,
         valueParamIsNullable: Boolean,
-        targetTypeRef: KSTypeReference
+        targetType: ResolvedType
     ): CodeBlock? {
         return when {
-            source.ignore -> handleIgnoredSource(valueParamHasDefault, valueParamIsNullable, targetTypeRef)
+            source.ignore -> handleIgnoredSource(valueParamHasDefault, valueParamIsNullable, targetType)
             source.constant != null -> CodeBlock.of(source.constant)
             source.expression != null -> {
                 val expression = "let·{ ${source.expression} }"
@@ -299,43 +296,43 @@ $className(${"⇥\n%L"}
     private fun handleIgnoredSource(
         valueParamHasDefault: Boolean,
         valueParamIsNullable: Boolean,
-        targetTypeRef: KSTypeReference
+        targetType: ResolvedType
     ): CodeBlock? {
         return when {
             valueParamHasDefault -> null
             valueParamIsNullable -> CodeBlock.of("null")
-            else -> throw IgnoredTargetNotIgnorableException(targetTypeRef.toString())
+            else -> throw IgnoredTargetNotIgnorableException(targetType.toString())
         }
     }
 
     private fun handleNonNullSourceData(
         source: PropertyMappingInfo,
-        targetType: KSType
+        targetType: ResolvedType
     ): CodeBlock {
         val sourceData = source.sourceData!!
-        val sourceType = sourceData.typeRef.resolve()
+        val sourceType = sourceData.type
         val paramName = source.mappingParamName?.let { "$it." } ?: ""
         val sourceAccessCode = sourceData.accessCode
 
         return TypeConverterRegistry.withAdditionallyEnabledConverters(source.enableConverters + Configuration.enableConverters) {
-            firstOrNull { it.matches(sourceType, targetType) }
-                ?.convert(paramName + sourceAccessCode, sourceType, targetType)
+            firstOrNull { it.matches(sourceType.ksType, targetType.ksType) }
+                ?.convert(paramName + sourceAccessCode, sourceType.ksType, targetType.ksType)
                 ?: throwException(paramName + source.sourceName, sourceType, source.targetName, targetType)
         }
     }
 
     private fun throwException(
         sourceName: String,
-        sourceType: KSType,
+        sourceType: ResolvedType,
         targetName: String,
-        targetType: KSType
+        targetType: ResolvedType
     ): Nothing {
         val notNullOperatorNeeded = sourceType.isNullable() && !targetType.isNullable()
-        val typeConverterExisting = { TypeConverterRegistry.any { it.matches(sourceType, targetType.makeNullable()) } }
+        val typeConverterExisting = { TypeConverterRegistry.any { it.matches(sourceType.ksType, targetType.ksType.makeNullable()) } }
 
         if (notNullOperatorNeeded && !Configuration.enforceNotNull && typeConverterExisting()) {
-            throw NotNullOperatorNotEnabledException(sourceName, sourceType, targetName, targetType)
+            throw NotNullOperatorNotEnabledException(sourceName, sourceType.ksType, targetName, targetType.ksType)
         }
-        throw NoMatchingTypeConverterException(sourceName, sourceType, targetName, targetType)
+        throw NoMatchingTypeConverterException(sourceName, sourceType.ksType, targetName, targetType.ksType)
     }
 }
