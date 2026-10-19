@@ -83,6 +83,12 @@ val Configuration.Companion.invalidMappingStrategy: InvalidMappingStrategy
             ?: INVALID_MAPPING_STRATEGY_OPTION.defaultValue
     }
 
+val Configuration.Companion.unmappedTargetPolicy: UnmappedTargetPolicy
+    get() = UNMAPPED_TARGET_POLICY_OPTION.get(CURRENT) { configString ->
+        UnmappedTargetPolicy.entries.firstOrNull { it.name.equals(configString, ignoreCase = true) }
+            ?: UNMAPPED_TARGET_POLICY_OPTION.defaultValue
+    }
+
 /**
  * Reads the value for [Option.key] from the provided `options` or fallbacks to the [Option.defaultValue].
  */
