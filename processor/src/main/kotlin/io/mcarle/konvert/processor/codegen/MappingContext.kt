@@ -10,4 +10,8 @@ data class MappingContext constructor(
     val target: KSType,
     val paramName: String?,
     val targetClassImportName: String?,
+    /**
+     * Generate the mapping as an expression instead of a `return` statement, e.g. for a `when` branch
+     */
+    val asExpression: Boolean = false,
 )

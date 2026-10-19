@@ -6,6 +6,16 @@ import org.junit.jupiter.api.Test
 class TestGeneratedCode {
 
     @Test
+    fun paymentMapperMapsEverySubclass() {
+        val mapper = Konverter.get<PaymentMapper>()
+        assert(mapper.toDto(Payment.Card("4242")) == PaymentDto.Card("4242"))
+        assert(mapper.toDto(Payment.Transfer("DE00")) == PaymentDto.Transfer("DE00"))
+        assert(mapper.toDto(Payment.Cash) == PaymentDto.Cash)
+        assert(mapper.toDto(Payment.Wallet.Paypal("a@b.c")) == PaymentDto.Wallet.Paypal("a@b.c"))
+        assert(mapper.toDto(Payment.Wallet.ApplePay) == PaymentDto.Wallet.ApplePay)
+    }
+
+    @Test
     fun audiToCar() {
         val audi = Audi()
         val car = audi.toCar()

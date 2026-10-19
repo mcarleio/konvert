@@ -19,6 +19,7 @@ import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.codegen.MappingContext
 import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
+import io.mcarle.konvert.processor.codegen.SealedClassMappingCodeGenerator
 import io.mcarle.konvert.processor.exceptions.KonvertException
 import io.mcarle.konvert.processor.validated
 import java.util.ServiceLoader
@@ -121,22 +122,36 @@ object KonverterCodeGenerator {
         targetClassImportName: String?,
         logger: KSPLogger
     ): FunSpec.Builder {
+        val mappings = konvertData.annotationData.mappings.asIterable()
+            .validated(konvertData.mapKSFunctionDeclaration, logger)
+        val context = MappingContext(
+            sourceClassDeclaration = konvertData.sourceClassDeclaration,
+            targetClassDeclaration = konvertData.targetClassDeclaration,
+            source = konvertData.sourceType,
+            target = konvertData.targetType,
+            paramName = konvertData.paramName,
+            targetClassImportName = targetClassImportName,
+        )
+        val visibilityContext = MappingVisibilityContext.Declaration(konvertData.mapKSFunctionDeclaration)
+        val sealedMapper = SealedClassMappingCodeGenerator(mapper)
         return addCode(
-            mapper.generateCode(
-                mappings = konvertData.annotationData.mappings.asIterable()
-                    .validated(konvertData.mapKSFunctionDeclaration, logger),
-                enforcedConstructorTypes = konvertData.annotationData.constructor,
-                context = MappingContext(
-                    sourceClassDeclaration = konvertData.sourceClassDeclaration,
-                    targetClassDeclaration = konvertData.targetClassDeclaration,
-                    source = konvertData.sourceType,
-                    target = konvertData.targetType,
-                    paramName = konvertData.paramName,
-                    targetClassImportName = targetClassImportName,
-                ),
-                visibilityContext = MappingVisibilityContext.Declaration(konvertData.mapKSFunctionDeclaration),
-                additionalSourceParameters = konvertData.additionalParameters
-            )
+            if (sealedMapper.isApplicable(context)) {
+                sealedMapper.generateCode(
+                    mappings = mappings,
+                    enforcedConstructorTypes = konvertData.annotationData.constructor,
+                    context = context,
+                    visibilityContext = visibilityContext,
+                    additionalSourceParameters = konvertData.additionalParameters
+                )
+            } else {
+                mapper.generateCode(
+                    mappings = mappings,
+                    enforcedConstructorTypes = konvertData.annotationData.constructor,
+                    context = context,
+                    visibilityContext = visibilityContext,
+                    additionalSourceParameters = konvertData.additionalParameters
+                )
+            }
         )
     }
 
