@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug fixes
 * a `@Konverter` function with additional parameters no longer short-circuits to a type converter that reads only the source: a same-type function such as `fun clone(@Konverter.Source e: E, name: String): E` constructs a new `E` instead of returning `e` and ignoring `name`
+* a `@Konverter` function with parameters beyond its single source, such as `fun toTier(@Konverter.Source request: Request, order: Int): Tier`, is no longer offered as a type converter for `Request -> Tier`: another mapping needing that pair generated `toTier(request = it)`, which did not compile, and now reports the pair as not convertible
 
 
 ## [4.5.1]

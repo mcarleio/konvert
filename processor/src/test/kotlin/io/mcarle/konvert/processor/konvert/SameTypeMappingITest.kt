@@ -193,4 +193,62 @@ interface Mapper {
 
         assertContains(result.messages, "No constructor for Shape matching the available properties")
     }
+
+    @Test
+    fun functionWithAdditionalParametersIsNotOfferedAsTypeConverter() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+class Request(val name: String)
+class Tier(val name: String, val order: Int)
+class Season(val tier: Request)
+class SeasonEntity(val tier: Tier)
+
+@Konverter
+interface Mapper {
+    fun toTier(@Konverter.Source request: Request, order: Int): Tier
+    fun toSeason(season: Season): SeasonEntity
+}
+                """.trimIndent()
+            )
+        )
+
+        assertContains(result.messages, "No converter for season.tier -> tier: Request -> Tier")
+    }
+
+    @Test
+    fun singleSourceFunctionIsStillOfferedAsTypeConverter() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+class Request(val name: String)
+class Tier(val name: String)
+class Season(val tier: Request)
+class SeasonEntity(val tier: Tier)
+
+@Konverter
+interface Mapper {
+    fun toTier(request: Request): Tier
+    fun toTierAt(@Konverter.Source request: Request, name: String): Tier
+    fun toSeason(season: Season): SeasonEntity
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "tier = this.toTier(request = season.tier)")
+    }
 }
