@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 ### New features
 * New option `konvert.unmapped-target-policy` (`ignore`, `warn`, `error`) to report a target constructor parameter or assignable non-constructor property (`var`, Java setter) that no source property and no mapping provides, instead of silently leaving it to its default or initial value
 
+### Bug fixes
+* a created target's `var` whose setter is private, protected or internal to another module is no longer assigned from a same-named source property (the generated code did not compile), and an explicit `@Mapping` onto it fails with `NotAssignableTargetException`
+
 
 ## [4.5.1]
 

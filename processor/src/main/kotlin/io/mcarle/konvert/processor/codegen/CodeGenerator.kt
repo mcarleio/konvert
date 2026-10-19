@@ -21,6 +21,7 @@ import io.mcarle.konvert.converter.api.config.unmappedTargetPolicy
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.exceptions.InvalidMappingException
+import io.mcarle.konvert.processor.exceptions.NotAssignableTargetException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 import io.mcarle.konvert.processor.exceptions.UnmappedTargetException
 import io.mcarle.konvert.processor.sourcedata.DefaultSourceDataExtractionStrategy
@@ -77,6 +78,8 @@ class CodeGenerator constructor(
         verifyAvailableMappingsForConstructorParameters(sourceProperties, constructorParameters)
 
         verifyTargetExists(mappings, constructorParameters, targetData.varProperties, targetData.setter)
+
+        verifyMappedTargetsAssignable(mappings, constructorParameters, targetData)
 
         val effectiveNonConstructorPropertiesMappingMode = determineNonConstructorPropertiesMappingMode(
             targetData,
@@ -158,6 +161,26 @@ class CodeGenerator constructor(
     }
 
     /**
+     * An explicit mapping onto a `var` whose setter the generated code cannot call would never be written.
+     */
+    private fun verifyMappedTargetsAssignable(
+        mappings: List<Mapping>,
+        constructorParameters: List<KSValueParameter>,
+        targetData: TargetDataExtractionStrategy.TargetData
+    ) {
+        val parameterNames = constructorParameters.mapNotNull { it.name?.asString() }
+        val setterNames = targetData.setter.map { it.name }
+        val notAssignableNames = targetData.varProperties
+            .filterNot { it.hasAccessibleSetter() }
+            .map { it.name }
+            .filter { it !in parameterNames && it !in setterNames }
+        val notAssignableMappings = mappings.filter { !it.ignore && it.target in notAssignableNames }
+        if (notAssignableMappings.isNotEmpty()) {
+            throw NotAssignableTargetException(notAssignableMappings.map { it.target })
+        }
+    }
+
+    /**
      * A `var` whose setter is private or protected, or internal to another module, cannot be written by the generated code.
      */
     private fun TargetDataExtractionStrategy.TargetVarProperty.hasAccessibleSetter(): Boolean {
@@ -229,6 +252,7 @@ class CodeGenerator constructor(
     ): Set<TargetDataExtractionStrategy.TargetVarProperty> {
 
         val remainingProperties = targetData.varProperties
+            .filter { it.hasAccessibleSetter() }
             .filter { variable ->
                 variable.name !in constructorParameters.mapNotNull { it.name?.asString() }
             }
