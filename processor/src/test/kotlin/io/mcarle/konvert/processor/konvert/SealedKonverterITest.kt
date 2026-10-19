@@ -436,6 +436,51 @@ interface Mapper {
     }
 
     @Test
+    fun mapEverySubclassOntoOneTargetThroughItsOwnFunction() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.api.Konvert
+import io.mcarle.konvert.api.Mapping
+
+sealed interface Widget {
+    data class Slider(val min: Int, val max: Int) : Widget
+    data class Select(val options: List<String>) : Widget
+}
+data class FlatWidget(val min: Int? = null, val max: Int? = null, val options: List<String> = emptyList())
+
+@Konverter
+interface Mapper {
+    fun toFlat(source: Widget): FlatWidget
+
+    @Konvert(mappings = [Mapping(target = "options", ignore = true)])
+    fun toFlat(source: Widget.Slider): FlatWidget
+
+    @Konvert(mappings = [Mapping(target = "min", ignore = true), Mapping(target = "max", ignore = true)])
+    fun toFlat(source: Widget.Select): FlatWidget
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(
+            mapperCode,
+            """
+              override fun toFlat(source: Widget): FlatWidget = when (source) {
+                is Widget.Select -> this.toFlat(source = source)
+                is Widget.Slider -> this.toFlat(source = source)
+              }
+            """.trimIndent().prependIndent("  ")
+        )
+    }
+
+    @Test
     fun failOnSourceSubclassWithoutTargetPair() {
         val (_, result) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),

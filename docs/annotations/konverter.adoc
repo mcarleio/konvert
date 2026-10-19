@@ -85,6 +85,9 @@ object ShapeMapperImpl: ShapeMapper {
 ----
 
 To map a pair whose fields differ, declare a function for that pair and define its mappings with xref:konvert.adoc[`@Konvert`].
+
+A sealed source also maps onto ONE non-sealed target, when every source subclass has a function of its own to that
+target: the generated `when` dispatches each subclass to its function, e.g. to flatten a hierarchy into one view.
 The generation fails, if a source subclass has no or more than one target subclass to pair with,
 if the sealed types are generic, if the function defines `mappings` or `constructor`,
 or if a nullable source should be mapped to a non-nullable target.

@@ -22,11 +22,27 @@ class SealedClassMappingCodeGenerator(
 
     private class Branch(val source: KSClassDeclaration, val code: CodeBlock)
 
+    /**
+     * A sealed source maps onto a sealed target subclass by subclass, or onto ONE non-sealed target when every source
+     * subclass has a converter of its own to it.
+     */
     fun isApplicable(context: MappingContext): Boolean {
         return context.sourceClassDeclaration.isSealed()
-            && context.targetClassDeclaration.isSealed()
             && TypeConverterRegistry.none { it !is AnnotatedConverter && it.matches(context.source, context.target) }
+            && (context.targetClassDeclaration.isSealed() || everySubclassHasOwnConverter(context))
     }
+
+    private fun everySubclassHasOwnConverter(context: MappingContext): Boolean {
+        val subclasses = context.sourceClassDeclaration.getSealedSubclasses().toList()
+        return subclasses.isNotEmpty() && subclasses.all { ownConverter(it, context) != null }
+    }
+
+    /** A converter written for [subclass] itself, not one for the sealed parent, which would call itself. */
+    private fun ownConverter(subclass: KSClassDeclaration, context: MappingContext) =
+        TypeConverterRegistry.firstOrNull {
+            it.matches(subclass.asStarProjectedType(), context.target)
+                && !it.matches(context.sourceClassDeclaration.asStarProjectedType(), context.target)
+        }
 
     fun generateCode(
         mappings: List<Mapping>,
@@ -49,8 +65,14 @@ class SealedClassMappingCodeGenerator(
         }
 
         val paramName = requireNotNull(context.paramName)
-        val branches = branches(source, target, context, enforcedConstructorTypes, visibilityContext, additionalSourceParameters)
-            .sortedBy { it.source.qualifiedName?.asString() }
+        val branches = if (target.isSealed()) {
+            branches(source, target, context, enforcedConstructorTypes, visibilityContext, additionalSourceParameters)
+        } else {
+            source.getSealedSubclasses().map { subclass ->
+                val subclassType = subclass.asStarProjectedType()
+                Branch(subclass, requireNotNull(ownConverter(subclass, context)).convert(paramName, subclassType, context.target))
+            }.toList()
+        }.sortedBy { it.source.qualifiedName?.asString() }
 
         return CodeBlock.builder()
             .add("return·when·(%L)·{\n⇥", paramName)
