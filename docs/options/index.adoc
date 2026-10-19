@@ -288,6 +288,35 @@ An invalid mapping occurs when:
 - A mapping references a target property that does not exist in the target type.
 - A mapping defines incompatible parameters (e.g., both `source` and `ignore = true`).
 - There are multiple mappings for the same target property.
+
+a|`*konvert.ignored-target-policy*`
+a|`ignore`, `warn`, `error`
+a|`ignore`
+a|Determines how Konvert handles a target excluded with `@Mapping(target = "...", ignore = true)` that a source
+property or a parameter of the mapping function would map to by name. Such an ignore silently drops a value the
+source provides, e.g. after the source gained the property.
+
+- `ignore` (default): the target is ignored without a word.
+- `warn`: as `ignore`, and Konvert logs a warning for each such target, naming the mapping function and the source.
+- `error`: Konvert fails the build and names every such target.
+
+A source property is only considered when a type converter can map it to the target, and not when another mapping of
+the same function uses it as its `source`.
+
+[source,kotlin]
+----
+class Source(val id: String, val note: String)
+class Target(val id: String, val note: String? = null, val comment: String? = null)
+
+@Konverter(options = [Konfig(key = "konvert.ignored-target-policy", value = "error")])
+interface Mapper {
+    @Konvert(mappings = [Mapping(target = "note", ignore = true)])
+    fun toTarget(source: Source): Target  // fails: the source property `note` would map to `note`
+
+    @Konvert(mappings = [Mapping(target = "comment", source = "note"), Mapping(target = "note", ignore = true)])
+    fun toTargetWithComment(source: Source): Target  // Target(id = source.id, comment = source.note)
+}
+----
 |===
 
 === `@Konverter` Options

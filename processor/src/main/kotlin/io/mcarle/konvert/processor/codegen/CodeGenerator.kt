@@ -3,21 +3,28 @@ package io.mcarle.konvert.processor.codegen
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.Configuration
+import io.mcarle.konvert.converter.api.config.IgnoredTargetPolicy
 import io.mcarle.konvert.converter.api.config.InvalidMappingStrategy
 import io.mcarle.konvert.converter.api.config.NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION
 import io.mcarle.konvert.converter.api.config.NonConstructorPropertiesMapping
+import io.mcarle.konvert.converter.api.config.enableConverters
+import io.mcarle.konvert.converter.api.config.ignoredTargetPolicy
 import io.mcarle.konvert.converter.api.config.invalidMappingStrategy
 import io.mcarle.konvert.converter.api.config.nonConstructorPropertiesMapping
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
+import io.mcarle.konvert.processor.exceptions.IgnoredTargetException
 import io.mcarle.konvert.processor.exceptions.InvalidMappingException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 import io.mcarle.konvert.processor.sourcedata.DefaultSourceDataExtractionStrategy
+import io.mcarle.konvert.processor.sourcedata.SourceDataExtractionStrategy
 import io.mcarle.konvert.processor.targetdata.DefaultTargetDataExtractionStrategy
 import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy
 
@@ -72,6 +79,15 @@ class CodeGenerator constructor(
 
         verifyTargetExists(mappings, constructorParameters, targetData.varProperties, targetData.setter)
 
+        reportIgnoredTargetsWithSource(
+            context.functionName,
+            mappings,
+            sourceDataList,
+            additionalSourceParameters,
+            constructorParameters,
+            targetData
+        )
+
         val effectiveNonConstructorPropertiesMappingMode = determineNonConstructorPropertiesMappingMode(
             targetData,
             sourceProperties
@@ -119,6 +135,69 @@ class CodeGenerator constructor(
                 }
                 InvalidMappingStrategy.FAIL -> throw InvalidMappingException.missingTarget(mappingsWithMissingTargets)
             }
+        }
+    }
+
+    /**
+     * An ignored target that a source property or an additional parameter would map to by name silently drops its value.
+     * A source property that another mapping uses as its `source` is not considered, as it is mapped elsewhere.
+     */
+    private fun reportIgnoredTargetsWithSource(
+        functionName: String,
+        mappings: List<Mapping>,
+        sourceDataList: List<SourceDataExtractionStrategy.SourceData>,
+        additionalSourceParameters: List<KSValueParameter>,
+        constructorParameters: List<KSValueParameter>,
+        targetData: TargetDataExtractionStrategy.TargetData
+    ) {
+        val policy = Configuration.ignoredTargetPolicy
+        if (policy == IgnoredTargetPolicy.IGNORE) return
+
+        val sourcesOfOtherMappings = mappings.filter { !it.ignore && it.source.isNotEmpty() }.map { it.source }.toSet()
+        val sourcesByTarget = mappings
+            .filter { it.ignore && it.source.isEmpty() }
+            .mapNotNull { mapping ->
+                val targetType = targetTypeOf(mapping.target, constructorParameters, targetData)?.resolve()
+                    ?: return@mapNotNull null
+                val parameter = additionalSourceParameters.firstOrNull {
+                    it.name?.asString() == mapping.target && targetType.isAssignableFrom(it.type.resolve())
+                }
+                val sourceData = sourceDataList.firstOrNull {
+                    it.name == mapping.target && it.name !in sourcesOfOtherMappings && isConvertible(it.typeRef.resolve(), targetType)
+                }
+                when {
+                    parameter != null -> mapping.target to "parameter '${mapping.target}'"
+                    sourceData != null -> mapping.target to "source property '${sourceData.name}'"
+                    else -> null
+                }
+            }
+            .toMap()
+        if (sourcesByTarget.isEmpty()) return
+
+        if (policy == IgnoredTargetPolicy.ERROR) {
+            throw IgnoredTargetException(functionName, sourcesByTarget)
+        }
+        sourcesByTarget.forEach { (target, source) ->
+            logger.warn(
+                "$functionName ignores the target '$target', but the $source would map to it: " +
+                    "remove @Mapping(target = \"$target\", ignore = true), or map it"
+            )
+        }
+    }
+
+    private fun targetTypeOf(
+        target: String,
+        constructorParameters: List<KSValueParameter>,
+        targetData: TargetDataExtractionStrategy.TargetData
+    ): KSTypeReference? {
+        return constructorParameters.firstOrNull { it.name?.asString() == target }?.type
+            ?: targetData.varProperties.firstOrNull { it.name == target }?.property?.type
+            ?: targetData.setter.firstOrNull { it.name == target }?.typeRef
+    }
+
+    private fun isConvertible(sourceType: KSType, targetType: KSType): Boolean {
+        return TypeConverterRegistry.withAdditionallyEnabledConverters(Configuration.enableConverters) {
+            any { it.matches(sourceType, targetType) }
         }
     }
 
