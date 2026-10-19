@@ -51,7 +51,8 @@ object KonvertToCodeGenerator {
                                 source = data.sourceClassDeclaration.asStarProjectedType(),
                                 target = data.targetClassDeclaration.asStarProjectedType(),
                                 paramName = null,
-                                targetClassImportName = null
+                                targetClassImportName = null,
+                                functionName = "${(data.sourceClassDeclaration.qualifiedName ?: data.sourceClassDeclaration.simpleName).asString()}.${data.mapFunctionName}",
                             ),
                             visibilityContext = MappingVisibilityContext.TopLevelInPackage(
                                 data.sourceClassDeclaration.packageName.asString()

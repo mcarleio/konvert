@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New features
+* New option `konvert.ignored-target-policy` (`ignore`, `warn`, `error`) to report a target excluded with `@Mapping(ignore = true)` that a source property or parameter would map to by name, instead of silently dropping its value
+
 
 ## [4.5.1]
 
