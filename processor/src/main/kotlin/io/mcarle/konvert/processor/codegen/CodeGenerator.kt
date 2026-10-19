@@ -3,7 +3,10 @@ package io.mcarle.konvert.processor.codegen
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.Origin
 import com.squareup.kotlinpoet.CodeBlock
 import io.mcarle.konvert.api.Mapping
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
@@ -11,12 +14,15 @@ import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.InvalidMappingStrategy
 import io.mcarle.konvert.converter.api.config.NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION
 import io.mcarle.konvert.converter.api.config.NonConstructorPropertiesMapping
+import io.mcarle.konvert.converter.api.config.UnmappedTargetPolicy
 import io.mcarle.konvert.converter.api.config.invalidMappingStrategy
 import io.mcarle.konvert.converter.api.config.nonConstructorPropertiesMapping
+import io.mcarle.konvert.converter.api.config.unmappedTargetPolicy
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
 import io.mcarle.konvert.processor.exceptions.InvalidMappingException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
+import io.mcarle.konvert.processor.exceptions.UnmappedTargetException
 import io.mcarle.konvert.processor.sourcedata.DefaultSourceDataExtractionStrategy
 import io.mcarle.konvert.processor.targetdata.DefaultTargetDataExtractionStrategy
 import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy
@@ -92,6 +98,13 @@ class CodeGenerator constructor(
             effectiveNonConstructorPropertiesMappingMode
         )
 
+        reportUnmappedTargets(
+            constructor,
+            sourceProperties,
+            targetData,
+            variablesWithoutConstructorParameters.map { it.name } + remainingSetters.map { it.name }
+        )
+
         return MappingCodeGenerator(logger).generateMappingCode(
             context,
             sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
@@ -99,6 +112,61 @@ class CodeGenerator constructor(
             variablesWithoutConstructorParameters.map { it.property },
             remainingSetters.toList()
         )
+    }
+
+    /**
+     * A constructor parameter that no source property and no mapping provides silently takes its default value, or
+     * `null`. An assignable non-constructor property that is neither written nor excluded with `ignore = true` silently
+     * keeps the value the constructor gives it, whichever [NonConstructorPropertiesMapping] left it unwritten.
+     */
+    private fun reportUnmappedTargets(
+        constructor: KSFunctionDeclaration,
+        sourceProperties: List<PropertyMappingInfo>,
+        targetData: TargetDataExtractionStrategy.TargetData,
+        writtenNonConstructorNames: List<String>
+    ) {
+        val policy = Configuration.unmappedTargetPolicy
+        if (policy == UnmappedTargetPolicy.IGNORE) return
+
+        val parameterNames = constructor.parameters.mapNotNull { it.name?.asString() }
+        val unmappedParameters = parameterNames.filter { name -> sourceProperties.none { it.targetName == name } }
+
+        val ignoredNames = sourceProperties.filter { it.ignore }.map { it.targetName }.toSet()
+        val unmappedProperties = (targetData.varProperties.filter { it.hasAccessibleSetter() }.map { it.name }
+            + targetData.setter.map { it.name })
+            .distinct()
+            .filter { it !in parameterNames && it !in writtenNonConstructorNames && it !in ignoredNames }
+
+        if (unmappedParameters.isEmpty() && unmappedProperties.isEmpty()) return
+
+        val targetClass = targetData.classDeclaration
+        if (policy == UnmappedTargetPolicy.ERROR) {
+            throw UnmappedTargetException(targetClass, unmappedParameters, unmappedProperties)
+        }
+        unmappedParameters.forEach {
+            logger.warn(
+                "No source for the target parameter '$it' of ${targetClass.qualifiedName?.asString()}, its default value is used",
+                constructor
+            )
+        }
+        unmappedProperties.forEach {
+            logger.warn(
+                "No source for the target property '$it' of ${targetClass.qualifiedName?.asString()}, its initial value is kept",
+                targetClass
+            )
+        }
+    }
+
+    /**
+     * A `var` whose setter is private or protected, or internal to another module, cannot be written by the generated code.
+     */
+    private fun TargetDataExtractionStrategy.TargetVarProperty.hasAccessibleSetter(): Boolean {
+        val modifiers = property.setter?.modifiers ?: return true
+        return when {
+            Modifier.PRIVATE in modifiers || Modifier.PROTECTED in modifiers -> false
+            Modifier.INTERNAL in modifiers -> property.origin == Origin.KOTLIN
+            else -> true
+        }
     }
 
     private fun verifyTargetExists(

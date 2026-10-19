@@ -292,27 +292,45 @@ An invalid mapping occurs when:
 a|`*konvert.unmapped-target-policy*`
 a|`ignore`, `warn`, `error`
 a|`ignore`
-a|Determines how Konvert handles a target constructor parameter that no source property and no mapping provides,
-which would otherwise silently take its default value, or `null`.
+a|Determines how Konvert handles a target that no source property and no mapping provides when it creates a new
+target instance:
 
-- `ignore` (default): the parameter takes its default value, or `null` when it is nullable and has none.
-- `warn`: as `ignore`, and Konvert logs a warning for each such parameter.
-- `error`: Konvert fails the build and names every such parameter.
+- a constructor parameter, which would otherwise silently take its default value, or `null`
+- an assignable non-constructor property (a `var` whose setter the generated code can call, or a Java setter), which
+would otherwise silently keep the value the constructor gives it. A property counts as unmapped whenever it is not
+written, whichever `konvert.non-constructor-properties-mapping` mode left it unwritten. A `val` and a `var` with a
+`private` or `protected` setter are never reported.
 
-A parameter excluded with `@Mapping(target = "...", ignore = true)` is never reported and keeps its usual
+- `ignore` (default): the parameter takes its default value, or `null` when it is nullable and has none, and the
+property keeps its initial value.
+- `warn`: as `ignore`, and Konvert logs a warning for each such parameter and property.
+- `error`: Konvert fails the build and names every such parameter and property.
+
+A target excluded with `@Mapping(target = "...", ignore = true)` is never reported and keeps its usual
 handling under every policy.
 
 [source,kotlin]
 ----
 class Source(val id: String)
 class Target(val id: String, val note: String? = null)
+open class Entity {
+    var id: String = ""
+    var version: Long = 0
+        protected set
+    var note: String? = null
+}
 
 @Konverter(options = [Konfig(key = "konvert.unmapped-target-policy", value = "error")])
 interface Mapper {
-    fun toTarget(source: Source): Target  // fails: no source for `note`
+    fun toTarget(source: Source): Target  // fails: no source for the parameter `note`
 
     @Konvert(mappings = [Mapping(target = "note", ignore = true)])
-    fun toTargetWithoutNote(source: Source): Target  // Target(id = source.id, note = null)
+    fun toTargetWithoutNote(source: Source): Target  // Target(id = source.id)
+
+    fun toEntity(source: Source): Entity  // fails: no source for the property `note`
+
+    @Konvert(mappings = [Mapping(target = "note", ignore = true)])
+    fun toEntityWithoutNote(source: Source): Entity  // Entity().also { it.id = source.id }
 }
 ----
 |===

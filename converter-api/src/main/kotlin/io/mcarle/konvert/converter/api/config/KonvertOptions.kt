@@ -159,16 +159,19 @@ object INVALID_MAPPING_STRATEGY_OPTION : Option<InvalidMappingStrategy>(
 )
 
 /**
- * Controls how Konvert reacts to a target constructor parameter that no source property and no mapping provides.
- * Such a parameter is otherwise silently left to its default value, or to `null`.
+ * Controls how Konvert reacts to a target that no source property and no mapping provides when it creates a new
+ * target instance:
+ * - a constructor parameter, which is otherwise silently left to its default value, or to `null`
+ * - an assignable non-constructor property (a `var` with an accessible setter, or a Java setter), which otherwise
+ *   silently keeps the value the constructor gives it. This applies under every
+ *   [NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION] mode: a property that mode leaves unwritten counts as unmapped.
  *
  * Possible values:
  * - "ignore" (default)
  * - "warn"
  * - "error"
  *
- * With "warn" or "error", a nullable parameter excluded with `@Mapping(target = "...", ignore = true)` is passed `null`
- * explicitly, so every argument of the generated constructor call is visible in the generated code.
+ * A target excluded with `@Mapping(target = "...", ignore = true)` is never reported.
  *
  * @see UnmappedTargetPolicy
  * @since 4.6.0
