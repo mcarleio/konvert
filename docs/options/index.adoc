@@ -288,6 +288,33 @@ An invalid mapping occurs when:
 - A mapping references a target property that does not exist in the target type.
 - A mapping defines incompatible parameters (e.g., both `source` and `ignore = true`).
 - There are multiple mappings for the same target property.
+
+a|`*konvert.unmapped-target-policy*`
+a|`ignore`, `warn`, `error`
+a|`ignore`
+a|Determines how Konvert handles a target constructor parameter that no source property and no mapping provides,
+which would otherwise silently take its default value, or `null`.
+
+- `ignore` (default): the parameter takes its default value, or `null` when it is nullable and has none.
+- `warn`: as `ignore`, and Konvert logs a warning for each such parameter.
+- `error`: Konvert fails the build and names every such parameter.
+
+A parameter excluded with `@Mapping(target = "...", ignore = true)` is never reported and keeps its usual
+handling under every policy.
+
+[source,kotlin]
+----
+class Source(val id: String)
+class Target(val id: String, val note: String? = null)
+
+@Konverter(options = [Konfig(key = "konvert.unmapped-target-policy", value = "error")])
+interface Mapper {
+    fun toTarget(source: Source): Target  // fails: no source for `note`
+
+    @Konvert(mappings = [Mapping(target = "note", ignore = true)])
+    fun toTargetWithoutNote(source: Source): Target  // Target(id = source.id, note = null)
+}
+----
 |===
 
 === `@Konverter` Options

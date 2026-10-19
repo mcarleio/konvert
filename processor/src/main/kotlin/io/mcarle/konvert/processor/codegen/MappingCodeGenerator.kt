@@ -14,14 +14,17 @@ import com.squareup.kotlinpoet.ksp.toClassName
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.EnforceNotNullStrategy
+import io.mcarle.konvert.converter.api.config.UnmappedTargetPolicy
 import io.mcarle.konvert.converter.api.config.enableConverters
 import io.mcarle.konvert.converter.api.config.enforceNotNull
 import io.mcarle.konvert.converter.api.config.enforceNotNullStrategy
+import io.mcarle.konvert.converter.api.config.unmappedTargetPolicy
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.exceptions.IgnoredTargetNotIgnorableException
 import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
+import io.mcarle.konvert.processor.exceptions.UnmappedTargetException
 import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy.TargetSetter
 import java.util.Locale
 
@@ -113,6 +116,7 @@ $className(${"⇥\n%L"}
         constructor: KSFunctionDeclaration,
         sourceProperties: List<PropertyMappingInfo>
     ): CodeBlock {
+        reportUnmappedTargets(constructor, sourceProperties)
         return constructor.parameters.mapNotNull { ksValueParameter ->
             val constructorHasParamNames = constructor.origin !in listOf(
                 Origin.JAVA,
@@ -219,6 +223,33 @@ $className(${"⇥\n%L"}
 
 
         return (propertyCodeBlocks + setterCodeBlocks).joinToCode("\n")
+    }
+
+    /**
+     * A parameter no source property and no mapping provides would silently take its default value, or `null`.
+     */
+    private fun reportUnmappedTargets(
+        constructor: KSFunctionDeclaration,
+        sourceProperties: List<PropertyMappingInfo>
+    ) {
+        val policy = Configuration.unmappedTargetPolicy
+        if (policy == UnmappedTargetPolicy.IGNORE) return
+
+        val unmapped = constructor.parameters
+            .filter { determinePropertyMappingInfo(sourceProperties, it) == null }
+            .mapNotNull { it.name?.asString() }
+        if (unmapped.isEmpty()) return
+
+        val targetClass = constructor.parentDeclaration as KSClassDeclaration
+        if (policy == UnmappedTargetPolicy.ERROR) {
+            throw UnmappedTargetException(targetClass, unmapped)
+        }
+        unmapped.forEach {
+            logger.warn(
+                "No source for the target parameter '$it' of ${targetClass.qualifiedName?.asString()}, its default value is used",
+                constructor
+            )
+        }
     }
 
     private fun determinePropertyMappingInfo(

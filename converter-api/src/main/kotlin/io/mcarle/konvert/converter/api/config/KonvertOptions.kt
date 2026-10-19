@@ -157,3 +157,23 @@ object INVALID_MAPPING_STRATEGY_OPTION : Option<InvalidMappingStrategy>(
     key = "konvert.invalid-mapping-strategy",
     defaultValue = InvalidMappingStrategy.WARN
 )
+
+/**
+ * Controls how Konvert reacts to a target constructor parameter that no source property and no mapping provides.
+ * Such a parameter is otherwise silently left to its default value, or to `null`.
+ *
+ * Possible values:
+ * - "ignore" (default)
+ * - "warn"
+ * - "error"
+ *
+ * With "warn" or "error", a nullable parameter excluded with `@Mapping(target = "...", ignore = true)` is passed `null`
+ * explicitly, so every argument of the generated constructor call is visible in the generated code.
+ *
+ * @see UnmappedTargetPolicy
+ * @since 4.6.0
+ */
+object UNMAPPED_TARGET_POLICY_OPTION : Option<UnmappedTargetPolicy>(
+    key = "konvert.unmapped-target-policy",
+    defaultValue = UnmappedTargetPolicy.IGNORE
+)

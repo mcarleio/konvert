@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New features
+* New option `konvert.unmapped-target-policy` (`ignore`, `warn`, `error`) to report a target constructor parameter that no source property and no mapping provides, instead of silently leaving it to its default value
+
 
 ## [4.5.1]
 
