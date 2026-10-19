@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug fixes
+* a `@Konverter` function with additional parameters no longer short-circuits to a type converter that reads only the source: a same-type function such as `fun clone(@Konverter.Source e: E, name: String): E` constructs a new `E` instead of returning `e` and ignoring `name`
+
 
 ## [4.5.1]
 
