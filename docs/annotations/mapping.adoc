@@ -25,6 +25,9 @@ class Person(val firstName: String, val lastName: String)
 class PersonDto(val givenName: String, val familyName: String)
 ----
 
+In a function with xref:konverter-source.adoc#multiple-sources[several `@Konverter.Source` parameters], `source` may
+be qualified by the parameter name and navigate further properties, e.g. `Mapping(target="city", source="entity.customer.address.city")`.
+
 === `constant`
 
 The value you provide here will be placed **as is** into the generated code.

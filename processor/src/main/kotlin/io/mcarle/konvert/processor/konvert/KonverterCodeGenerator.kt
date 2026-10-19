@@ -11,6 +11,7 @@ import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.api.Konverter
+import io.mcarle.konvert.converter.api.classDeclaration
 import io.mcarle.konvert.converter.api.config.Configuration
 import io.mcarle.konvert.converter.api.config.konverterGenerateClass
 import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
@@ -18,6 +19,7 @@ import io.mcarle.konvert.plugin.api.KonverterInjector
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.codegen.MappingContext
+import io.mcarle.konvert.processor.codegen.MappingSource
 import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
 import io.mcarle.konvert.processor.exceptions.KonvertException
 import io.mcarle.konvert.processor.validated
@@ -47,9 +49,12 @@ object KonverterCodeGenerator {
             data.konvertData.forEach { konvertData ->
                 withIsolatedConfiguration(konvertData.annotationData.options) {
                     try {
-                        if (isAlias(konvertData.sourceTypeReference, konvertData.sourceType)) {
-                            // @Konverter annotated interface used alias for source, so the implementation should also use the same alias
-                            codeBuilder.addImport(konvertData.sourceType, konvertData.sourceTypeReference.toString())
+                        konvertData.sourceParameters.forEach { sourceParameter ->
+                            val sourceType = sourceParameter.type.resolve()
+                            if (isAlias(sourceParameter.type, sourceType)) {
+                                // @Konverter annotated interface used alias for source, so the implementation should also use the same alias
+                                codeBuilder.addImport(sourceType, sourceParameter.type.toString())
+                            }
                         }
 
                         val targetClassImportName =
@@ -100,7 +105,15 @@ object KonverterCodeGenerator {
     }
 
     private fun FunSpec.Builder.generateSuperCall(konvertData: KonvertData): FunSpec.Builder {
-        return if (konvertData.additionalParameters.isEmpty()) {
+        return if (konvertData.hasMultipleSources) {
+            addCode(
+                "return·super.${konvertData.mapFunctionName}(«\n"
+                    + konvertData.mapKSFunctionDeclaration.parameters.joinToString(separator = ",\n") {
+                    val paramName = it.name?.asString()!!
+                    "$paramName·=·$paramName"
+                } + "»\n)"
+            )
+        } else if (konvertData.additionalParameters.isEmpty()) {
             addCode(
                 "return·super.${konvertData.mapFunctionName}(${konvertData.paramName})"
             )
@@ -127,11 +140,16 @@ object KonverterCodeGenerator {
                     .validated(konvertData.mapKSFunctionDeclaration, logger),
                 enforcedConstructorTypes = konvertData.annotationData.constructor,
                 context = MappingContext(
-                    sourceClassDeclaration = konvertData.sourceClassDeclaration,
+                    sources = konvertData.sourceParameters.map {
+                        val sourceType = it.type.resolve()
+                        MappingSource(
+                            classDeclaration = sourceType.classDeclaration()!!,
+                            type = sourceType,
+                            paramName = it.name!!.asString(),
+                        )
+                    },
                     targetClassDeclaration = konvertData.targetClassDeclaration,
-                    source = konvertData.sourceType,
                     target = konvertData.targetType,
-                    paramName = konvertData.paramName,
                     targetClassImportName = targetClassImportName,
                 ),
                 visibilityContext = MappingVisibilityContext.Declaration(konvertData.mapKSFunctionDeclaration),
@@ -170,7 +188,7 @@ object KonverterCodeGenerator {
 
     fun toFunctionFullyQualifiedNames(data: KonverterData): List<String> {
         return data.konvertData
-            .filter { it.additionalParameters.isEmpty() } // filter out mappings with more than one parameter
+            .filter { it.additionalParameters.isEmpty() && !it.hasMultipleSources } // filter out mappings with more than one parameter
             .map {
                 val packageName = data.konverterInterface.packageName
                 val simpleName = data.konverterInterface.simpleName + Konverter.KONVERTER_GENERATED_CLASS_SUFFIX

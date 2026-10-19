@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New features
+* Map several sources into one target by annotating several parameters of a `@Konverter` function with `@Konverter.Source` [#71](https://github.com/mcarleio/konvert/issues/71)
+   * target properties are matched by name against the properties of all sources; a property found in several sources is a compile error unless a `@Mapping` decides it
+   * `Mapping.source` may be qualified by the parameter name and navigate nested properties, e.g. `Mapping(target = "city", source = "entity.customer.address.city")`, reading null-safely after a nullable step
+   * source properties are converted with the registered type converters, nullable source parameters are read with `?.`
+
 
 ## [4.5.1]
 

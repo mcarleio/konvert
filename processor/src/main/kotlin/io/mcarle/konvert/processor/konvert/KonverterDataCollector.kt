@@ -60,8 +60,8 @@ object KonverterDataCollector {
                     return@mapNotNull null
                 }
 
-                val sourceValueParameter = determineSourceParam(it, logger)
-                val source = sourceValueParameter?.type
+                val sourceValueParameters = determineSourceParams(it)
+                val source = sourceValueParameters.firstOrNull()?.type
                 val target = it.returnType?.let { returnType ->
                     if (returnType.resolve().declaration == resolver.getClassDeclarationByName<Unit>()) {
                         null
@@ -81,8 +81,8 @@ object KonverterDataCollector {
                 if (it.isAbstract) {
                     // abstract functions must have a defined source and target type
                     check(source != null && target != null) {
-                        "${Konvert::class.simpleName} annotated function must have exactly one source parameter (either single " +
-                            "parameter or annotated with @${Konverter::class.simpleName}.${Konverter.Source::class.simpleName}) " +
+                        "${Konvert::class.simpleName} annotated function must have a source parameter (either a single " +
+                            "parameter or parameters annotated with @${Konverter::class.simpleName}.${Konverter.Source::class.simpleName}) " +
                             "and must have a return type: ${it.qualifiedName?.asString() ?: it}"
                     }
                 }
@@ -95,7 +95,8 @@ object KonverterDataCollector {
                         sourceTypeReference = source,
                         targetTypeReference = target,
                         mapKSFunctionDeclaration = it,
-                        additionalParameters = determineAdditionalParams(it, sourceValueParameter)
+                        sourceParameters = sourceValueParameters,
+                        additionalParameters = it.parameters - sourceValueParameters.toSet()
                     )
                 } else {
                     if (annotation != null) {
@@ -109,32 +110,12 @@ object KonverterDataCollector {
     }
 
     @OptIn(KspExperimental::class)
-    private fun determineSourceParam(function: KSFunctionDeclaration, logger: KSPLogger): KSValueParameter? {
+    private fun determineSourceParams(function: KSFunctionDeclaration): List<KSValueParameter> {
         val parameters = function.parameters
         return when {
-            parameters.isEmpty() -> null
-            parameters.size > 1 -> {
-                val sourceParameter = parameters.filter { it.isAnnotationPresent(Konverter.Source::class) }
-                when {
-                    sourceParameter.isEmpty() -> null
-                    sourceParameter.size > 1 -> {
-                        logger.error("Ignored method as multiple parameters were annotated with @Konverter.Source", function)
-                        null
-                    }
-
-                    else -> sourceParameter.first()
-                }
-            }
-
-            else -> parameters.first()
+            parameters.size > 1 -> parameters.filter { it.isAnnotationPresent(Konverter.Source::class) }
+            else -> parameters
         }
-    }
-
-    @OptIn(KspExperimental::class)
-    private fun determineAdditionalParams(function: KSFunctionDeclaration, sourceParam: KSValueParameter?): List<KSValueParameter> {
-        return function.parameters
-            .filterNot { it.isAnnotationPresent(Konverter.Source::class) }
-            .filterNot { it == sourceParam }
     }
 
 }

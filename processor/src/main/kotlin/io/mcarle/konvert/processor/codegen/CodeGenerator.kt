@@ -15,6 +15,7 @@ import io.mcarle.konvert.converter.api.config.invalidMappingStrategy
 import io.mcarle.konvert.converter.api.config.nonConstructorPropertiesMapping
 import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.AnnotatedConverter
+import io.mcarle.konvert.processor.exceptions.AmbiguousSourceException
 import io.mcarle.konvert.processor.exceptions.InvalidMappingException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
 import io.mcarle.konvert.processor.sourcedata.DefaultSourceDataExtractionStrategy
@@ -36,29 +37,45 @@ class CodeGenerator constructor(
         visibilityContext: MappingVisibilityContext,
         additionalSourceParameters: List<KSValueParameter>
     ): CodeBlock {
-        if (context.paramName != null && mappings.isEmpty()) {
+        val singleSource = context.sources.singleOrNull()
+        if (singleSource?.paramName != null && mappings.isEmpty()) {
             val existingTypeConverter = TypeConverterRegistry
                 .firstOrNull {
-                    it.matches(context.source, context.target) && it !is AnnotatedConverter
+                    it.matches(singleSource.type, context.target) && it !is AnnotatedConverter
                 }
 
             if (existingTypeConverter != null) {
                 return CodeBlock.of(
                     "return·%L",
-                    existingTypeConverter.convert(context.paramName, context.source, context.target)
+                    existingTypeConverter.convert(singleSource.paramName, singleSource.type, context.target)
                 )
             }
         }
 
-        val sourceDataList = sourceDataExtractionStrategy.extract(resolver, context.sourceClassDeclaration, visibilityContext)
         val targetData = targetDataExtractionStrategy.extract(resolver, context.targetClassDeclaration, visibilityContext)
 
-        val sourceProperties = PropertyMappingResolver(logger).determinePropertyMappings(
-            mappingParamName = context.paramName,
-            mappings = mappings,
-            additionalSourceParameters = additionalSourceParameters,
-            sourceDataList = sourceDataList
-        )
+        val sourceProperties = if (singleSource != null) {
+            val sourceDataList = sourceDataExtractionStrategy.extract(resolver, singleSource.classDeclaration, visibilityContext)
+            PropertyMappingResolver(logger).determinePropertyMappings(
+                mappingParamName = singleSource.paramName,
+                mappings = mappings,
+                additionalSourceParameters = additionalSourceParameters,
+                sourceDataList = sourceDataList
+            )
+        } else {
+            PropertyMappingResolver(logger).determinePropertyMappings(
+                sources = context.sources.map {
+                    PropertyMappingResolver.SourceWithData(
+                        paramName = requireNotNull(it.paramName) { "Every one of several sources must be a parameter" },
+                        type = it.type,
+                        sourceDataList = sourceDataExtractionStrategy.extract(resolver, it.classDeclaration, visibilityContext)
+                    )
+                },
+                mappings = mappings,
+                additionalSourceParameters = additionalSourceParameters,
+                extractSourceData = { sourceDataExtractionStrategy.extract(resolver, it, visibilityContext) }
+            )
+        }
 
         val constructor = ConstructorResolver.determineConstructor(
             targetData = targetData,
@@ -90,6 +107,13 @@ class CodeGenerator constructor(
             constructorParameters,
             targetData,
             effectiveNonConstructorPropertiesMappingMode
+        )
+
+        verifyNoAmbiguousSource(
+            sourceProperties,
+            constructorParameters.mapNotNull { it.name?.asString() }
+                + variablesWithoutConstructorParameters.map { it.name }
+                + remainingSetters.map { it.name }
         )
 
         return MappingCodeGenerator(logger).generateMappingCode(
@@ -223,6 +247,22 @@ class CodeGenerator constructor(
             )
         }
         return settersToSourceProperty.filterValues { it != null && !it.ignore }.keys
+    }
+
+    /**
+     * With several sources, a target that properties of different sources match by name must be mapped explicitly.
+     * A mapping or an additional parameter for that target takes precedence, so it is not ambiguous then.
+     */
+    private fun verifyNoAmbiguousSource(sourceProperties: List<PropertyMappingInfo>, targetNames: List<String>) {
+        targetNames.distinct().forEach { targetName ->
+            val matching = sourceProperties.filter { it.targetName == targetName }
+            if (matching.any { it.isBasedOnAnnotation || it.sourceData == null }) return@forEach
+
+            val sourcesByParam = matching.filter { it.sourcePath != null }.distinctBy { it.mappingParamName }
+            if (sourcesByParam.size > 1) {
+                throw AmbiguousSourceException(targetName, sourcesByParam.map { "${it.mappingParamName}.${it.sourceName}" })
+            }
+        }
     }
 
     private fun verifyAvailableMappingsForConstructorParameters(

@@ -30,6 +30,13 @@ annotation class Konverter(
     val options: Array<Konfig> = []
 ) {
 
+    /**
+     * Marks the parameter to map from, when a function has further parameters. Those are mapped to the same named target
+     * properties as they are.
+     *
+     * Several parameters can be marked to map all of them into one target: a target property is then matched by name
+     * against the properties of all sources, and must be decided with a [Mapping] if more than one source has it.
+     */
     @Retention(AnnotationRetention.RUNTIME)
     @Target(AnnotationTarget.VALUE_PARAMETER)
     annotation class Source

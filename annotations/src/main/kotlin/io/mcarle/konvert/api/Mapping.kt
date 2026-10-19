@@ -17,6 +17,9 @@ annotation class Mapping(
     val target: String,
     /**
      * The source property name of the source class.
+     *
+     * In a function with several [Konverter.Source] parameters, it may be qualified by the parameter name and navigate
+     * nested properties, e.g. `entity.customer.name`. Unqualified, exactly one source must have the property.
      */
     val source: String = "",
     /**
@@ -36,7 +39,8 @@ annotation class Mapping(
      */
     val constant: String = "",
     /**
-     * You can use the variable named __`it`__ to get the source object.
+     * You can use the variable named __`it`__ to get the source object. A function with several [Konverter.Source]
+     * parameters has no __`it`__, refer to the parameters by name instead.
      * You have to make sure yourself, that you handle the nullability correct in your expression. __`it`__ is always not null.
      *
      * ```kotlin
