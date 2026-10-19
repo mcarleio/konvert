@@ -43,7 +43,12 @@ object PersonMapperImpl: PersonMapper {
 == Sealed hierarchies
 
 If both the source and the target of a function are sealed, Konvert generates an exhaustive `when` over the subclasses of the source.
-Each source subclass is paired with the target subclass of the same simple name:
+Each source subclass is paired with a subclass of the target:
+
+* the one a converter maps it to (e.g. another function of a `@Konverter` interface), so differently named subclasses are paired by declaring a function for them
+* otherwise the one with the same simple name
+
+Then each pair is mapped:
 
 * if a converter for the pair exists (e.g. another function of a `@Konverter` interface, including ones with a default implementation), it is used
 * if the target subclass is an `object`, it is referenced
@@ -80,7 +85,7 @@ object ShapeMapperImpl: ShapeMapper {
 ----
 
 To map a pair whose fields differ, declare a function for that pair and define its mappings with xref:konvert.adoc[`@Konvert`].
-The generation fails, if a source subclass has no or more than one target subclass with the same simple name,
+The generation fails, if a source subclass has no or more than one target subclass to pair with,
 if the sealed types are generic, if the function defines `mappings` or `constructor`,
 or if a nullable source should be mapped to a non-nullable target.
 

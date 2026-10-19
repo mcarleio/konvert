@@ -70,7 +70,15 @@ class SealedClassMappingCodeGenerator(
     ): List<Branch> {
         val targetSubclasses = target.getSealedSubclasses().toList()
         val pairs = source.getSealedSubclasses().associateWith { sourceSubclass ->
-            val candidates = targetSubclasses.filter { it.simpleName.asString() == sourceSubclass.simpleName.asString() }
+            val sameName = targetSubclasses.filter { it.simpleName.asString() == sourceSubclass.simpleName.asString() }
+            val convertible = targetSubclasses.filter { targetSubclass ->
+                TypeConverterRegistry.any { it.matches(sourceSubclass.asStarProjectedType(), targetSubclass.asStarProjectedType()) }
+            }
+            val candidates = when {
+                convertible.size == 1 -> convertible
+                convertible.size > 1 -> convertible.intersect(sameName.toSet()).ifEmpty { convertible }.toList()
+                else -> sameName
+            }
             if (candidates.size > 1) {
                 throw SealedClassMappingException.ambiguousTargetSubclasses(sourceSubclass, target, candidates)
             }

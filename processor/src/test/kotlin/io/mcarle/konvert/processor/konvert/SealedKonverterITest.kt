@@ -361,6 +361,81 @@ interface Mapper {
     }
 
     @Test
+    fun pairSubclassesWithDifferentNamesThroughKonverterFunction() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+sealed interface PricingPayload {
+    val type: String
+}
+data class LinearPricingPayload(override val type: String, val price: Int) : PricingPayload
+data class PerWinPricingPayload(override val type: String, val pricePerWin: Int) : PricingPayload
+
+sealed interface PricingData
+data class LinearData(val price: Int) : PricingData
+data class PerWinData(val pricePerWin: Int) : PricingData
+
+@Konverter
+interface Mapper {
+    fun toData(source: PricingPayload): PricingData
+    fun toData(source: LinearPricingPayload): LinearData
+    fun toData(source: PerWinPricingPayload): PerWinData
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(
+            mapperCode,
+            """
+              override fun toData(source: PricingPayload): PricingData = when (source) {
+                is LinearPricingPayload -> this.toData(source = source)
+                is PerWinPricingPayload -> this.toData(source = source)
+              }
+            """.trimIndent().prependIndent("  ")
+        )
+    }
+
+    @Test
+    fun konverterFunctionWinsOverSameNamedSubclass() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+sealed interface Source {
+    data class A(val value: String) : Source
+}
+sealed interface Target {
+    data class A(val value: String) : Target
+    data class Legacy(val value: String) : Target
+}
+
+@Konverter
+interface Mapper {
+    fun toTarget(source: Source): Target
+    fun toLegacy(source: Source.A): Target.Legacy
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertContains(mapperCode, "is Source.A -> this.toLegacy(source = source)")
+    }
+
+    @Test
     fun failOnSourceSubclassWithoutTargetPair() {
         val (_, result) = compileWith(
             enabledConverters = listOf(SameTypeConverter()),
@@ -388,7 +463,7 @@ interface Mapper {
             )
         )
 
-        assertContains(result.messages, "Target has no subclass with the simple name of [Source.B, Source.C]")
+        assertContains(result.messages, "No subclass of Target has the simple name of, or a converter from, [Source.B, Source.C]")
     }
 
     @Test
@@ -418,7 +493,7 @@ interface Mapper {
             )
         )
 
-        assertContains(result.messages, "Source.A matches more than one subclass of Target by simple name: [A, Target.A]")
+        assertContains(result.messages, "Source.A matches more than one subclass of Target: [A, Target.A]")
     }
 
     @Test

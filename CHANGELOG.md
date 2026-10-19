@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### New features
-* `@Konverter` functions map sealed hierarchies: if source and target are sealed, an exhaustive `when` pairs the subclasses by their simple name [#216](https://github.com/mcarleio/konvert/issues/216)
+* `@Konverter` functions map sealed hierarchies: if source and target are sealed, an exhaustive `when` pairs the subclasses through a declared converter or by their simple name [#216](https://github.com/mcarleio/konvert/issues/216)
 
 
 ## [4.5.1]

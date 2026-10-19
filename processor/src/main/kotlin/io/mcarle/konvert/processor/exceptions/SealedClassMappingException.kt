@@ -7,12 +7,12 @@ class SealedClassMappingException(message: String) : RuntimeException(message) {
     companion object {
         fun missingTargetSubclasses(target: KSClassDeclaration, sources: List<KSClassDeclaration>) =
             SealedClassMappingException(
-                "${target.name()} has no subclass with the simple name of ${sources.map { it.name() }.sorted()}"
+                "No subclass of ${target.name()} has the simple name of, or a converter from, ${sources.map { it.name() }.sorted()}"
             )
 
         fun ambiguousTargetSubclasses(source: KSClassDeclaration, target: KSClassDeclaration, candidates: List<KSClassDeclaration>) =
             SealedClassMappingException(
-                "${source.name()} matches more than one subclass of ${target.name()} by simple name: ${candidates.map { it.name() }.sorted()}"
+                "${source.name()} matches more than one subclass of ${target.name()}: ${candidates.map { it.name() }.sorted()}"
             )
 
         fun genericTypes(source: KSClassDeclaration, target: KSClassDeclaration) =
