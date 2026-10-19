@@ -45,14 +45,17 @@ class MappingCodeGenerator constructor(
         )
         val propertyCode = propertyCode(
             className = className,
-            functionParamName = context.paramName,
+            functionParamNames = context.sources.mapNotNull { it.paramName },
             sourceProperties = sourceProperties,
             targetProperties = targetProperties,
             targetSetters = targetSetters
         )
-        return if (context.source.isNullable()) {
+        // several sources are each read null-safely, see SourcePath
+        val source = context.sources.singleOrNull()
+        return if (source != null && source.type.isNullable()) {
             // source can only be nullable in case of @Konverter/@Konvert which require a functionParamName
-            val code = "return·${context.paramName!!}?.let·{\n⇥%L%L⇤\n}"
+            val paramName = source.paramName!!
+            val code = "return·$paramName?.let·{\n⇥%L%L⇤\n}"
             if (context.target.isNullable()) {
                 CodeBlock.of(code, constructorCode, propertyCode)
             } else {
@@ -63,12 +66,12 @@ class MappingCodeGenerator constructor(
 
                         EnforceNotNullStrategy.REQUIRE_NOT_NULL -> {
                             val requireCode =
-                                "return·requireNotNull(${context.paramName})·{·\"${context.paramName}·must·not·be·null\"·}·.let·{\n⇥%L%L⇤\n}"
+                                "return·requireNotNull($paramName)·{·\"$paramName·must·not·be·null\"·}·.let·{\n⇥%L%L⇤\n}"
                             CodeBlock.of(requireCode, constructorCode, propertyCode)
                         }
                     }
                 } else {
-                    throw NotNullOperatorNotEnabledException(context.paramName, context.source, context.target)
+                    throw NotNullOperatorNotEnabledException(paramName, source.type, context.target)
                 }
             }
         } else {
@@ -143,7 +146,7 @@ $className(${"⇥\n%L"}
 
     private fun propertyCode(
         className: String,
-        functionParamName: String?,
+        functionParamNames: List<String>,
         sourceProperties: List<PropertyMappingInfo>,
         targetProperties: List<KSPropertyDeclaration>,
         targetSetters: List<TargetSetter>
@@ -151,7 +154,7 @@ $className(${"⇥\n%L"}
         if (noTargetOrAllIgnored(sourceProperties, targetProperties, targetSetters)) return CodeBlock.of("")
 
         var varName = className.replaceFirstChar { it.lowercase(Locale.getDefault()) }
-        if (varName == functionParamName) {
+        while (varName in functionParamNames) {
             varName += "0"
         }
 
@@ -284,6 +287,7 @@ $className(${"⇥\n%L"}
         return when {
             source.ignore -> handleIgnoredSource(valueParamHasDefault, valueParamIsNullable, targetTypeRef)
             source.constant != null -> CodeBlock.of(source.constant)
+            source.expression != null && source.expressionWithoutReceiver -> CodeBlock.of("run·{ ${source.expression} }")
             source.expression != null -> {
                 val expression = "let·{ ${source.expression} }"
                 CodeBlock.of(
@@ -313,14 +317,14 @@ $className(${"⇥\n%L"}
         targetType: KSType
     ): CodeBlock {
         val sourceData = source.sourceData!!
-        val sourceType = sourceData.typeRef.resolve()
+        val sourceType = source.sourcePath?.type ?: sourceData.typeRef.resolve()
         val paramName = source.mappingParamName?.let { "$it." } ?: ""
-        val sourceAccessCode = sourceData.accessCode
+        val sourceAccessCode = source.sourcePath?.code ?: (paramName + sourceData.accessCode)
 
         return TypeConverterRegistry.withAdditionallyEnabledConverters(source.enableConverters + Configuration.enableConverters) {
             firstOrNull { it.matches(sourceType, targetType) }
-                ?.convert(paramName + sourceAccessCode, sourceType, targetType)
-                ?: throwException(paramName + source.sourceName, sourceType, source.targetName, targetType)
+                ?.convert(sourceAccessCode, sourceType, targetType)
+                ?: throwException(source.sourcePath?.code ?: (paramName + source.sourceName), sourceType, source.targetName, targetType)
         }
     }
 

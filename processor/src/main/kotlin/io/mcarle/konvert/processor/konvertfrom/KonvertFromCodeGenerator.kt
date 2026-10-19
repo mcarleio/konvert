@@ -12,6 +12,7 @@ import io.mcarle.konvert.converter.api.config.withIsolatedConfiguration
 import io.mcarle.konvert.processor.codegen.CodeBuilder
 import io.mcarle.konvert.processor.codegen.CodeGenerator
 import io.mcarle.konvert.processor.codegen.MappingContext
+import io.mcarle.konvert.processor.codegen.MappingSource
 import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
 import io.mcarle.konvert.processor.exceptions.InaccessibleDueToVisibilityClassException
 import io.mcarle.konvert.processor.exceptions.KonvertException
@@ -53,11 +54,15 @@ object KonvertFromCodeGenerator {
                             mappings = data.annotationData.mappings.validated(data.sourceClassDeclaration, environment.logger),
                             enforcedConstructorTypes = data.annotationData.constructor,
                             context = MappingContext(
-                                sourceClassDeclaration = data.sourceClassDeclaration,
+                                sources = listOf(
+                                    MappingSource(
+                                        classDeclaration = data.sourceClassDeclaration,
+                                        type = data.sourceClassDeclaration.asStarProjectedType(),
+                                        paramName = data.paramName,
+                                    )
+                                ),
                                 targetClassDeclaration = data.targetClassDeclaration,
-                                source = data.sourceClassDeclaration.asStarProjectedType(),
                                 target = data.targetClassDeclaration.asStarProjectedType(),
-                                paramName = data.paramName,
                                 targetClassImportName = null,
                             ),
                             visibilityContext = MappingVisibilityContext.TopLevelInPackage(

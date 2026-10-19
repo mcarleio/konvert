@@ -6,7 +6,8 @@
 
 The annotation `@Konverter.Source` is only being processed in abstract functions in interfaces annotated with xref:konverter.adoc[`@Konverter`].
 
-It can be used to pass additional fields to the mapping functions.
+It can be used to pass additional fields to the mapping functions, or to map several sources into one target
+(see <<multiple-sources>>).
 
 [source,kotlin]
 ----
@@ -34,4 +35,56 @@ object PersonMapperImpl : PersonMapper {
 Additional parameters passed to the mapping function take precedence over fields in the `@Konverter.Source` annotated
 parameter.
 
+[#multiple-sources]
+== Multiple sources
+
+Annotate several parameters with `@Konverter.Source` to combine them into one target.
+Each target property is matched by name against the properties of *all* sources:
+
+[source,kotlin]
+----
+@Konverter
+interface OrderMapper {
+    @Konvert(mappings = [Mapping(target = "name", source = "enrichment.name")])
+    fun toOrder(@Konverter.Source entity: OrderEntity, @Konverter.Source enrichment: OrderEnrichment?, requestedBy: String): Order
+}
+
+class OrderEntity(val id: Long, val name: String, val status: EntityStatus)
+class OrderEnrichment(val name: String, val comment: String?)
+class Order(val id: Long, val name: String?, val status: Status, val comment: String?, val requestedBy: String)
+----
+
+This will generate
+
+[source,kotlin]
+----
+object OrderMapperImpl : OrderMapper {
+  override fun toOrder(entity: OrderEntity, enrichment: OrderEnrichment?, requestedBy: String): Order = Order(
+    id = entity.id,
+    name = enrichment?.name,
+    status = when (entity.status) { ... },
+    comment = enrichment?.comment,
+    requestedBy = requestedBy
+  )
+}
+----
+
+The rules:
+
+* A target property found in more than one source is a compile error naming every candidate,
+  unless a xref:mapping.adoc[`@Mapping`] for that target, or an additional parameter of the same name, decides it.
+  A property several sources share but the target does not have is no error.
+* `Mapping.source` may be qualified by the parameter name: `enrichment.name`.
+  It may also navigate further properties: `entity.customer.address.city`.
+  An unqualified `source` keeps working as long as exactly one source has that property.
+* A source property is converted with the registered type converters, like the property of a single source
+  (e.g. an enum to another enum, or a list of classes through another mapping function).
+* A nullable source parameter is not wrapped in `?.let { ... }` as a single source is: each of its properties is read
+  with `?.`, as is every step of a path after a nullable one. A nullable value for a not nullable target then needs
+  link:../options[`konvert.enforce-not-null`], like any nullable source property does.
+  The target is always constructed, even if every source is `null`.
+* An `expression` has no `it`, as there is no single source object. Refer to the source parameters by name, e.g.
+  `Mapping(target = "summary", expression = "entity.name + enrichment.comment")`.
+* Unmarked parameters are still passed on to the same named target properties and take precedence over source properties.
+* A function with several sources is not used as a type converter by other mappings, as it cannot be called with one value.
 

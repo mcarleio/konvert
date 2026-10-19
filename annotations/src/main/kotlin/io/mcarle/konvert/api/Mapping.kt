@@ -17,6 +17,10 @@ annotation class Mapping(
     val target: String,
     /**
      * The source property name of the source class.
+     *
+     * A dotted path navigates nested properties, e.g. `customer.address.city`; every step after a nullable one is read
+     * with `?.`. The path may start with the name of the source parameter, e.g. `entity.customer.name`. In a function
+     * with several [Konverter.Source] parameters, an unqualified path must exist in exactly one source.
      */
     val source: String = "",
     /**
@@ -36,7 +40,8 @@ annotation class Mapping(
      */
     val constant: String = "",
     /**
-     * You can use the variable named __`it`__ to get the source object.
+     * You can use the variable named __`it`__ to get the source object. A function with several [Konverter.Source]
+     * parameters has no __`it`__, refer to the parameters by name instead.
      * You have to make sure yourself, that you handle the nullability correct in your expression. __`it`__ is always not null.
      *
      * ```kotlin

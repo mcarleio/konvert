@@ -23,6 +23,10 @@ class KonvertData constructor(
     val sourceTypeReference: KSTypeReference,
     val targetTypeReference: KSTypeReference,
     val mapKSFunctionDeclaration: KSFunctionDeclaration,
+    /**
+     * The parameters to map from: the single parameter, or every parameter annotated with `@Konverter.Source`
+     */
+    val sourceParameters: List<KSValueParameter>,
     val additionalParameters: List<KSValueParameter>
 ) {
 
@@ -31,7 +35,12 @@ class KonvertData constructor(
     val targetType: KSType = targetTypeReference.resolve()
     val targetClassDeclaration: KSClassDeclaration = targetType.classDeclaration()!!
     val mapFunctionName: String = mapKSFunctionDeclaration.simpleName.asString()
-    val paramName: String = (mapKSFunctionDeclaration.parameters - additionalParameters).first().name!!.asString()
+    val paramName: String = sourceParameters.first().name!!.asString()
+
+    /**
+     * A function with several sources cannot be called with a single value, so it is not offered as a type converter
+     */
+    val hasMultipleSources: Boolean = sourceParameters.size > 1
 
     val priority = annotationData.priority
 

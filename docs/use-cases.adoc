@@ -33,6 +33,19 @@ class Person(val name: String, val birthday: Date)
 class PersonDto(val name: String, val dateOfBirth: Instant)
 ----
 
+If the values of the target come from several objects, a `@Konverter` function can take them all as
+xref:annotations/konverter-source.adoc#multiple-sources[`@Konverter.Source` parameters]:
+[source,kotlin]
+----
+@Konverter
+interface PersonMapper {
+    fun toDto(@Konverter.Source person: Person, @Konverter.Source address: Address): PersonDto
+}
+class Person(val name: String, val age: Int)
+class Address(val street: String, val city: String)
+class PersonDto(val name: String, val age: Int, val street: String, val city: String)
+----
+
 As shown, Konvert can be used in various scenarios and can be customized to fulfill a lot of typical use-cases!
 
 [.info]

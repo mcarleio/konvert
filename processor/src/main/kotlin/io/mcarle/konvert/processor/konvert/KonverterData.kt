@@ -18,7 +18,7 @@ class KonverterData constructor(
 
     override fun toTypeConverters(): List<AnnotatedConverter> {
         return withIsolatedConfiguration(annotationData.options) {
-            konvertData.map {
+            konvertData.filterNot { it.hasMultipleSources }.map {
                 KonvertTypeConverter(
                     priority = it.priority,
                     alreadyGenerated = false,
