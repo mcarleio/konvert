@@ -60,7 +60,9 @@ class CodeGenerator constructor(
                 mappingParamName = singleSource.paramName,
                 mappings = mappings,
                 additionalSourceParameters = additionalSourceParameters,
-                sourceDataList = sourceDataList
+                sourceDataList = sourceDataList,
+                sourceType = singleSource.type,
+                extractSourceData = { sourceDataExtractionStrategy.extract(resolver, it, visibilityContext) }
             )
         } else {
             PropertyMappingResolver(logger).determinePropertyMappings(

@@ -18,8 +18,9 @@ annotation class Mapping(
     /**
      * The source property name of the source class.
      *
-     * In a function with several [Konverter.Source] parameters, it may be qualified by the parameter name and navigate
-     * nested properties, e.g. `entity.customer.name`. Unqualified, exactly one source must have the property.
+     * A dotted path navigates nested properties, e.g. `customer.address.city`; every step after a nullable one is read
+     * with `?.`. The path may start with the name of the source parameter, e.g. `entity.customer.name`. In a function
+     * with several [Konverter.Source] parameters, an unqualified path must exist in exactly one source.
      */
     val source: String = "",
     /**

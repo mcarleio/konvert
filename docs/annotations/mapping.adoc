@@ -25,8 +25,36 @@ class Person(val firstName: String, val lastName: String)
 class PersonDto(val givenName: String, val familyName: String)
 ----
 
-In a function with xref:konverter-source.adoc#multiple-sources[several `@Konverter.Source` parameters], `source` may
-be qualified by the parameter name and navigate further properties, e.g. `Mapping(target="city", source="entity.customer.address.city")`.
+==== Nested properties
+
+A `source` with dots navigates nested properties of the source, with every kind of mapping (`@KonvertTo`, `@KonvertFrom`
+and `@Konvert` functions with one or several sources):
+
+[source,kotlin]
+----
+class Identity(val sessionId: String)
+class Cart(val id: Long, val identity: Identity?)
+class CartDto(val id: Long, val sessionId: String?)
+
+@Konverter
+interface CartMapper {
+    @Konvert(mappings = [Mapping(target = "sessionId", source = "identity.sessionId")])
+    fun toDto(cart: Cart): CartDto
+}
+// generates: CartDto(id = cart.id, sessionId = cart.identity?.sessionId)
+----
+
+* Every step after a nullable one is read with `?.`, so the value is nullable then. Mapping it into a non-null target
+  needs the option link:../options[`konvert.enforce-not-null`], like any nullable property.
+* The value goes through the registered type converters like a property of the source itself; the last step may be any
+  readable property, also a computed one (`val sessionIdOrNull: String? get() = ...`).
+* In a `@Konvert` or `@Konverter` function, the path may start with the name of the source parameter:
+  `source="cart.identity.sessionId"`.
+* A path that does not exist is handled by the option link:../options[`konvert.invalid-mapping-strategy`], like a
+  missing property.
+
+In a function with xref:konverter-source.adoc#multiple-sources[several `@Konverter.Source` parameters], an unqualified
+`source` must exist in exactly one of them, e.g. `Mapping(target="city", source="entity.customer.address.city")`.
 
 === `constant`
 

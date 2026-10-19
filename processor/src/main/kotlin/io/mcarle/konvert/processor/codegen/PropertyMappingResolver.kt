@@ -17,14 +17,22 @@ import io.mcarle.konvert.processor.sourcedata.SourceDataExtractionStrategy
 class PropertyMappingResolver(
     private val logger: KSPLogger,
 ) {
+    /**
+     * The mappings of a function with a single source. A [Mapping.source] with a dot is a path through nested properties,
+     * resolved like a path of several sources (`identity.sessionId`, or qualified by the parameter: `cart.identity.sessionId`).
+     */
     fun determinePropertyMappings(
         mappingParamName: String?,
         mappings: List<Mapping>,
         additionalSourceParameters: List<KSValueParameter>,
-        sourceDataList: List<SourceDataExtractionStrategy.SourceData>
+        sourceDataList: List<SourceDataExtractionStrategy.SourceData>,
+        sourceType: KSType,
+        extractSourceData: (KSClassDeclaration) -> List<SourceDataExtractionStrategy.SourceData>
     ): List<PropertyMappingInfo> {
+        // a nullable single source is mapped inside `source?.let { ... }`, so a path starts from the smart cast, non-null value
+        val pathSource = SourceWithData(mappingParamName, sourceType.makeNotNullable(), sourceDataList)
         val propertiesWithoutSource = getPropertyMappingsWithoutSource(mappings, mappingParamName)
-        val propertiesWithSource = getPropertyMappingsWithSource(mappings, sourceDataList, mappingParamName)
+        val propertiesWithSource = getPropertyMappingsWithSource(mappings, sourceDataList, mappingParamName, pathSource, extractSourceData)
         val propertiesFromAdditionalParameters = getPropertyMappingsFromAdditionalParameters(additionalSourceParameters)
         val propertiesWithoutMappings = getPropertyMappingsWithoutMappings(sourceDataList, mappingParamName)
 
@@ -89,17 +97,7 @@ class PropertyMappingResolver(
             .filter { it.source.isNotEmpty() }
             .associateWith { resolveSourcePath(it, sources, extractSourceData) }
 
-        val missingSourceMappings = resolvedMappings.filterValues { it == null }.keys
-        if (missingSourceMappings.isNotEmpty()) {
-            when (Configuration.invalidMappingStrategy) {
-                InvalidMappingStrategy.FAIL -> throw InvalidMappingException.missingSource(missingSourceMappings)
-                InvalidMappingStrategy.WARN -> {
-                    missingSourceMappings.forEach {
-                        logger.warn("Ignoring the mapping $it as the source field '${it.source}' does not exist.")
-                    }
-                }
-            }
-        }
+        handleMissingSources(resolvedMappings.filterValues { it == null }.keys)
 
         return resolvedMappings.mapNotNull { (annotation, path) ->
             if (path == null) return@mapNotNull null
@@ -161,7 +159,10 @@ class PropertyMappingResolver(
      * A source parameter with the properties readable from it
      */
     data class SourceWithData(
-        val paramName: String,
+        /**
+         * `null` when the source is the receiver (`@KonvertTo`)
+         */
+        val paramName: String?,
         val type: KSType,
         val sourceDataList: List<SourceDataExtractionStrategy.SourceData>
     )
@@ -180,7 +181,11 @@ class PropertyMappingResolver(
             return SourcePathStep(
                 source = source,
                 step = sourceData,
-                code = code + (if (nullable) "?." else ".") + sourceData.accessCode,
+                code = when {
+                    code.isEmpty() -> sourceData.accessCode
+                    nullable -> "$code?.${sourceData.accessCode}"
+                    else -> "$code.${sourceData.accessCode}"
+                },
                 nullable = nullable || type.isNullable(),
                 type = type
             )
@@ -195,7 +200,7 @@ class PropertyMappingResolver(
             fun start(source: SourceWithData) = SourcePathStep(
                 source = source,
                 step = null,
-                code = source.paramName,
+                code = source.paramName ?: "",
                 nullable = source.type.isNullable(),
                 type = source.type
             )
@@ -241,45 +246,52 @@ class PropertyMappingResolver(
     private fun getPropertyMappingsWithSource(
         mappings: List<Mapping>,
         sourceDataList: List<SourceDataExtractionStrategy.SourceData>,
-        mappingParamName: String?
+        mappingParamName: String?,
+        pathSource: SourceWithData,
+        extractSourceData: (KSClassDeclaration) -> List<SourceDataExtractionStrategy.SourceData>
     ): List<PropertyMappingInfo> {
-
-        val missingSourceMappings = mappings
+        val (pathMappings, propertyMappings) = mappings
             .filter { it.source.isNotEmpty() }
-            .filter { sourceDataList.none { property -> property.name == it.source } }
+            .partition { '.' in it.source }
 
-        if (missingSourceMappings.isNotEmpty()) {
-            when (Configuration.invalidMappingStrategy) {
-                InvalidMappingStrategy.FAIL -> throw InvalidMappingException.missingSource(missingSourceMappings)
-                InvalidMappingStrategy.WARN -> {
-                    missingSourceMappings.forEach {
-                        logger.warn("Ignoring the mapping $it as the source field '${it.source}' does not exist.")
-                    }
+        val resolvedPaths = pathMappings.associateWith { annotation ->
+            resolveSourcePath(annotation, listOf(pathSource), extractSourceData)
+        }
+        val resolvedProperties = propertyMappings.associateWith { annotation ->
+            sourceDataList.firstOrNull { it.name == annotation.source }
+        }
+
+        val missing = resolvedPaths.filterValues { it == null }.keys + resolvedProperties.filterValues { it == null }.keys
+        handleMissingSources(mappings.filter { it in missing })
+
+        return mappings.mapNotNull { annotation ->
+            val path = resolvedPaths[annotation]
+            val sourceData = path?.sourceData ?: resolvedProperties[annotation] ?: return@mapNotNull null
+            PropertyMappingInfo(
+                mappingParamName = mappingParamName,
+                sourceName = sourceData.name,
+                targetName = annotation.target,
+                constant = annotation.constant.takeIf { it.isNotEmpty() },
+                expression = annotation.expression.takeIf { it.isNotEmpty() },
+                ignore = annotation.ignore,
+                enableConverters = annotation.enable.toList(),
+                sourceData = sourceData,
+                isBasedOnAnnotation = true,
+                sourcePath = path?.toSourcePath()
+            )
+        }
+    }
+
+    private fun handleMissingSources(missingSourceMappings: Collection<Mapping>) {
+        if (missingSourceMappings.isEmpty()) return
+        when (Configuration.invalidMappingStrategy) {
+            InvalidMappingStrategy.FAIL -> throw InvalidMappingException.missingSource(missingSourceMappings)
+            InvalidMappingStrategy.WARN -> {
+                missingSourceMappings.forEach {
+                    logger.warn("Ignoring the mapping $it as the source field '${it.source}' does not exist.")
                 }
             }
         }
-
-        return (mappings - missingSourceMappings)
-            .filter { it.source.isNotEmpty() }
-            .map { annotation ->
-                annotation to sourceDataList.first { property ->
-                    property.name == annotation.source
-                }
-            }
-            .map { (annotation, sourceData) ->
-                PropertyMappingInfo(
-                    mappingParamName = mappingParamName,
-                    sourceName = sourceData.name,
-                    targetName = annotation.target,
-                    constant = annotation.constant.takeIf { it.isNotEmpty() },
-                    expression = annotation.expression.takeIf { it.isNotEmpty() },
-                    ignore = annotation.ignore,
-                    enableConverters = annotation.enable.toList(),
-                    sourceData = sourceData,
-                    isBasedOnAnnotation = true
-                )
-            }
-
     }
 
     private fun getPropertyMappingsWithoutSource(
