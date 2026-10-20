@@ -1,11 +1,13 @@
 package io.mcarle.konvert.processor
 
+import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.IntToStringConverter
 import io.mcarle.konvert.converter.IterableToListConverter
 import io.mcarle.konvert.converter.IterableToSetConverter
 import io.mcarle.konvert.converter.MapToMapConverter
 import io.mcarle.konvert.converter.SameTypeConverter
+import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
@@ -553,6 +555,229 @@ interface Mapper {
 
         assertContains(mapperCode, "tags = source.tags.map { this.toTag(source = it) }")
         assertContains(mapperCode, "plainTags = source.plainTags.toSet()")
+    }
+
+    @Test
+    fun resolveStarBoundTypeParameterOfDirectlyDeclaredMemberToItsUpperBound() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceBox<T>(val value: T, val nullableValue: T?)
+data class TargetBox(val value: Any?, val nullableValue: Any?)
+
+@Konverter
+interface Mapper {
+    fun toBox(source: SourceBox<*>): TargetBox
+}
+                    """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        // an unbounded type parameter bound to a star projection is effectively `Any?`
+        assertContains(mapperCode, "value = source.value")
+        assertContains(mapperCode, "nullableValue = source.nullableValue")
+    }
+
+    @Test
+    fun resolveStarBoundTypeParameterOfDirectlyDeclaredMemberToItsDeclaredUpperBound() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IterableToSetConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+typealias Tags<T> = List<T>
+
+data class SourceBox<T : Tags<String>>(val value: T)
+data class TargetBox(val value: Set<String>)
+
+@Konverter
+interface Mapper {
+    fun toBox(source: SourceBox<*>): TargetBox
+}
+                    """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        // the upper bound (`Tags<String>` -> `List<String>`) is used and its typealias is expanded
+        assertContains(mapperCode, "value = source.value.toSet()")
+    }
+
+    @Test
+    fun narrowStarProjectionInTypeArgumentPositionToUpperBound() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceBox<T : Number>(val values: List<T>)
+data class TargetBox(val values: List<Number>)
+
+@Konverter
+interface Mapper {
+    fun toBox(source: SourceBox<*>): TargetBox
+}
+                    """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        // `SourceBox<*>.values` is a `List<out Number>` (like in Kotlin) and therefore assignable to `List<Number>`
+        assertContains(mapperCode, "values = source.values")
+    }
+
+    @Test
+    fun keepStarProjectionInInvariantTypeArgumentPosition() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceBox<T : Number>(val values: MutableList<T>)
+data class TargetBox(val values: MutableList<Number>)
+
+@Konverter
+interface Mapper {
+    fun toBox(source: SourceBox<*>): TargetBox
+}
+                    """.trimIndent()
+            )
+        )
+
+        // `MutableList` is invariant, therefore a `MutableList<out Number>` is not a `MutableList<Number>`
+        // (the very same mapping is rejected by the Kotlin compiler as well)
+        assertContains(compilationResult.messages, NoMatchingTypeConverterException::class.qualifiedName!!)
+        assertContains(compilationResult.messages, "MutableList<out Number> -> MutableList<Number>")
+    }
+
+    @Test
+    fun keepStarProjectionInContravariantTypeArgumentPosition() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceBox<T : Number>(val cmp: Comparable<T>)
+data class TargetBox(val cmp: Comparable<Number>)
+
+@Konverter
+interface Mapper {
+    fun toBox(source: SourceBox<*>): TargetBox
+}
+                    """.trimIndent()
+            )
+        )
+
+        // in an `in` position the upper bound must not be used, as `SourceBox<*>.cmp` is a `Comparable<in Nothing>`
+        // (the very same mapping is rejected by the Kotlin compiler as well)
+        assertContains(compilationResult.messages, NoMatchingTypeConverterException::class.qualifiedName!!)
+        assertContains(compilationResult.messages, "Comparable<*> -> Comparable<Number>")
+    }
+
+    @Test
+    fun resolveStarBoundTypeParameterOfDirectlyDeclaredMemberToItsNullableUpperBound() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceBox<T : Number?>(val value: T)
+data class TargetBox(val value: Number?)
+
+@Konverter
+interface Mapper {
+    fun toBox(source: SourceBox<*>): TargetBox
+}
+                    """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        // the nullability of the upper bound is kept (`Number?` instead of `Any?`)
+        assertContains(mapperCode, "value = source.value")
+    }
+
+    @Test
+    fun resolveStarBoundTypeParameterWithSelfReferencingUpperBound() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IterableToSetConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceBox<T : List<T>>(val value: T)
+data class TargetBox(val value: Set<Any?>)
+
+@Konverter
+interface Mapper {
+    fun toBox(source: SourceBox<*>): TargetBox
+}
+                    """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        // the upper bound itself references the starred type parameter: `List<T>` -> `List<*>`
+        // (and the resolution does not end up in an endless recursion)
+        assertContains(mapperCode, "value = source.value.toSet()")
+    }
+
+    @Test
+    fun resolveStarBoundTypeParameterWithMultipleUpperBoundsToAnyNullable() {
+        val (_, compilationResult) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceBox<T>(val value: T) where T : Number, T : Comparable<T>
+data class TargetBox(val value: Number)
+
+@Konverter
+interface Mapper {
+    fun toBox(source: SourceBox<*>): TargetBox
+}
+                    """.trimIndent()
+            )
+        )
+
+        // multiple upper bounds would require an intersection type (`Number & Comparable<T>`), which cannot be
+        // represented -> the type parameter falls back to `Any?` instead of using one of the bounds
+        assertContains(compilationResult.messages, NoMatchingTypeConverterException::class.qualifiedName!!)
+        assertContains(compilationResult.messages, "Any? -> Number")
     }
 
     @Test
