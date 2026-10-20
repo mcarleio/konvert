@@ -27,7 +27,7 @@ class DefaultTargetDataExtractionStrategy : TargetDataExtractionStrategy {
             .filter { it.extensionReceiver == null }
             .filter { it.isVisibleFrom(visibilityContext) }
             .filter { it.isMutable }
-            .map { TargetDataExtractionStrategy.TargetVarProperty(it, substitution, resolver) }
+            .map { TargetDataExtractionStrategy.TargetVarProperty(it, targetType, substitution, resolver) }
 
         val setters = classDeclaration.getAllFunctions()
             .filter { it.extensionReceiver == null }
@@ -39,6 +39,7 @@ class DefaultTargetDataExtractionStrategy : TargetDataExtractionStrategy {
                 TargetDataExtractionStrategy.TargetSetter(
                     it,
                     determineCorrespondingGetter(it, classDeclaration, resolver),
+                    targetType,
                     substitution,
                     resolver
                 )

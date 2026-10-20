@@ -10,7 +10,8 @@ import io.mcarle.konvert.converter.api.isNullable
 import io.mcarle.konvert.processor.ResolvedType
 import io.mcarle.konvert.processor.TypeSubstitution
 import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
-import io.mcarle.konvert.processor.resolveFully
+import io.mcarle.konvert.processor.resolveReturnTypeAsMemberOf
+import io.mcarle.konvert.processor.resolveTypeAsMemberOf
 
 fun interface SourceDataExtractionStrategy {
 
@@ -29,16 +30,17 @@ fun interface SourceDataExtractionStrategy {
         companion object {
             fun from(
                 function: KSFunctionDeclaration,
+                sourceType: ResolvedType,
                 substitution: TypeSubstitution,
                 resolver: Resolver
             ): SourceData? {
                 val functionName = function.simpleName.asString()
                 if (matchesGetterName(functionName)) {
-                    return SourceGetter(function, substitution, resolver)
+                    return SourceGetter(function, sourceType, substitution, resolver)
                 }
 
                 if (matchesIsFunction(functionName, function.returnType!!.resolve(), resolver.builtIns.booleanType)) {
-                    return SourceFunction(function, substitution, resolver)
+                    return SourceFunction(function, sourceType, substitution, resolver)
                 }
 
                 return null
@@ -56,23 +58,25 @@ fun interface SourceDataExtractionStrategy {
 
     data class SourceProperty(
         private val property: KSPropertyDeclaration,
+        private val sourceType: ResolvedType,
         private val substitution: TypeSubstitution,
         private val resolver: Resolver
     ) : SourceData {
         override val name: String = property.simpleName.asString()
-        override val type: ResolvedType by lazy { property.type.resolveFully(resolver, substitution) }
+        override val type: ResolvedType by lazy { property.resolveTypeAsMemberOf(sourceType, resolver, substitution) }
         override val accessCode: String = name
     }
 
     data class SourceGetter(
         private val getter: KSFunctionDeclaration,
+        private val sourceType: ResolvedType,
         private val substitution: TypeSubstitution,
         private val resolver: Resolver
     ) : SourceData {
         override val name: String = getter.simpleName.asString()
             .removePrefix("get")
             .replaceFirstChar { it.lowercase() }
-        override val type: ResolvedType by lazy { getter.returnType!!.resolveFully(resolver, substitution) }
+        override val type: ResolvedType by lazy { getter.resolveReturnTypeAsMemberOf(sourceType, resolver, substitution) }
         override val accessCode: String =
             if (getter.origin in listOf(Origin.JAVA, Origin.JAVA_LIB)) name else "${getter.simpleName.asString()}()"
     }
@@ -82,11 +86,12 @@ fun interface SourceDataExtractionStrategy {
      */
     data class SourceFunction(
         private val function: KSFunctionDeclaration,
+        private val sourceType: ResolvedType,
         private val substitution: TypeSubstitution,
         private val resolver: Resolver
     ) : SourceData {
         override val name: String = function.simpleName.asString()
-        override val type: ResolvedType by lazy { function.returnType!!.resolveFully(resolver, substitution) }
+        override val type: ResolvedType by lazy { function.resolveReturnTypeAsMemberOf(sourceType, resolver, substitution) }
 
         /**
          * no need for `()` suffix

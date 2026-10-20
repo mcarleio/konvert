@@ -3,6 +3,8 @@ package io.mcarle.konvert.processor
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.KSTypeArgument
@@ -53,6 +55,69 @@ fun KSType.resolveFully(resolver: Resolver, substitution: TypeSubstitution = Typ
     ResolvedType.of(this, resolver, substitution)
 
 /**
+ * Fully resolves the type of this property as seen from the given [owner] (e.g. `T` of an inherited
+ * `val value: T` declared in `Base<T>` resolves to `Int` for `class Source : Base<Int>`).
+ *
+ * @see resolveAsMemberOf
+ */
+fun KSPropertyDeclaration.resolveTypeAsMemberOf(
+    owner: ResolvedType,
+    resolver: Resolver,
+    substitution: TypeSubstitution
+): ResolvedType = resolveAsMemberOf(
+    owner, resolver, substitution,
+    declared = { type.resolve() },
+    inherited = { asMemberOf(it) }
+)
+
+/**
+ * Fully resolves the return type of this function as seen from the given [owner].
+ *
+ * @see resolveAsMemberOf
+ */
+fun KSFunctionDeclaration.resolveReturnTypeAsMemberOf(
+    owner: ResolvedType,
+    resolver: Resolver,
+    substitution: TypeSubstitution
+): ResolvedType = resolveAsMemberOf(
+    owner, resolver, substitution,
+    declared = { returnType!!.resolve() },
+    inherited = { asMemberOf(it).returnType!! }
+)
+
+/**
+ * Fully resolves the type of the single parameter of this function (e.g. a setter) as seen from the given [owner].
+ *
+ * @see resolveAsMemberOf
+ */
+fun KSFunctionDeclaration.resolveSingleParameterTypeAsMemberOf(
+    owner: ResolvedType,
+    resolver: Resolver,
+    substitution: TypeSubstitution
+): ResolvedType = resolveAsMemberOf(
+    owner, resolver, substitution,
+    declared = { parameters.single().type.resolve() },
+    inherited = { asMemberOf(it).parameterTypes.single()!! }
+)
+
+/**
+ * Members declared directly in the [owner] are resolved by their declared type, whose type parameters are
+ * replaced afterwards via the [substitution] (which must belong to the [owner]).
+ * Inherited members are resolved via `asMemberOf`, so that the type arguments of the supertypes
+ * (e.g. `Base<Int>`) are applied.
+ */
+private inline fun <D : KSDeclaration> D.resolveAsMemberOf(
+    owner: ResolvedType,
+    resolver: Resolver,
+    substitution: TypeSubstitution,
+    declared: D.() -> KSType,
+    inherited: D.(KSType) -> KSType
+): ResolvedType {
+    val memberType = if (this.parentDeclaration == owner.declaration) declared() else inherited(owner.ksType)
+    return memberType.resolveFully(resolver, substitution)
+}
+
+/**
  * Recursively expands all typealiases and replaces all type parameters known by the given [substitution].
  *
  * Examples (with `typealias Tags<T> = List<Tag<T>>`):
@@ -94,9 +159,9 @@ private fun KSType.fullyResolved(resolver: Resolver, substitution: TypeSubstitut
  * (`Any?` if unbounded) - exactly like Kotlin does when accessing such a member through a star projection.
  */
 private fun KSTypeParameter.effectiveUpperBoundIfStar(resolver: Resolver, substitution: TypeSubstitution): KSType? {
-    if (!substitution.isStar(this)) return null
+    val origin = substitution.starOf(this)?.origin ?: return null
 
-    return this.resolvedUpperBound(resolver, substitution) ?: resolver.builtIns.anyType.makeNullable()
+    return origin.resolvedUpperBound(resolver, substitution) ?: resolver.builtIns.anyType.makeNullable()
 }
 
 /**
@@ -136,8 +201,10 @@ private fun KSTypeArgument.fullyResolved(
     val type = typeReference.resolve()
 
     val declaration = type.declaration
-    if (declaration is KSTypeParameter && substitution.isStar(declaration)) {
-        return declaration.starProjectionAt(resolver, substitution, typeReference, this.variance, parameterVariance)
+    if (declaration is KSTypeParameter) {
+        substitution.starOf(declaration)?.let { star ->
+            return star.origin.starProjectionAt(resolver, substitution, typeReference, type.isMarkedNullable || star.isNullable, this.variance, parameterVariance)
+        }
     }
 
     val resolvedType = type.fullyResolved(resolver, substitution)
@@ -145,9 +212,20 @@ private fun KSTypeArgument.fullyResolved(
     return if (resolvedType === type) {
         this
     } else {
-        resolver.getTypeArgument(resolver.createKSTypeReferenceFromKSType(resolvedType), this.variance)
+        val substituteVariance = (declaration as? KSTypeParameter)?.let { substitution.varianceOf(it) }
+        val variance = when {
+            substituteVariance != null && substituteVariance != Variance.INVARIANT -> substituteVariance
+            // An invariant container cannot be assigned as if its nested captured type were an exact bound.
+            this.variance == Variance.INVARIANT && type.containsStarredParameter(substitution) -> Variance.COVARIANT
+            else -> this.variance
+        }
+        resolver.getTypeArgument(resolver.createKSTypeReferenceFromKSType(resolvedType), variance)
     }
 }
+
+private fun KSType.containsStarredParameter(substitution: TypeSubstitution): Boolean =
+    (this.declaration is KSTypeParameter && substitution.isStar(this.declaration)) ||
+        this.arguments.any { it.type?.resolve()?.containsStarredParameter(substitution) == true }
 
 /**
  * Recreates the star projection of a type parameter which is bound to one (e.g. `Tags<*>` with
@@ -163,6 +241,7 @@ private fun KSTypeParameter.starProjectionAt(
     resolver: Resolver,
     substitution: TypeSubstitution,
     typeReference: KSTypeReference,
+    isNullable: Boolean,
     useSiteVariance: Variance,
     parameterVariance: Variance
 ): KSTypeArgument {
@@ -173,7 +252,8 @@ private fun KSTypeParameter.starProjectionAt(
     // unbounded (or multiple bounds) would result in `out Any?`, which is equivalent to the star projection
     val upperBound = this.resolvedUpperBound(resolver, substitution) ?: return starProjection
 
-    return resolver.getTypeArgument(resolver.createKSTypeReferenceFromKSType(upperBound), Variance.COVARIANT)
+    val projectedBound = if (isNullable) upperBound.makeNullable() else upperBound
+    return resolver.getTypeArgument(resolver.createKSTypeReferenceFromKSType(projectedBound), Variance.COVARIANT)
 }
 
 /**
@@ -194,11 +274,11 @@ class TypeSubstitution private constructor(
      * and therefore can only be recreated at type argument positions).
      */
     internal sealed interface Substitute {
-        data object Star : Substitute {
+        class Star(val origin: KSTypeParameter, val isNullable: Boolean = false) : Substitute {
             override fun toString(): String = "*"
         }
 
-        class Actual(val type: KSType) : Substitute {
+        class Actual(val type: KSType, val variance: Variance) : Substitute {
             override fun toString(): String = type.toString()
         }
     }
@@ -228,35 +308,45 @@ class TypeSubstitution private constructor(
             context: TypeSubstitution = EMPTY
         ): TypeSubstitution {
             val typeParameters = declaration.typeParameters
-            if (typeParameters.isEmpty() || arguments.isEmpty()) return EMPTY
+            if (typeParameters.isEmpty() || arguments.isEmpty()) return context
 
             val substitutions = typeParameters.mapIndexedNotNull { index, typeParameter ->
                 val argument = arguments.getOrNull(index) ?: return@mapIndexedNotNull null
-                val substitute = argument.substitute(resolver, context) ?: return@mapIndexedNotNull null
+                val substitute = argument.substitute(typeParameter, resolver, context) ?: return@mapIndexedNotNull null
                 typeParameter.key() to substitute
             }.toMap()
 
-            return if (substitutions.isEmpty()) EMPTY else TypeSubstitution(substitutions)
+            return if (substitutions.isEmpty()) context else TypeSubstitution(context.substitutions + substitutions, context.boundsInResolution)
         }
 
-        private fun KSTypeArgument.substitute(resolver: Resolver, context: TypeSubstitution): Substitute? {
-            if (this.variance == Variance.STAR) return Substitute.Star
+        private fun KSTypeArgument.substitute(parameter: KSTypeParameter, resolver: Resolver, context: TypeSubstitution): Substitute? {
+            if (this.variance == Variance.STAR) return Substitute.Star(parameter)
 
             val argumentType = this.type?.resolve() ?: return null
 
             // the argument may itself be a type parameter which is bound to a star projection (e.g. with
             // `typealias Tags<T> = List<T>` and `typealias Boxes<T> = Tags<T>`, resolving `Boxes<*>`)
-            if (context.isStar(argumentType.declaration)) return Substitute.Star
+            (argumentType.declaration as? KSTypeParameter)?.let { context.starOf(it) }?.let {
+                return Substitute.Star(it.origin, it.isNullable || argumentType.isMarkedNullable)
+            }
 
-            return Substitute.Actual(argumentType.fullyResolved(resolver, context))
+            val forwardedVariance = (argumentType.declaration as? KSTypeParameter)?.let { context.varianceOf(it) }
+            val variance = if (this.variance == Variance.INVARIANT) forwardedVariance ?: this.variance else this.variance
+            return Substitute.Actual(argumentType.fullyResolved(resolver, context), variance)
         }
     }
 
     internal fun typeOf(typeParameter: KSTypeParameter): KSType? =
         (substitutions[typeParameter.key()] as? Substitute.Actual)?.type
 
+    internal fun varianceOf(typeParameter: KSTypeParameter): Variance? =
+        (substitutions[typeParameter.key()] as? Substitute.Actual)?.variance
+
+    internal fun starOf(typeParameter: KSTypeParameter): Substitute.Star? =
+        substitutions[typeParameter.key()] as? Substitute.Star
+
     internal fun isStar(declaration: KSDeclaration): Boolean =
-        declaration is KSTypeParameter && substitutions[declaration.key()] === Substitute.Star
+        declaration is KSTypeParameter && starOf(declaration) != null
 
     internal fun isResolvingBoundOf(typeParameter: KSTypeParameter): Boolean =
         typeParameter.key() in boundsInResolution
@@ -279,4 +369,3 @@ private fun KSTypeParameter.key(): String {
         ?: parent.toString()
     return "$parentName#${this.name.asString()}"
 }
-

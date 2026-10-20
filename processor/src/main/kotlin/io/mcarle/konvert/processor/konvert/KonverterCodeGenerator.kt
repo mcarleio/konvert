@@ -157,7 +157,7 @@ object KonverterCodeGenerator {
     private fun CodeBuilder.addAliasedImportIfNeeded(typeReference: KSTypeReference, type: ResolvedType): String? {
         if (!isImportAlias(typeReference, typeReference.resolve())) return null
 
-        val alias = typeReference.toString()
+        val alias = typeReference.toString().substringBefore('<').removeSuffix("?")
         addImport(type.ksType, alias)
         return alias
     }

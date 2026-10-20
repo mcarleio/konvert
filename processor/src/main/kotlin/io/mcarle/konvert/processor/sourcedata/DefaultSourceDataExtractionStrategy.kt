@@ -26,7 +26,7 @@ class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
 
         val properties = classDeclaration.getAllProperties()
             .filter { it.isVisibleFrom(visibilityContext) }
-            .map { SourceDataExtractionStrategy.SourceProperty(it, substitution, resolver) }
+            .map { SourceDataExtractionStrategy.SourceProperty(it, sourceType, substitution, resolver) }
 
         val potentialFunctions = classDeclaration.getAllFunctions()
             .filter { it.parameters.isEmpty() }
@@ -35,8 +35,8 @@ class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
             .filter { it.isVisibleFrom(visibilityContext) }
 
         val functionsAndGetters = when {
-            classDeclaration.isRecord() -> handleRecords(potentialFunctions, substitution, resolver)
-            else -> handleClasses(potentialFunctions, substitution, resolver)
+            classDeclaration.isRecord() -> handleRecords(potentialFunctions, sourceType, substitution, resolver)
+            else -> handleClasses(potentialFunctions, sourceType, substitution, resolver)
         }
 
         return (properties + functionsAndGetters).toList()
@@ -44,21 +44,23 @@ class DefaultSourceDataExtractionStrategy : SourceDataExtractionStrategy {
 
     private fun handleRecords(
         potentialFunctions: Sequence<KSFunctionDeclaration>,
+        sourceType: ResolvedType,
         substitution: TypeSubstitution,
         resolver: Resolver
     ): Sequence<SourceDataExtractionStrategy.SourceData> {
         return potentialFunctions
             .filter { !it.isConstructor() && !it.modifiers.contains(Modifier.ABSTRACT) }
-            .map { SourceDataExtractionStrategy.SourceFunction(it, substitution, resolver) }
+            .map { SourceDataExtractionStrategy.SourceFunction(it, sourceType, substitution, resolver) }
     }
 
     private fun handleClasses(
         potentialFunctions: Sequence<KSFunctionDeclaration>,
+        sourceType: ResolvedType,
         substitution: TypeSubstitution,
         resolver: Resolver
     ): Sequence<SourceDataExtractionStrategy.SourceData> {
         return potentialFunctions.mapNotNull {
-            SourceDataExtractionStrategy.SourceData.from(it, substitution, resolver)
+            SourceDataExtractionStrategy.SourceData.from(it, sourceType, substitution, resolver)
         }
     }
 

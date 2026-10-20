@@ -1044,7 +1044,7 @@ interface Mapper {
         val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
         println(mapperCode)
 
-        // the import alias of the return type is kept (the one of the source parameter is lost, see KonverterCodeGenerator.isAlias)
+        // the import alias of the return type is kept (the one of the source parameter is lost, see KonverterCodeGenerator.isImportAlias)
         assertContains(mapperCode, "import b.TargetTag as TargetT")
         assertContains(mapperCode, "tags = source.tags?.map { this.toTag(source = it) }")
         assertContains(mapperCode, "tag = source.tag?.let { this.toTag(source = it) }")
@@ -1343,9 +1343,173 @@ interface BugReproMapper {
 
         assertContains(mapperCode, "tags = source.tags.map { this.toTag(source = it) }")
     }
+
+    @Test
+    fun resolveInheritedGenericSourceGetter() {
+        enforceNotNull = true
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IntToStringConverter()),
+            code = arrayOf(SourceFile.java("Base.java", """
+public class Base<T> {
+    private T value;
+    public Base(T value) { this.value = value; }
+    public T getValue() { return value; }
 }
+            """.trimIndent()), SourceFile.kotlin("TestCode.kt", """
+import io.mcarle.konvert.api.Konverter
 
+class Derived : Base<Int>(42)
+data class Target(val value: String)
 
+@Konverter interface Mapper { fun map(source: Derived): Target }
+            """.trimIndent()))
+        )
+        assertContains(compilation.generatedSourceFor("MapperKonverter.kt"), "source.value?.toString()!!")
+    }
 
+    @Test
+    fun resolveInheritedGenericTargetSetter() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IntToStringConverter()),
+            code = arrayOf(
+                SourceFile.java("Base.java", """
+public class Base<T> {
+    public void setValue(T value) {}
+}
+                """.trimIndent()),
+                SourceFile.kotlin("TestCode.kt", """
+import io.mcarle.konvert.api.Konverter
 
+class Derived : Base<String>()
+data class Source(val value: Int)
+@Konverter interface Mapper { fun map(source: Source): Derived }
+                """.trimIndent())
+            )
+        )
+        assertContains(compilation.generatedSourceFor("MapperKonverter.kt"), "source.value.toString()")
+    }
 
+    @Test
+    fun retainNestedCaptureThroughInvariantContainer() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
+            code = SourceFile.kotlin("TestCode.kt", """
+import io.mcarle.konvert.api.Konverter
+
+class SourceBox<T : Number>(val values: MutableList<List<T>>)
+data class TargetBox(val values: MutableList<List<Number>>)
+@Konverter interface Mapper { fun map(source: SourceBox<*>): TargetBox }
+            """.trimIndent())
+        )
+        assertContains(result.messages, NoMatchingTypeConverterException::class.qualifiedName!!)
+    }
+
+    @Test
+    fun retainNullableOccurrenceOnStarredBound() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
+            code = SourceFile.kotlin("TestCode.kt", """
+import io.mcarle.konvert.api.Konverter
+
+class SourceBox<T : Number>(val values: List<T?>)
+data class TargetBox(val values: List<Number>)
+@Konverter interface Mapper { fun map(source: SourceBox<*>): TargetBox }
+            """.trimIndent())
+        )
+        assertContains(result.messages, NoMatchingTypeConverterException::class.qualifiedName!!)
+    }
+
+    @Test
+    fun retainUpperBoundWhenForwardingStarThroughTypealias() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = SourceFile.kotlin("TestCode.kt", """
+import io.mcarle.konvert.api.Konverter
+
+typealias Tags<E> = List<E>
+class SourceBox<T : Number>(val values: Tags<T>)
+data class TargetBox(val values: List<Number>)
+@Konverter interface Mapper { fun map(source: SourceBox<*>): TargetBox }
+            """.trimIndent())
+        )
+        assertContains(compilation.generatedSourceFor("MapperKonverter.kt"), "values = source.values")
+    }
+
+    @Test
+    fun retainNullableStarWhenForwardingThroughTypealias() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
+            code = SourceFile.kotlin("TestCode.kt", """
+import io.mcarle.konvert.api.Konverter
+
+typealias Tags<E> = List<E>
+typealias NullableTags<T> = Tags<T?>
+class SourceBox<T : Number>(val values: NullableTags<T>)
+data class TargetBox(val values: List<Number>)
+@Konverter interface Mapper { fun map(source: SourceBox<*>): TargetBox }
+            """.trimIndent())
+        )
+        assertContains(result.messages, NoMatchingTypeConverterException::class.qualifiedName!!)
+    }
+
+    @Test
+    fun retainUseSiteVarianceWhenExpandingTypealias() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
+            code = SourceFile.kotlin("TestCode.kt", """
+import io.mcarle.konvert.api.Konverter
+
+typealias Items<T> = MutableList<T>
+data class Source(val values: Items<out Number>)
+data class Target(val values: MutableList<Number>)
+@Konverter interface Mapper { fun map(source: Source): Target }
+            """.trimIndent())
+        )
+        assertContains(result.messages, NoMatchingTypeConverterException::class.qualifiedName!!)
+    }
+
+    @Test
+    fun retainUseSiteVarianceWhenForwardingThroughTypealiases() {
+        val (_, result) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            expectResultCode = KotlinCompilation.ExitCode.INTERNAL_ERROR,
+            code = SourceFile.kotlin("TestCode.kt", """
+import io.mcarle.konvert.api.Konverter
+
+typealias Items<T> = MutableList<T>
+typealias Forwarded<T> = Items<T>
+data class Source(val values: Forwarded<out Number>)
+data class Target(val values: MutableList<Number>)
+@Konverter interface Mapper { fun map(source: Source): Target }
+            """.trimIndent())
+        )
+        assertContains(result.messages, NoMatchingTypeConverterException::class.qualifiedName!!)
+    }
+
+    @Test
+    fun importGenericTargetAliasWithSimpleIdentifier() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter()),
+            code = arrayOf(
+                SourceFile.kotlin("model/Target.kt", """
+package model
+data class Target<T>(val value: T)
+                """.trimIndent()),
+                SourceFile.kotlin("Mapper.kt", """
+import io.mcarle.konvert.api.Konverter
+import model.Target as TargetT
+
+data class Source(val value: String)
+@Konverter interface Mapper { fun map(source: Source): TargetT<String> }
+                """.trimIndent())
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        assertContains(mapperCode, "import model.Target as TargetT")
+        assertContains(mapperCode, "TargetT(")
+    }
+}

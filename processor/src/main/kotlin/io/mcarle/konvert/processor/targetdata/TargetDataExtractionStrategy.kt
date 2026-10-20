@@ -10,6 +10,8 @@ import io.mcarle.konvert.processor.ResolvedType
 import io.mcarle.konvert.processor.TypeSubstitution
 import io.mcarle.konvert.processor.codegen.MappingVisibilityContext
 import io.mcarle.konvert.processor.resolveFully
+import io.mcarle.konvert.processor.resolveSingleParameterTypeAsMemberOf
+import io.mcarle.konvert.processor.resolveTypeAsMemberOf
 
 fun interface TargetDataExtractionStrategy {
 
@@ -30,11 +32,12 @@ fun interface TargetDataExtractionStrategy {
 
     data class TargetVarProperty(
         private val property: KSPropertyDeclaration,
+        private val targetType: ResolvedType,
         private val substitution: TypeSubstitution,
         private val resolver: Resolver
     ) {
         val name = property.simpleName.asString()
-        val type: ResolvedType by lazy { property.type.resolveFully(resolver, substitution) }
+        val type: ResolvedType by lazy { property.resolveTypeAsMemberOf(targetType, resolver, substitution) }
     }
 
     data class TargetConstructor(
@@ -65,6 +68,7 @@ fun interface TargetDataExtractionStrategy {
     data class TargetSetter(
         private val setter: KSFunctionDeclaration,
         private val correspondingGetter: KSFunctionDeclaration?,
+        private val targetType: ResolvedType,
         private val substitution: TypeSubstitution,
         private val resolver: Resolver
     ) {
@@ -75,7 +79,7 @@ fun interface TargetDataExtractionStrategy {
         }
 
         val name = extractPropertyName(setter)
-        val type: ResolvedType by lazy { setter.parameters.single().type.resolveFully(resolver, substitution) }
+        val type: ResolvedType by lazy { setter.resolveSingleParameterTypeAsMemberOf(targetType, resolver, substitution) }
 
         fun generateAssignmentCode(valueToAssign: CodeBlock): CodeBlock {
             return if (correspondingGetter != null) {

@@ -5,8 +5,10 @@ import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.toTypeName
 import io.mcarle.konvert.api.GeneratedKonverter
 import io.mcarle.konvert.api.Priority
 import io.mcarle.konvert.converter.api.config.Configuration
@@ -46,7 +48,8 @@ class CodeBuilder private constructor(
     }
 
     fun addImport(type: KSType, alias: String) {
-        builder.addAliasedImport(type.toClassName(), alias)
+        val className = (type.toTypeName() as? ParameterizedTypeName)?.rawType ?: type.toClassName()
+        builder.addAliasedImport(className, alias)
     }
 
     fun build(): FileSpec {
