@@ -22,6 +22,7 @@ import io.mcarle.konvert.processor.exceptions.IgnoredTargetNotIgnorableException
 import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
 import io.mcarle.konvert.processor.exceptions.NotNullOperatorNotEnabledException
 import io.mcarle.konvert.processor.exceptions.PropertyMappingNotExistingException
+import io.mcarle.konvert.processor.resolveTypeAliases
 import io.mcarle.konvert.processor.targetdata.TargetDataExtractionStrategy.TargetSetter
 import java.util.Locale
 
@@ -313,7 +314,8 @@ $className(${"⇥\n%L"}
         targetType: KSType
     ): CodeBlock {
         val sourceData = source.sourceData!!
-        val sourceType = sourceData.typeRef.resolve()
+        val sourceType = sourceData.typeRef.resolve().resolveTypeAliases()
+        val targetType = targetType.resolveTypeAliases()
         val paramName = source.mappingParamName?.let { "$it." } ?: ""
         val sourceAccessCode = sourceData.accessCode
 

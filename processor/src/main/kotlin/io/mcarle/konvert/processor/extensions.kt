@@ -4,6 +4,8 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Visibility
 import io.mcarle.konvert.api.Konfig
@@ -64,6 +66,22 @@ fun Konfig.Companion.from(annotation: KSAnnotation) = Konfig(
 )
 
 fun KSValueParameter.typeClassDeclaration(): KSClassDeclaration? = this.type.resolve().classDeclaration()
+
+/**
+ * Resolves (possibly nested) type aliases to the type they are aliasing.
+ *
+ * A [KSType] whose declaration is a [KSTypeAlias] has no type arguments of its own, even if the aliased
+ * type is generic (e.g. `typealias Tags = List<Tag>`). Converters relying on [KSType.arguments] would
+ * otherwise fail. The nullability of the alias itself is retained.
+ */
+fun KSType.resolveTypeAliases(): KSType {
+    var type = this
+    while (true) {
+        val alias = type.declaration as? KSTypeAlias ?: return type
+        val aliasedType = alias.type.resolve()
+        type = if (type.isMarkedNullable && !aliasedType.isMarkedNullable) aliasedType.makeNullable() else aliasedType
+    }
+}
 
 fun Visibility.isEqualOrMoreRestrictedThan(other: Visibility): Boolean {
     if (this == other) return true

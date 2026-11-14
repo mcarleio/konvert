@@ -1771,6 +1771,53 @@ interface Mapper {
             assertContains(compilationResult.messages, NotNullOperatorNotEnabledException::class.qualifiedName!!)
         }
     }
+
+    @Test
+    fun issue221TypeAliasOfListProperty() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), IterableToListConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.Konverter
+
+data class SourceTag(val id: Int, val name: String)
+typealias SourceTags = List<SourceTag>
+data class SourceView(val id: Int, val tags: SourceTags)
+
+data class TargetTag(val id: Int, val name: String)
+typealias TargetTags = List<TargetTag>
+data class TargetView(val id: Int, val tags: TargetTags)
+
+@Konverter
+interface Mapper {
+    fun toTag(source: SourceTag): TargetTag
+    fun toView(source: SourceView): TargetView
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("MapperKonverter.kt")
+        println(mapperCode)
+
+        assertSourceEquals(
+            """
+            public object MapperImpl : Mapper {
+              override fun toTag(source: SourceTag): TargetTag = TargetTag(
+                id = source.id,
+                name = source.name
+              )
+
+              override fun toView(source: SourceView): TargetView = TargetView(
+                id = source.id,
+                tags = source.tags.map { this.toTag(source = it) }
+              )
+            }
+            """.trimIndent(),
+            mapperCode
+        )
+    }
 }
 
 private fun Konverter.Companion.getWithClassLoader(classFQN: String, classLoader: ClassLoader): Any {
