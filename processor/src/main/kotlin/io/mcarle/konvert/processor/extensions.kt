@@ -6,6 +6,9 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeAlias
+import com.google.devtools.ksp.symbol.KSTypeArgument
+import com.google.devtools.ksp.symbol.KSTypeParameter
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Visibility
 import io.mcarle.konvert.api.Konfig
@@ -70,17 +73,94 @@ fun KSValueParameter.typeClassDeclaration(): KSClassDeclaration? = this.type.res
 /**
  * Resolves (possibly nested) type aliases to the type they are aliasing.
  *
- * A [KSType] whose declaration is a [KSTypeAlias] has no type arguments of its own, even if the aliased
+ * An alias which does not declare type parameters has no type arguments of its own, even if the aliased
  * type is generic (e.g. `typealias Tags = List<Tag>`). Converters relying on [KSType.arguments] would
  * otherwise fail. The nullability of the alias itself is retained.
+ *
+ * If the alias itself declares type parameters (e.g. Kotlin's `typealias HashMap<K, V> = java.util.HashMap<K, V>`),
+ * the actual type arguments of the alias usage are substituted into the aliased type. Otherwise the arguments
+ * of the alias would be replaced by the unresolvable type parameters of the alias declaration.
  */
 fun KSType.resolveTypeAliases(): KSType {
     var type = this
     while (true) {
         val alias = type.declaration as? KSTypeAlias ?: return type
-        val aliasedType = alias.type.resolve()
+        val aliasedType = alias.type.resolve().substituteTypeParameters(alias, type.arguments)
         type = if (type.isMarkedNullable && !aliasedType.isMarkedNullable) aliasedType.makeNullable() else aliasedType
     }
+}
+
+/**
+ * Replaces the type parameters of the given [alias] inside the already expanded [alias type][this]
+ * with the actual type [arguments] of the alias usage.
+ */
+private fun KSType.substituteTypeParameters(
+    alias: KSTypeAlias,
+    arguments: List<KSTypeArgument>
+): KSType {
+    if (arguments.isEmpty()) return this
+
+    val substitution = alias.typeParameters.mapIndexedNotNull { index, parameter ->
+        arguments.getOrNull(index)?.let { parameter.name.asString() to it }
+    }.toMap()
+
+    return if (substitution.isEmpty()) this else substituteTypeParameters(substitution)
+}
+
+private fun KSType.substituteTypeParameters(substitution: Map<String, KSTypeArgument>): KSType {
+    val parameter = declaration as? KSTypeParameter
+    if (parameter != null) {
+        val argumentType = substitution[parameter.name.asString()]?.type?.resolve() ?: return this
+        return if (isMarkedNullable && !argumentType.isMarkedNullable) argumentType.makeNullable() else argumentType
+    }
+
+    if (arguments.isEmpty()) return this
+
+    var changed = false
+    val substitutedArguments = arguments.map { argument ->
+        val argumentType = argument.type?.resolve() ?: return@map argument
+        val argumentParameter = argumentType.declaration as? KSTypeParameter
+        val replacement = argumentParameter?.let { substitution[it.name.asString()] }
+
+        val substitutedArgument = if (replacement != null) {
+            val replacementType = replacement.type?.resolve()
+            when {
+                // A star projection has no type, so keep it as it is.
+                replacementType == null -> replacement
+                argumentType.isMarkedNullable && !replacementType.isMarkedNullable ->
+                    replacement.withType(replacementType.makeNullable())
+
+                else -> replacement
+            }
+        } else {
+            val resolvedType = argumentType.substituteTypeParameters(substitution)
+            if (resolvedType === argumentType) argument else argument.withType(resolvedType)
+        }
+
+        if (substitutedArgument !== argument) changed = true
+        substitutedArgument
+    }
+
+    return if (changed) replace(substitutedArguments) else this
+}
+
+private fun KSTypeArgument.withType(type: KSType): KSTypeArgument {
+    val typeReference = this.type ?: return this
+    return DelegatingTypeArgument(this, DelegatingTypeReference(typeReference, type))
+}
+
+private class DelegatingTypeArgument(
+    private val delegate: KSTypeArgument,
+    private val typeReference: KSTypeReference
+) : KSTypeArgument by delegate {
+    override val type: KSTypeReference get() = typeReference
+}
+
+private class DelegatingTypeReference(
+    private val delegate: KSTypeReference,
+    private val type: KSType
+) : KSTypeReference by delegate {
+    override fun resolve(): KSType = type
 }
 
 fun Visibility.isEqualOrMoreRestrictedThan(other: Visibility): Boolean {
