@@ -52,7 +52,7 @@ import kotlin.Unit
 @ContributesBinding(
   scope = AppScope::class,
   boundType = Unit::class,
-  replaces = arrayOf(),
+  replaces = [],
   priority = ContributesBinding.Priority.NORMAL,
   ignoreQualifier = false,
   rank = -2_147_483_648,
@@ -112,7 +112,7 @@ import kotlin.Unit
 @ContributesBinding(
   scope = AppScope::class,
   boundType = Unit::class,
-  replaces = arrayOf(),
+  replaces = [],
   priority = ContributesBinding.Priority.NORMAL,
   ignoreQualifier = false,
   rank = -2_147_483_648,
@@ -212,7 +212,7 @@ import kotlin.Unit
 @ContributesMultibinding(
   scope = AppScope::class,
   boundType = Unit::class,
-  replaces = arrayOf(),
+  replaces = [],
   ignoreQualifier = false,
 )
 @Named(`value` = "test")
@@ -272,7 +272,7 @@ import kotlin.Unit
 @ContributesMultibinding(
   scope = AppScope::class,
   boundType = Unit::class,
-  replaces = arrayOf(),
+  replaces = [],
   ignoreQualifier = false,
 )
 @CustomQualifier
@@ -330,7 +330,7 @@ import kotlin.Unit
 @ContributesMultibinding(
   scope = AppScope::class,
   boundType = Unit::class,
-  replaces = arrayOf(),
+  replaces = [],
   ignoreQualifier = false,
 )
 @StringKey(`value` = "test")
