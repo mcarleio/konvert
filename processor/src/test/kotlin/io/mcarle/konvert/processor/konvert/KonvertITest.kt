@@ -10,6 +10,7 @@ import io.mcarle.konvert.converter.IterableToArrayListConverter
 import io.mcarle.konvert.converter.IterableToListConverter
 import io.mcarle.konvert.converter.IterableToSetConverter
 import io.mcarle.konvert.converter.SameTypeConverter
+import io.mcarle.konvert.converter.ValueClassToXConverter
 import io.mcarle.konvert.converter.api.TypeConverterRegistry
 import io.mcarle.konvert.converter.api.config.GENERATED_FILENAME_SUFFIX_OPTION
 import io.mcarle.konvert.converter.api.config.KONVERTER_GENERATE_CLASS_OPTION
@@ -1770,6 +1771,60 @@ interface Mapper {
         } else {
             assertContains(compilationResult.messages, NotNullOperatorNotEnabledException::class.qualifiedName!!)
         }
+    }
+
+    @Test
+    fun issue231ValueClassWithPrivatePropertyAndGetter() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(SameTypeConverter(), ValueClassToXConverter()),
+            code = SourceFile.kotlin(
+                name = "TestCode.kt",
+                contents =
+                    """
+import io.mcarle.konvert.api.KonvertTo
+
+@KonvertTo(UserDto::class)
+class User private constructor(
+    private var email: Email
+) {
+    fun getEmail(): Email {
+        return email
+    }
+
+    companion object {
+        fun of(email: Email): User {
+            return User(email)
+        }
+    }
+}
+
+data class UserDto(
+    val email: String
+)
+
+@JvmInline
+value class Email private constructor(private val value: String) {
+    fun getValue(): String = value
+
+    companion object {
+        fun of(value: String): Email {
+            return Email(value)
+        }
+    }
+}
+                """.trimIndent()
+            )
+        )
+        val mapperCode = compilation.generatedSourceFor("UserKonverter.kt")
+
+        assertSourceEquals(
+            """
+            public fun User.toUserDto(): UserDto = UserDto(
+              email = getEmail().getValue()
+            )
+            """.trimIndent(),
+            mapperCode
+        )
     }
 
     @Test

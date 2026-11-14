@@ -1,6 +1,7 @@
 package io.mcarle.konvert.converter
 
 import com.google.auto.service.AutoService
+import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.symbol.ClassKind
@@ -29,7 +30,7 @@ class ValueClassToXConverter : AbstractTypeConverter() {
             val primaryConstructor = sourceClassDeclaration.primaryConstructor ?: return@handleNullable false
             val parameter = primaryConstructor.parameters.singleOrNull() ?: return@handleNullable false
 
-            if (!sourceClassDeclaration.isPropertyAccessible(parameter)) return@handleNullable false
+            if (sourceClassDeclaration.valueAccessCode(parameter) == null) return@handleNullable false
 
             val parameterType = parameter.type.resolve()
             return@handleNullable TypeConverterRegistry.any {
@@ -42,9 +43,10 @@ class ValueClassToXConverter : AbstractTypeConverter() {
     }
 
     override fun convert(fieldName: String, source: KSType, target: KSType): CodeBlock {
-        val valueParam = requireNotNull(source.classDeclaration()?.primaryConstructor?.parameters?.single())
+        val sourceClassDeclaration = requireNotNull(source.classDeclaration())
+        val valueParam = requireNotNull(sourceClassDeclaration.primaryConstructor?.parameters?.single())
 
-        val propertyName = requireNotNull(valueParam.name).asString()
+        val accessCode = requireNotNull(sourceClassDeclaration.valueAccessCode(valueParam))
         val propertyType = valueParam.type.resolve()
 
         val typeConverter = TypeConverterRegistry.first {
@@ -55,16 +57,16 @@ class ValueClassToXConverter : AbstractTypeConverter() {
         }
 
         return if (needsNotNullAssertionOperator(source, target)) {
-            typeConverter.convert("$fieldName!!.$propertyName", propertyType, target)
+            typeConverter.convert("$fieldName!!.$accessCode", propertyType, target)
         } else {
             if (source.isNullable()) {
                 CodeBlock.of(
                     "$fieldName?.let { %L }",
-                    typeConverter.convert("it.$propertyName", propertyType, target),
+                    typeConverter.convert("it.$accessCode", propertyType, target),
                 )
             } else {
                 typeConverter.convert(
-                    "$fieldName.$propertyName",
+                    "$fieldName.$accessCode",
                     propertyType,
                     target
                 )
@@ -72,10 +74,28 @@ class ValueClassToXConverter : AbstractTypeConverter() {
         }
     }
 
-    private fun KSClassDeclaration.isPropertyAccessible(parameter: KSValueParameter): Boolean {
-        return this.getDeclaredProperties()
-            .single { it.simpleName == parameter.name }
-            .isPublic() // TODO: extend TypeConverter#matches to be able to provide more information to use isVisibleFrom here
+    /**
+     * Returns the code to access the underlying value of the value class.
+     *
+     * If the property is not public, a public Kotlin getter (e.g. `getValue()`) is used instead.
+     * This allows value classes like `value class Email private constructor(private val value: String)`
+     * which expose their value through a public function.
+     */
+    private fun KSClassDeclaration.valueAccessCode(parameter: KSValueParameter): String? {
+        val parameterName = parameter.name?.asString() ?: return null
+
+        val property = getDeclaredProperties()
+            .singleOrNull { it.simpleName.asString() == parameterName }
+        if (property?.isPublic() == true) return parameterName
+
+        val parameterType = parameter.type.resolve()
+        val getterName = "get${parameterName.replaceFirstChar { it.uppercaseChar() }}"
+        return getDeclaredFunctions()
+            // TODO: extend TypeConverter to be able to provide more information to use isVisibleFrom here
+            .filter { it.parameters.isEmpty() && it.isPublic() }
+            .filter { it.returnType?.resolve() == parameterType }
+            .firstOrNull { it.simpleName.asString() == getterName }
+            ?.let { "$getterName()" }
     }
 }
 

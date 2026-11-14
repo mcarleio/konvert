@@ -5,6 +5,7 @@ import com.tschuchort.compiletesting.SourceFile
 import io.mcarle.konvert.converter.utils.ConverterITest
 import io.mcarle.konvert.converter.utils.VerificationData
 import io.mcarle.konvert.processor.exceptions.NoMatchingTypeConverterException
+import io.mcarle.konvert.processor.generatedSourceFor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -97,6 +98,44 @@ class ValueClassToXConverterITest : ConverterITest() {
         assertContains(
             compilationResult.messages,
             NoMatchingTypeConverterException::class.qualifiedName + ""
+        )
+    }
+
+    @Test
+    fun usePublicGetterForPrivateValueClassProperty() {
+        val (compilation) = compileWith(
+            enabledConverters = listOf(
+                ValueClassToXConverter(),
+                SameTypeConverter()
+            ),
+            code = SourceFile.kotlin(
+                "Code.kt",
+                """
+                    import io.mcarle.konvert.api.KonvertTo
+
+                    @JvmInline
+                    value class Email private constructor(private val value: String) {
+                        fun getValue(): String = value
+
+                        companion object {
+                            fun of(value: String): Email = Email(value)
+                        }
+                    }
+
+                    @KonvertTo(Target::class)
+                    data class Source(val email: Email)
+                    data class Target(val email: String)
+                """.trimIndent()
+            )
+        )
+
+        assertSourceEquals(
+            """
+            public fun Source.toTarget(): Target = Target(
+              email = email.getValue()
+            )
+            """.trimIndent(),
+            compilation.generatedSourceFor("SourceKonverter.kt")
         )
     }
 
