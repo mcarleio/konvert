@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <kotlin.version>2.3.10</kotlin.version>
+        <kotlin.version>2.4.21</kotlin.version>
         <konvert.version>0.1.0-SNAPSHOT</konvert.version>
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.source>17</maven.compiler.source>
@@ -65,8 +65,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <apiVersion>2.2</apiVersion>
-                    <languageVersion>2.2</languageVersion>
+                    <apiVersion>2.4</apiVersion>
+                    <languageVersion>2.4</languageVersion>
                     <jvmTarget>17</jvmTarget>
                 </configuration>
             </plugin>
@@ -84,8 +84,8 @@
                 </executions>
                 <configuration>
                     <jvmTarget>17</jvmTarget>
-                    <languageVersion>2.2</languageVersion>
-                    <apiVersion>2.2</apiVersion>
+                    <languageVersion>2.4</languageVersion>
+                    <apiVersion>2.4</apiVersion>
                     <processorOptions>
                         <option>konvert.konverter.generate-class=true</option>
                     </processorOptions>
@@ -100,6 +100,21 @@
                         <groupId>io.mcarle</groupId>
                         <artifactId>konvert-spring-injector</artifactId>
                         <version>${konvert.version}</version>
+                    </dependency>
+                    <!--
+                      Pin the Kotlin runtime used inside the forked KSP process.
+                      Otherwise Maven resolves the Kotlin stdlib bundled with KSP (2.3.0-RC),
+                      which is too old for the kotlin-reflect version pulled in by kotlinpoet.
+                    -->
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-stdlib</artifactId>
+                        <version>${kotlin.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-reflect</artifactId>
+                        <version>${kotlin.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>

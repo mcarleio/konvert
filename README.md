@@ -144,7 +144,7 @@ To use Konvert with Gradle, you have to do the following steps:
 2. Add the KSP plugin:
    ```kotlin
    plugins {
-       id("com.google.devtools.ksp").version("2.3.5")
+       id("com.google.devtools.ksp").version("2.3.13")
    }
    ```
 
@@ -186,6 +186,21 @@ To use Konvert with Maven, you have to do the following steps:
                <groupId>io.mcarle</groupId>
                <artifactId>konvert</artifactId>
                <version>${konvert.version}</version>
+           </dependency>
+           <!--
+             Align the Kotlin runtime used by the forked KSP process with your project's Kotlin version.
+             Without this, Maven may pick the older Kotlin stdlib bundled with KSP, which is
+             incompatible with the kotlin-reflect version used by the KSP processors.
+           -->
+           <dependency>
+               <groupId>org.jetbrains.kotlin</groupId>
+               <artifactId>kotlin-stdlib</artifactId>
+               <version>${kotlin.version}</version>
+           </dependency>
+           <dependency>
+               <groupId>org.jetbrains.kotlin</groupId>
+               <artifactId>kotlin-reflect</artifactId>
+               <version>${kotlin.version}</version>
            </dependency>
        </dependencies>
    </plugin>
