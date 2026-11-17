@@ -73,7 +73,7 @@ class MappingCodeGenerator constructor(
                 }
             }
         } else {
-            CodeBlock.of("return·%L%L", constructorCode, propertyCode)
+            CodeBlock.of(if (context.asExpression) "%L%L" else "return·%L%L", constructorCode, propertyCode)
         }
     }
 
