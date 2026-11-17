@@ -40,6 +40,58 @@ object PersonMapperImpl: PersonMapper {
 }
 ----
 
+== Sealed hierarchies
+
+If both the source and the target of a function are sealed, Konvert generates an exhaustive `when` over the subclasses of the source.
+Each source subclass is paired with a subclass of the target:
+
+* the one a converter maps it to (e.g. another function of a `@Konverter` interface), so differently named subclasses are paired by declaring a function for them
+* otherwise the one with the same simple name
+
+Then each pair is mapped:
+
+* if a converter for the pair exists (e.g. another function of a `@Konverter` interface, including ones with a default implementation), it is used
+* if the target subclass is an `object`, it is referenced
+* if both subclasses are sealed themselves, their subclasses are paired the same way and added to the same `when`
+* otherwise the mapping of the pair is generated like for any other class
+
+[source,kotlin]
+----
+@Konverter
+interface ShapeMapper {
+    fun toDto(shape: Shape): ShapeDto
+}
+
+sealed interface Shape {
+    data class Circle(val radius: Int) : Shape
+    data object Dot : Shape
+}
+sealed interface ShapeDto {
+    data class Circle(val radius: Int) : ShapeDto
+    data object Dot : ShapeDto
+}
+----
+
+This will generate
+
+[source,kotlin]
+----
+object ShapeMapperImpl: ShapeMapper {
+    override fun toDto(shape: Shape): ShapeDto = when (shape) {
+        is Shape.Circle -> ShapeDto.Circle(radius = shape.radius)
+        is Shape.Dot -> ShapeDto.Dot
+    }
+}
+----
+
+To map a pair whose fields differ, declare a function for that pair and define its mappings with xref:konvert.adoc[`@Konvert`].
+
+A sealed source also maps onto ONE non-sealed target, when every source subclass has a function of its own to that
+target: the generated `when` dispatches each subclass to its function, e.g. to flatten a hierarchy into one view.
+The generation fails, if a source subclass has no or more than one target subclass to pair with,
+if the sealed types are generic, if the function defines `mappings` or `constructor`,
+or if a nullable source should be mapped to a non-nullable target.
+
 == Parameters
 
 include::.shared-attributes-options.adoc[]

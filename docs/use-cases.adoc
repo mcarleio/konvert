@@ -33,6 +33,24 @@ class Person(val name: String, val birthday: Date)
 class PersonDto(val name: String, val dateOfBirth: Instant)
 ----
 
+Sealed hierarchies whose subclasses share their simple names, like a domain model and its API representation,
+are mapped with a single link:annotations/konverter#_sealed_hierarchies[`@Konverter` function]:
+[source,kotlin]
+----
+@Konverter
+interface PaymentMapper {
+    fun toDto(payment: Payment): PaymentDto
+}
+sealed interface Payment {
+    data class Card(val last4: String) : Payment
+    data object Cash : Payment
+}
+sealed interface PaymentDto {
+    data class Card(val last4: String) : PaymentDto
+    data object Cash : PaymentDto
+}
+----
+
 As shown, Konvert can be used in various scenarios and can be customized to fulfill a lot of typical use-cases!
 
 [.info]
