@@ -35,3 +35,9 @@ Additional parameters passed to the mapping function take precedence over fields
 parameter.
 
 
+
+This also holds when source and target are the same type: `fun withAge(@Konverter.Source person: PersonDto, age: Int): PersonDto`
+constructs a new `PersonDto` with `age` taken from the parameter and every other property from `person`. Only a
+function with a single parameter and no `@Mapping` (e.g. `fun copy(person: PersonDto): PersonDto`) is answered by a
+type converter, which for the same type returns the given instance itself. If the target type cannot be constructed,
+the processor fails instead of ignoring the additional parameters.

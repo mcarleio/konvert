@@ -36,7 +36,10 @@ class CodeGenerator constructor(
         visibilityContext: MappingVisibilityContext,
         additionalSourceParameters: List<KSValueParameter>
     ): CodeBlock {
-        if (context.paramName != null && mappings.isEmpty()) {
+        // A type converter reads only the source parameter, so it may stand in for the whole mapping only when there
+        // is nothing else to apply: no @Mapping and no additional parameter. Otherwise e.g. a same-type function with
+        // additional parameters would collapse to `return source` and silently drop them.
+        if (context.paramName != null && mappings.isEmpty() && additionalSourceParameters.isEmpty()) {
             val existingTypeConverter = TypeConverterRegistry
                 .firstOrNull {
                     it.matches(context.source, context.target) && it !is AnnotatedConverter
