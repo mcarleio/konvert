@@ -84,6 +84,15 @@ val Configuration.Companion.invalidMappingStrategy: InvalidMappingStrategy
     }
 
 /**
+ * @see IGNORED_TARGET_POLICY_OPTION
+ */
+val Configuration.Companion.ignoredTargetPolicy: IgnoredTargetPolicy
+    get() = IGNORED_TARGET_POLICY_OPTION.get(CURRENT) { configString ->
+        IgnoredTargetPolicy.entries.firstOrNull { it.name.equals(configString, ignoreCase = true) }
+            ?: IGNORED_TARGET_POLICY_OPTION.defaultValue
+    }
+
+/**
  * Reads the value for [Option.key] from the provided `options` or fallbacks to the [Option.defaultValue].
  */
 inline fun <T> Option<T>.get(configuration: Configuration, mapping: (String) -> T): T {

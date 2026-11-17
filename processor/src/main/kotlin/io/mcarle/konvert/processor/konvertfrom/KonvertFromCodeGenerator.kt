@@ -59,6 +59,7 @@ object KonvertFromCodeGenerator {
                                 target = data.targetClassDeclaration.asStarProjectedType(),
                                 paramName = data.paramName,
                                 targetClassImportName = null,
+                                functionName = "${(data.targetCompanionDeclaration.qualifiedName ?: data.targetCompanionDeclaration.simpleName).asString()}.${data.mapFunctionName}",
                             ),
                             visibilityContext = MappingVisibilityContext.TopLevelInPackage(
                                 data.targetClassDeclaration.packageName.asString()

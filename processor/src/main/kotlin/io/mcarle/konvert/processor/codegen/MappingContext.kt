@@ -10,4 +10,8 @@ data class MappingContext constructor(
     val target: KSType,
     val paramName: String?,
     val targetClassImportName: String?,
+    /**
+     * The generated mapping function, qualified by its interface or receiver, to name it in messages
+     */
+    val functionName: String,
 )
