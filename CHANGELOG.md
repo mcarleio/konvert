@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug fixes
+* resolve type aliases, including generic ones with the correct type parameter substitution, during mapping generation [#221](https://github.com/mcarleio/konvert/issues/221)
+* use public getters for value class properties, so value classes which only expose their value through a public getter can be mapped [#231](https://github.com/mcarleio/konvert/issues/231)
+
 
 ## [4.5.1]
 
