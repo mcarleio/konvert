@@ -1,0 +1,72 @@
+:page-title: @Konverter.Target
+:page-parent: @Konverter
+:page-grand_parent: Annotations
+
+= @Konverter.Target
+
+The annotation `@Konverter.Target` is only being processed in abstract functions in interfaces annotated with xref:konverter.adoc[`@Konverter`].
+
+It marks a parameter as the target instance to map into. Konvert then sets the properties on that already existing
+instance instead of creating a new one, which is useful whenever you do not control the creation of the target, e.g.
+when updating an entity loaded from a database.
+
+[source,kotlin]
+----
+@Konverter
+interface PersonMapper {
+    fun update(person: Person, @Konverter.Target personEntity: PersonEntity)
+}
+
+class Person(val name: String)
+class PersonEntity {
+    var id: Long = 0
+    var name: String = ""
+}
+----
+
+This will generate
+
+[source,kotlin]
+----
+object PersonMapperImpl : PersonMapper {
+  override fun update(person: Person, personEntity: PersonEntity) {
+    personEntity.name = person.name
+  }
+}
+----
+
+As no constructor is called, only mutable properties (and setters) of the target are written. Properties without a
+matching source field — like `id` in the example above — keep their current value.
+
+The function may either return nothing or the type of the `@Konverter.Target` annotated parameter. In the latter case,
+the generated code returns the updated instance:
+
+[source,kotlin]
+----
+@Konverter
+interface PersonMapper {
+    fun update(person: Person, @Konverter.Target personEntity: PersonEntity): PersonEntity
+}
+----
+
+[source,kotlin]
+----
+object PersonMapperImpl : PersonMapper {
+  override fun update(person: Person, personEntity: PersonEntity): PersonEntity {
+    personEntity.name = person.name
+    return personEntity
+  }
+}
+----
+
+If the source parameter is nullable, the target instance is left untouched for a `null` source.
+
+== Differences to the other mapping functions
+
+* Such a function is *not* registered as a type converter, as callers have to provide the target instance themselves.
+  Therefore it is neither used implicitly for nested mappings nor exported via `@GeneratedKonverter`.
+* The xref:../options/index.adoc[`konvert.non-constructor-properties-mapping`] option
+  defaults to `implicit` for these functions: when mapping into an existing instance, every target property is a
+  non-constructor property, so defining a single xref:mapping.adoc[`@Mapping`] does not disable the implicit mappings of
+  all other matching properties. The other values of the option are still respected.
+* Use `@Mapping(target = "...", ignore = true)` to exclude a target property from being written.

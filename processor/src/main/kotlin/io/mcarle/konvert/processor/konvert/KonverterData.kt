@@ -18,7 +18,9 @@ class KonverterData constructor(
 
     override fun toTypeConverters(): List<AnnotatedConverter> {
         return withIsolatedConfiguration(annotationData.options) {
-            konvertData.map {
+            // functions mapping into an existing target instance cannot be used as a type converter, as they require
+            // the caller to provide that instance
+            konvertData.filterNot { it.mapsIntoExistingTarget }.map {
                 KonvertTypeConverter(
                     priority = it.priority,
                     alreadyGenerated = false,

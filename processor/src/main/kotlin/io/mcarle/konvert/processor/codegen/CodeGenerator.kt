@@ -36,7 +36,7 @@ class CodeGenerator constructor(
         visibilityContext: MappingVisibilityContext,
         additionalSourceParameters: List<KSValueParameter>
     ): CodeBlock {
-        if (context.paramName != null && mappings.isEmpty()) {
+        if (context.targetParamName == null && context.paramName != null && mappings.isEmpty()) {
             val existingTypeConverter = TypeConverterRegistry
                 .firstOrNull {
                     it.matches(context.source, context.target) && it !is AnnotatedConverter
@@ -60,21 +60,29 @@ class CodeGenerator constructor(
             sourceDataList = sourceDataList
         )
 
-        val constructor = ConstructorResolver.determineConstructor(
-            targetData = targetData,
-            sourceProperties = sourceProperties,
-            constructorTypes = enforcedConstructorTypes
-        )
+        // when mapping into an already existing target instance, no constructor is called at all
+        val constructor = if (context.targetParamName == null) {
+            ConstructorResolver.determineConstructor(
+                targetData = targetData,
+                sourceProperties = sourceProperties,
+                constructorTypes = enforcedConstructorTypes
+            )
+        } else {
+            null
+        }
 
-        val constructorParameters = constructor.parameters
+        val constructorParameters = constructor?.parameters ?: emptyList()
 
-        verifyAvailableMappingsForConstructorParameters(sourceProperties, constructorParameters)
+        if (constructor != null) {
+            verifyAvailableMappingsForConstructorParameters(sourceProperties, constructorParameters)
+        }
 
         verifyTargetExists(mappings, constructorParameters, targetData.varProperties, targetData.setter)
 
         val effectiveNonConstructorPropertiesMappingMode = determineNonConstructorPropertiesMappingMode(
             targetData,
-            sourceProperties
+            sourceProperties,
+            context
         )
 
         val variablesWithoutConstructorParameters = obtainTargetNonConstructorProperties(
@@ -92,13 +100,26 @@ class CodeGenerator constructor(
             effectiveNonConstructorPropertiesMappingMode
         )
 
-        return MappingCodeGenerator(logger).generateMappingCode(
-            context,
-            sourceProperties.sortedByDescending { it.isBasedOnAnnotation },
-            constructor,
-            variablesWithoutConstructorParameters.map { it.property },
-            remainingSetters.toList()
-        )
+        val mappingCodeGenerator = MappingCodeGenerator(logger)
+        val orderedSourceProperties = sourceProperties.sortedByDescending { it.isBasedOnAnnotation }
+        val targetProperties = variablesWithoutConstructorParameters.map { it.property }
+
+        return if (constructor == null) {
+            mappingCodeGenerator.generateUpdateCode(
+                context,
+                orderedSourceProperties,
+                targetProperties,
+                remainingSetters.toList()
+            )
+        } else {
+            mappingCodeGenerator.generateMappingCode(
+                context,
+                orderedSourceProperties,
+                constructor,
+                targetProperties,
+                remainingSetters.toList()
+            )
+        }
     }
 
     private fun verifyTargetExists(
@@ -128,9 +149,22 @@ class CodeGenerator constructor(
     private fun determineNonConstructorPropertiesMappingMode(
         targetData: TargetDataExtractionStrategy.TargetData,
         sourceProperties: List<PropertyMappingInfo>,
+        context: MappingContext,
     ): NonConstructorPropertiesMapping {
         return when (val value = Configuration.nonConstructorPropertiesMapping) {
             NonConstructorPropertiesMapping.AUTO -> {
+                if (context.targetParamName != null) {
+                    // when mapping into an existing target instance, every target property is a non-constructor
+                    // property. Restricting them to the annotated ones would ignore all matching properties, so
+                    // defining a single mapping must not disable the implicit ones.
+                    return NonConstructorPropertiesMapping.IMPLICIT.also {
+                        logger.logging(
+                            "${NON_CONSTRUCTOR_PROPERTIES_MAPPING_OPTION.key} resolved to: $it",
+                            targetData.classDeclaration
+                        )
+                    }
+                }
+
                 val userDefinedProperties = sourceProperties.filter { it.isBasedOnAnnotation }
 
                 return if (userDefinedProperties.none { !it.ignore }) {
